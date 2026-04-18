@@ -1,0 +1,157 @@
+<div class="register-container">
+  <div class="register-card">
+
+    <div class="logo">
+      <span class="icon">❤</span>
+      <h2>CareConnect</h2>
+      <p>Connecting Healthcare Professionals</p>
+    </div>
+
+    <div>
+      <p *ngIf="role === 'patient'">Register as a Patient</p>
+      <p *ngIf="role === 'nurse'">Register as a Healthcare Professional</p>
+    </div>
+
+    <div class="toggle">
+      <button 
+        [class.active]="role === 'nurse'" 
+        (click)="selectRole('nurse')">
+        Nurse
+      </button>
+      <button 
+        [class.active]="role === 'patient'" 
+        (click)="selectRole('patient')">
+        Patient
+      </button>
+    </div>
+
+    <!-- ================= PATIENT FORM ================= -->
+    <form #patientForm="ngForm" *ngIf="role === 'patient'" (ngSubmit)="register(patientForm)">
+
+      <div class="row">
+        <div>
+          <input type="text" placeholder="Full Name"
+            [(ngModel)]="patient.fullName" name="fullName"
+            required #nameRef="ngModel">
+          <small class="error-text" *ngIf="nameRef.invalid && nameRef.touched">
+            Required
+          </small>
+        </div>
+
+        <div>
+          <input type="text" placeholder="Age"
+            [(ngModel)]="patient.age" name="age" required>
+        </div>
+
+        <div>
+          <select [(ngModel)]="patient.gender" name="gender" required>
+            <option value="" disabled>Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Prefer Not To Say">Prefer Not To Say</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <input type="email" placeholder="Email"
+            [(ngModel)]="patient.email" name="email"
+            required email #emailRef="ngModel">
+          <small class="error-text" *ngIf="emailRef.invalid && emailRef.touched">
+            Invalid email
+          </small>
+        </div>
+
+        <div>
+          <input type="tel" placeholder="Phone"
+            [(ngModel)]="patient.phone" name="phone"
+            required pattern="^[0-9]{10}$">
+        </div>
+      </div>
+
+      <textarea [(ngModel)]="patient.address" name="address" required
+        placeholder="Enter Resedential Address"></textarea>
+
+      <div class="row">
+        <div>
+          <input type="password" placeholder="Password"
+            [(ngModel)]="patient.password" name="password"
+            required minlength="6">
+        </div>
+
+        <div>
+          <input type="password" placeholder="Confirm Password"
+            [(ngModel)]="patient.confirmPassword" name="confirmPassword"
+            required>
+
+          <small class="error-text"
+            *ngIf="patient.password !== patient.confirmPassword && patient.confirmPassword">
+            Passwords do not match
+          </small>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn"
+        [disabled]="patientForm.invalid || patient.password !== patient.confirmPassword">
+        Create Patient Account
+      </button>
+
+    </form>
+
+    <!-- ================= NURSE FORM ================= -->
+    <form #nurseForm="ngForm" *ngIf="role === 'nurse'" (ngSubmit)="register(nurseForm)">
+
+      <div class="row">
+        <input type="text" placeholder="Full Name"
+          [(ngModel)]="nurse.fullName" name="nurseFullName" required>
+
+        <input type="email" placeholder="Email"
+          [(ngModel)]="nurse.email" name="nurseEmail" required email>
+      </div>
+
+      <div class="row">
+        <input type="password" placeholder="Password"
+          [(ngModel)]="nurse.password" name="nursePassword"
+          required minlength="6">
+
+        <input type="password" placeholder="Confirm Password"
+          [(ngModel)]="nurse.confirmPassword" name="nurseConfirmPassword"
+          required>
+      </div>
+
+      <div class="row">
+        <select [(ngModel)]="nurse.specialization" name="specialization" required>
+          <option value="" disabled>Select Specialization</option>
+        </select>
+
+        <input type="text" placeholder="Years of Exp."
+          [(ngModel)]="nurse.experience" name="experience" required>
+
+        <input type="text" placeholder="Availability Status"
+          [(ngModel)]="nurse.availability" name="availability" required>
+      </div>
+
+      <input type="tel" placeholder="Phone Number"
+        [(ngModel)]="nurse.phone" name="nursephone"
+        required pattern="^[0-9]{10}$">
+
+      <small class="error-text"
+        *ngIf="nurse.password !== nurse.confirmPassword && nurse.confirmPassword">
+        Passwords do not match
+      </small>
+
+      <button type="submit" class="submit-btn"
+        [disabled]="nurseForm.invalid || nurse.password !== nurse.confirmPassword">
+        Create Nurse Account →
+      </button>
+
+    </form>
+
+    <p class="login-link">
+      Already have an account? 
+      <span routerLink="/">Login here</span>
+    </p>
+
+  </div>
+</div>

@@ -1,0 +1,360 @@
+    /* ===== RESET & GLOBAL REFINEMENTS ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: #eef3f1;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ===== MAIN CONTAINER – elevated, softer backdrop ===== */
+    .register-container {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at 10% 30%, #d9eae6, #c0dad3);
+      padding: 1.5rem;
+    }
+
+    /* ===== CARD – premium glass-like surface, refined depth ===== */
+    .register-card {
+      width: 100%;
+      max-width: 720px;
+      padding: 2rem 2.2rem 2.2rem 2.2rem;
+      border-radius: 2.25rem;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(0px);
+      box-shadow: 0 20px 38px -12px rgba(0, 32, 24, 0.2), 0 4px 12px rgba(0, 0, 0, 0.03), 0 0 0 1px rgba(26, 163, 122, 0.05);
+      transition: transform 0.25s ease, box-shadow 0.35s ease;
+    }
+
+    .register-card:hover {
+      box-shadow: 0 28px 48px -16px rgba(0, 48, 36, 0.28), 0 0 0 1px rgba(26, 163, 122, 0.15);
+      transform: translateY(-2px);
+    }
+
+    /* ===== LOGO SECTION – refined breathing & vibrant ===== */
+    .logo {
+      text-align: center;
+      margin-bottom: 0.25rem;
+    }
+
+    .logo .icon {
+      background: linear-gradient(135deg, #eef9f5, #e0f0ea);
+      color: #1aa37a;
+      padding: 14px;
+      border-radius: 60px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      font-size: 32px;
+      width: 68px;
+      height: 68px;
+      box-shadow: 0 8px 16px -10px rgba(26, 163, 122, 0.35);
+      transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+
+    .logo .icon:hover {
+      transform: scale(1.03);
+      box-shadow: 0 12px 24px -12px #1aa37a66;
+      background: linear-gradient(135deg, #f1fbf7, #e5f3ef);
+    }
+
+    .logo h2 {
+      margin: 6px 0 4px;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(125deg, #147a5c, #1aa37a, #2bc48e);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      display: inline-block;
+    }
+
+    .logo p {
+      font-size: 0.85rem;
+      color: #5b6f6a;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+      margin-top: 6px;
+    }
+
+    /* ===== role badge (refined subtle chip) ===== */
+    .logo + div {
+      text-align: center;
+      margin: 0.5rem 0 0.2rem 0;
+    }
+
+    .logo + div p {
+      display: inline-block;
+      background: #ecf3f0;
+      padding: 0.3rem 1.1rem;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #1c7c5e;
+      backdrop-filter: blur(2px);
+      box-shadow: inset 0 1px 1px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    /* ===== TOGGLE – modern pill, soft shadows ===== */
+    .toggle {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      margin: 1.5rem 0 2rem 0;
+      background: #f2f7f5;
+      padding: 0.5rem;
+      border-radius: 80px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.02), 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .toggle button {
+      padding: 0.65rem 2rem;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 60px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #4e6a63;
+      transition: all 0.2s ease;
+      letter-spacing: 0.2px;
+    }
+
+    .toggle button.active {
+      background: #1aa37a;
+      color: white;
+      box-shadow: 0 6px 14px -6px rgba(26, 163, 122, 0.45);
+      transform: scale(1.01);
+    }
+
+    .toggle button:not(.active):hover {
+      background: #e6efec;
+      color: #1f4e43;
+      transform: translateY(-1px);
+    }
+
+    /* ===== FORM & FIELDS – consistent, airy, refined ===== */
+    form {
+      margin-top: 0.75rem;
+    }
+
+    /* row system – perfect spacing */
+    .row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .row > * {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* unified inputs: modern border, larger radius, smooth */
+    input, select, textarea {
+      width: 100%;
+      padding: 0.85rem 1.1rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.92rem;
+      border-radius: 20px;
+      border: 1.5px solid #e2ece8;
+      background-color: #ffffff;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.4, 1);
+      outline: none;
+      color: #1f2e2a;
+      font-weight: 500;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #1aa37a;
+      box-shadow: 0 0 0 4px rgba(26, 163, 122, 0.12);
+      background-color: #fefefe;
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #a6bcb5;
+      font-weight: 450;
+      font-size: 0.85rem;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 95px;
+      margin-bottom: 1.25rem;
+    }
+
+    /* modern select with custom chevron */
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231aa37a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    /* fix margins for standalone inputs/textarea */
+    form input:not(.row input),
+    form textarea:not(.row textarea),
+    form select:not(.row select) {
+      margin-bottom: 1.25rem;
+    }
+
+    /* make phone field (nurse) & consistent */
+    input[type="password"] {
+      letter-spacing: 0.08rem;
+    }
+
+    /* ===== SUBMIT BUTTON – premium gradient, elevated ===== */
+    .submit-btn {
+      width: 100%;
+      padding: 0.95rem;
+      background: linear-gradient(105deg, #137a5c, #1aa37a, #24ba8a);
+      color: white;
+      border: none;
+      border-radius: 56px;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      margin-top: 0.65rem;
+      transition: all 0.25s ease;
+      box-shadow: 0 8px 18px -8px rgba(26, 163, 122, 0.45);
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .submit-btn:hover {
+      background: linear-gradient(105deg, #0f6b51, #158467, #1ca97c);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 24px -10px rgba(26, 163, 122, 0.55);
+    }
+
+    .submit-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 6px 12px -6px rgba(26, 163, 122, 0.5);
+    }
+
+    /* ===== LOGIN LINK – elegant ===== */
+    .login-link {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #607d75;
+      font-weight: 500;
+    }
+
+    .login-link span {
+      color: #1aa37a;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+    }
+
+    .login-link span:hover {
+      color: #0f6f53;
+      border-bottom: 1px solid #1aa37a;
+      text-underline-offset: 6px;
+    }
+
+    /* ===== FORM FADE ANIMATION ===== */
+    form {
+      animation: fadeSlideUp 0.28s ease-out;
+    }
+
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ===== RESPONSIVE TOUCH & MOBILE ===== */
+    @media (max-width: 640px) {
+      .register-card {
+        padding: 1.5rem 1.3rem;
+        max-width: 96%;
+        border-radius: 1.8rem;
+      }
+
+      .row {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .row > * {
+        width: 100%;
+      }
+
+      .toggle button {
+        padding: 0.55rem 1.3rem;
+        font-size: 0.85rem;
+      }
+
+      .logo h2 {
+        font-size: 1.9rem;
+      }
+
+      input, select, textarea {
+        padding: 0.75rem 1rem;
+        font-size: 0.88rem;
+      }
+
+      .submit-btn {
+        padding: 0.85rem;
+      }
+
+      .logo .icon {
+        width: 58px;
+        height: 58px;
+        font-size: 28px;
+      }
+    }
+
+    /* optional: focus-visible accessibility */
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid #1aa37a;
+      outline-offset: 3px;
+    }
+
+    /* subtle selection color */
+    ::selection {
+      background: #c0e3da;
+      color: #0c5c45;
+    }
+
+    /* extra polish for password fields */
+    input[type="password"]:focus {
+      letter-spacing: normal;
+    }
