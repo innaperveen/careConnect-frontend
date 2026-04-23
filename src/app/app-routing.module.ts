@@ -10,18 +10,29 @@ import { BookAppointmentComponent } from './pages/patient/book-appointment/book-
 import { MyAppointmentsComponent } from './pages/patient/my-appointments/my-appointments.component';
 import { MedicalRecordsComponent } from './pages/patient/medical-records/medical-records.component';
 import { SettingsComponent } from './pages/patient/settings/settings.component';
+import { ProfileComponent } from './pages/nurse/profile/profile.component';
+import { JobsComponent } from './pages/nurse/jobs/jobs.component';
+import { ApplicationsComponent } from './pages/nurse/applications/applications.component';
 
 const routes: Routes = [
   { path: '', component: LoginComponent },
+  // {path:'',component:NurseDashboardComponent},
+    { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'home', component: HomeComponent },
   { path: 'admin', component: AdminDashboardComponent },
   { path: 'patient', component: PatientDashboardComponent },
   { path: 'nurse', component: NurseDashboardComponent },
-    { path: 'book-appointment', component: BookAppointmentComponent },
-  { path: 'my-appointments', component: MyAppointmentsComponent },
-  { path: 'medical-records', component: MedicalRecordsComponent },
-  { path: 'settings', component: SettingsComponent },
+    { path: 'patient-book-appointment', component: BookAppointmentComponent },
+  { path: 'patient-appointments', component: MyAppointmentsComponent },
+  { path: 'patient-medical-records', component: MedicalRecordsComponent },
+  { path: 'patient-settings', component: SettingsComponent },
+    { path: 'nurse-dashboard', component: NurseDashboardComponent },
+  { path: 'nurse-profile', component: ProfileComponent },
+  { path: 'nurse-available-jobs', component: JobsComponent },
+  { path: 'nurse-applications', component: ApplicationsComponent },
+
+
 ];
 
 @NgModule({

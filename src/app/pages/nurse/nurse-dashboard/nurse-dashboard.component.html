@@ -1,1 +1,225 @@
-<p>nurse-dashboard works!</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>CareConnect | Nurse Dashboard</title>
+  <!-- Bootstrap 5 + Icons + Google Fonts -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+<div class="d-flex">
+
+  <!-- SIDEBAR (enhanced, same structure) -->
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand">
+      <i class="bi bi-heart-pulse-fill"></i> 
+      <span>CareConnect</span>
+    </div>
+
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom"
+           routerLink="/nurse-dashboard"
+           routerLinkActive="active">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom"
+           routerLink="/nurse-available-jobs"
+           routerLinkActive="active">
+          <i class="bi bi-briefcase"></i> Jobs
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom"
+           routerLink="/nurse-applications"
+           routerLinkActive="active">
+          <i class="bi bi-journal-bookmark-fill"></i> Applications
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom"
+           routerLink="/nurse-profile"
+           routerLinkActive="active">
+          <i class="bi bi-person"></i> Profile
+        </a>
+      </li>
+      <div class="sidebar-divider"></div>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main p-4 w-100">
+
+    <!-- TOP BAR refined -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="fw-semibold mb-0" style="color: #1a3b3a;">Welcome back, Sarah</h4>
+        <small class="text-muted" style="font-size: 0.85rem;">🌟 Here are your latest opportunities</small>
+      </div>
+
+      <div class="d-flex align-items-center gap-3 position-relative">
+        <!-- Notification Bell + enhanced tooltip -->
+        <div class="position-relative">
+          <i class="bi bi-bell fs-5 cursor-pointer text-secondary"
+             (click)="toggleNotifications()"
+             style="transition: 0.1s;"></i>
+          <span *ngIf="hasUnreadNotifications()"
+                class="badge bg-danger position-absolute top-0 start-100 translate-middle p-1 rounded-circle"
+                style="border: 2px solid white; width: 10px; height: 10px; min-width: 10px;"></span>
+        </div>
+
+        <!-- Availability Toggle + refined shadow -->
+        <button class="btn toggle-available"
+                [ngClass]="isAvailable ? 'btn-success' : 'btn-secondary'"
+                (click)="toggleAvailability()"
+                style="min-width: 100px;">
+          <i class="bi" [ngClass]="isAvailable ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
+          {{ isAvailable ? 'Available' : 'Offline' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Notification Dropdown (enhanced) -->
+    <div *ngIf="notificationsOpen" class="notification-panel shadow-lg">
+      <h6 class="p-3 border-bottom fw-bold" style="font-size: 0.9rem;">🔔 Notifications</h6>
+      <div *ngFor="let n of notifications" class="notification-item p-3 border-bottom">
+        <p class="mb-0 small fw-medium">{{ n.message }}</p>
+        <small class="text-muted" style="font-size: 0.7rem;">{{ n.time }}</small>
+      </div>
+      <div *ngIf="notifications.length === 0" class="p-3 text-center text-muted small">
+        No new notifications
+      </div>
+    </div>
+
+    <!-- Update Profile + modern look -->
+    <button class="btn btn-update btn-sm mb-4">
+      <i class="bi bi-pencil-square me-1"></i> Update Profile
+    </button>
+
+    <!-- PROFILE + STATS row (improved readability) -->
+    <div class="row mb-5 g-4">
+      <div class="col-md-8">
+        <div class="card p-3 d-flex flex-row align-items-center p-3">
+          <div class="avatar-wrapper">
+  <img src="https://via.placeholder.com/60"
+       alt="User Avatar"
+       class="rounded-circle avatar-circle me-3"
+       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+  <div class="avatar-fallback rounded-circle d-none">
+    <i class="bi bi-person-fill"></i>
+  </div>
+</div>
+          <div>
+            <h6 class="fw-bold mb-0">Sarah Jenkins</h6>
+            <div class="d-flex align-items-center gap-2 mt-1">
+              <span class="badge-soft"><i class="bi bi-hospital"></i> ICU Specialist</span>
+              <span class="badge-soft"><i class="bi bi-clock-history"></i> 8 Years Exp</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card stat-card p-3 text-center">
+          <i class="bi bi-file-text" style="font-size: 1.8rem; color: #158467;"></i>
+          <h3 class="stat-number mb-0 mt-1">{{ applications.length }}</h3>
+          <small class="text-muted fw-medium">Active Applications</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT: JOBS + APPLICATIONS -->
+    <div class="row g-4">
+      <!-- JOBS section -->
+      <div class="col-md-8">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h5 class="fw-semibold" style="color: #1e4a47;"><i class="bi bi-briefcase-fill me-2"></i>Available Jobs</h5>
+          <span class="badge bg-light text-dark rounded-pill">{{ jobs.length }} openings</span>
+        </div>
+
+        <div class="card p-3 mb-3 job-card" *ngFor="let job of jobs">
+          <div class="d-flex justify-content-between align-items-start flex-wrap">
+            <div>
+              <h6 class="fw-bold mb-1">{{ job.title }}</h6>
+              <div class="job-meta d-flex flex-wrap gap-3 mt-1">
+                <small class="text-muted"><i class="bi bi-geo-alt-fill"></i> {{ job.location }}</small>
+                <small class="text-muted"><i class="bi bi-calendar-event"></i> {{ job.shift }}</small>
+              </div>
+            </div>
+            <span class="salary-badge mt-1 mt-sm-0"><i class="bi bi-cash-stack"></i> {{ job.salary }}</span>
+          </div>
+          <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3"
+                    (click)="openDetails(job)">
+              <i class="bi bi-eye me-1"></i> View Details
+            </button>
+            <button class="btn btn-success btn-sm rounded-pill px-4"
+                    (click)="apply(job)">
+              <i class="bi bi-send-check me-1"></i> Apply Now
+            </button>
+          </div>
+        </div>
+        <div *ngIf="jobs.length === 0" class="card p-4 text-center text-muted">
+          No jobs available at the moment.
+        </div>
+      </div>
+
+      <!-- APPLICATIONS card (improved micro UI) -->
+      <div class="col-md-4">
+        <div class="card p-3 h-100">
+          <h6 class="fw-semibold border-bottom pb-2"><i class="bi bi-journal-check me-2"></i>My Applications</h6>
+          <div *ngFor="let app of applications" class="mb-3 mt-1">
+            <p class="mb-0 fw-medium">{{ app.jobTitle }}</p>
+            <div class="d-flex align-items-center mt-1">
+              <span class="app-status-badge">{{ app.status }}</span>
+            </div>
+          </div>
+          <div *ngIf="applications.length === 0" class="text-center p-3 text-muted small">
+            No applications yet. Apply to jobs above!
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL (enhanced modern style) -->
+    <div class="modal fade show d-block" *ngIf="selectedJob" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-xl">
+          <div class="modal-header border-0 pt-4 pb-0 px-4">
+            <h5 class="modal-title fw-bold" style="color: #0f6b51;">{{ selectedJob.title }}</h5>
+            <button type="button" class="btn-close" (click)="closeModal()"></button>
+          </div>
+          <div class="modal-body px-4 pb-2">
+            <div class="mb-2 d-flex align-items-center gap-2 flex-wrap">
+              <span class="badge bg-light text-dark rounded-pill"><i class="bi bi-geo-alt"></i> {{ selectedJob.location }}</span>
+              <span class="badge bg-light text-dark rounded-pill"><i class="bi bi-clock"></i> {{ selectedJob.shift }}</span>
+              <span class="badge bg-success-subtle text-success rounded-pill"><i class="bi bi-cash"></i> {{ selectedJob.salary }}</span>
+            </div>
+            <hr>
+            <p class="small text-muted mt-2">🏥 Join a dedicated team providing excellent patient care. This role requires acute nursing skills and compassion.</p>
+          </div>
+          <div class="modal-footer border-0 pb-4 px-4">
+            <button class="btn btn-success rounded-pill px-4" (click)="apply(selectedJob)">
+              <i class="bi bi-send-check"></i> Apply
+            </button>
+            <button class="btn btn-outline-secondary rounded-pill px-4" (click)="closeModal()">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- script note: Angular logic remains untouched, only UI/UX improvements -->
+</body>
+</html>

@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
-
+import { RouterModule } from '@angular/router';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './pages/login/login.component';
@@ -15,6 +15,9 @@ import { MyAppointmentsComponent } from './pages/patient/my-appointments/my-appo
 import { MedicalRecordsComponent } from './pages/patient/medical-records/medical-records.component';
 import { SettingsComponent } from './pages/patient/settings/settings.component';
 import { BookAppointmentComponent } from './pages/patient/book-appointment/book-appointment.component';
+import { ProfileComponent } from './pages/nurse/profile/profile.component';
+import { JobsComponent } from './pages/nurse/jobs/jobs.component';
+import { ApplicationsComponent } from './pages/nurse/applications/applications.component';
 
 @NgModule({
   declarations: [
@@ -28,13 +31,18 @@ import { BookAppointmentComponent } from './pages/patient/book-appointment/book-
     BookAppointmentComponent,
     MyAppointmentsComponent,
     MedicalRecordsComponent,
-    SettingsComponent
+    SettingsComponent,
+    ProfileComponent,
+    JobsComponent,
+    ApplicationsComponent,
+    
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    FormsModule
+    FormsModule,
+    RouterModule
   ],
   providers: [],
   bootstrap: [AppComponent]
