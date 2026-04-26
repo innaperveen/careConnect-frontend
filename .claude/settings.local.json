@@ -12,12 +12,14 @@
       "PowerShell(Stop-Process -Name \"java\" -Force -ErrorAction SilentlyContinue)",
       "Read(//c/Users/prakhar/Music/Angular/CareConnect/careConnect-backend/src/main/java/com/careconnect/entity/**)",
       "Read(//c/Users/prakhar/Music/Angular/CareConnect/careConnect-backend/src/main/java/com/careconnect/dto/request/**)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "PowerShell(Start-Process \"C:\\\\Users\\\\prakhar\\\\Music\\\\Angular\\\\CareConnect\\\\careConnect-backend\\\\docs\\\\careconnect_erd_viewer.html\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend\\src\\main\\java\\com\\careconnect\\entity",
       "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend\\src\\main\\java\\com\\careconnect\\dto\\request",
-      "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend\\src\\main\\java\\com\\careconnect\\service"
+      "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend\\src\\main\\java\\com\\careconnect\\service",
+      "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend"
     ]
   }
 }

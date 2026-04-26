@@ -6,7 +6,7 @@
       height: 100vh;
       overflow-y: auto;
       z-index: 1050;
-      background: linear-gradient(145deg, #0a5c46 0%, #0f6b51 30%, #158467 100%);
+      background: linear-gradient(145deg, #0a3d2b, #0f5241, #145a4a);
       box-shadow: 8px 0 28px rgba(0, 32, 32, 0.12);
       transition: all 0.25s ease;
       display: flex;

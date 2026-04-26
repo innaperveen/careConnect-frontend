@@ -1,5 +1,5 @@
 /* SIDEBAR */
-.fixed-sidebar { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; overflow-y: auto; z-index: 1030; background: linear-gradient(135deg, #0f6b51, #158467, #1ca97c); box-shadow: 6px 0 18px rgba(0,0,0,0.08); transition: all 0.2s ease; }
+.fixed-sidebar { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; overflow-y: auto; z-index: 1030; background: linear-gradient(145deg, #0a3d2b, #0f5241, #145a4a); box-shadow: 6px 0 18px rgba(0,0,0,0.12); transition: all 0.2s ease; }
 .fixed-sidebar::-webkit-scrollbar { width: 5px; }
 .fixed-sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 10px; }
 .fixed-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 10px; }
