@@ -1,0 +1,127 @@
+<div class="d-flex">
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand"><i class="bi bi-heart-pulse-fill"></i><span>CareConnect</span></div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-dashboard" routerLinkActive="active"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-profile" routerLinkActive="active"><i class="bi bi-person-badge"></i> My Profile</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-available-jobs" routerLinkActive="active"><i class="bi bi-briefcase"></i> Jobs</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-applications" routerLinkActive="active"><i class="bi bi-journal-bookmark-fill"></i> Applications</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-schedule" routerLinkActive="active"><i class="bi bi-calendar3"></i> Schedule</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-payments" routerLinkActive="active"><i class="bi bi-cash-stack"></i> Payments</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-training" routerLinkActive="active"><i class="bi bi-mortarboard"></i> Training</a></li>
+      <div class="sidebar-divider"></div>
+    </ul>
+  </nav>
+
+  <div class="main p-4 w-100">
+    <div class="mb-4">
+      <h4 class="fw-semibold mb-0" style="color:#1a3b3a;">Payments & Earnings</h4>
+      <small class="text-muted">Track your earnings, submit timesheets, and manage payment methods</small>
+    </div>
+
+    <!-- Earnings summary -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card"><i class="bi bi-wallet2 stat-icon"></i><p class="stat-num">₹44,518</p><p class="stat-lbl">This Month</p></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card"><i class="bi bi-graph-up-arrow stat-icon"></i><p class="stat-num">₹1,93,245</p><p class="stat-lbl">This Year</p></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card"><i class="bi bi-hourglass-split stat-icon" style="color:#d68910;"></i><p class="stat-num" style="color:#d68910;">₹0</p><p class="stat-lbl">Pending</p></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card"><i class="bi bi-credit-card stat-icon"></i><p class="stat-num" style="font-size:1rem;padding-top:4px;">HDFC ****4321</p><p class="stat-lbl">Payment Method</p></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar mb-4">
+      <button class="tab-btn" [class.tab-active]="activeTab === 'history'" (click)="activeTab = 'history'"><i class="bi bi-receipt me-1"></i>Payment History</button>
+      <button class="tab-btn" [class.tab-active]="activeTab === 'timesheet'" (click)="activeTab = 'timesheet'"><i class="bi bi-clock me-1"></i>Submit Timesheet</button>
+    </div>
+
+    <!-- Payment History -->
+    <div *ngIf="activeTab === 'history'">
+      <div class="section-card">
+        <h6 class="section-title"><i class="bi bi-receipt me-2"></i>Payment History</h6>
+        <div class="table-responsive">
+          <table class="pay-table w-100">
+            <thead>
+              <tr><th>Period</th><th>Facility</th><th>Hours</th><th>Rate</th><th>Gross</th><th>Deductions</th><th>Net Pay</th><th>Status</th><th>Paid On</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of paymentHistory">
+                <td>{{ p.period }}</td>
+                <td>{{ p.facility }}</td>
+                <td>{{ p.hours }}h</td>
+                <td>{{ p.rate }}</td>
+                <td>{{ p.gross }}</td>
+                <td class="text-danger">-{{ p.deductions }}</td>
+                <td class="fw-bold" style="color:#0f6b51;">{{ p.net }}</td>
+                <td><span class="paid-badge">{{ p.status }}</span></td>
+                <td class="text-muted small">{{ p.paidOn }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timesheet Form -->
+    <div *ngIf="activeTab === 'timesheet'">
+      <div class="section-card">
+        <h6 class="section-title"><i class="bi bi-clock me-2"></i>Submit Timesheet</h6>
+        <div *ngIf="submitSuccess" class="alert-toast mb-4"><i class="bi bi-check-circle-fill me-2"></i>Timesheet submitted successfully! Payment will be processed within 3 business days.</div>
+
+        <form [formGroup]="timesheetForm" (ngSubmit)="submitTimesheet()">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="field-label">Facility / Assignment</label>
+              <select formControlName="facility" class="field-input" [class.input-error]="f['facility'].invalid && f['facility'].touched">
+                <option value="" disabled>Select facility</option>
+                <option value="Apollo Hospital">Apollo Hospital</option>
+                <option value="Fortis Healthcare">Fortis Healthcare</option>
+                <option value="CareConnect Home Care">CareConnect Home Care</option>
+                <option value="AIIMS">AIIMS</option>
+              </select>
+              <small class="err" *ngIf="f['facility'].touched && f['facility'].hasError('required')">Please select a facility.</small>
+            </div>
+            <div class="col-md-3">
+              <label class="field-label">Period Start</label>
+              <input type="date" formControlName="periodStart" class="field-input" [class.input-error]="f['periodStart'].invalid && f['periodStart'].touched">
+              <small class="err" *ngIf="f['periodStart'].touched && f['periodStart'].hasError('required')">Start date is required.</small>
+            </div>
+            <div class="col-md-3">
+              <label class="field-label">Period End</label>
+              <input type="date" formControlName="periodEnd" class="field-input" [class.input-error]="f['periodEnd'].invalid && f['periodEnd'].touched">
+              <small class="err" *ngIf="f['periodEnd'].touched && f['periodEnd'].hasError('required')">End date is required.</small>
+            </div>
+            <div class="col-md-3">
+              <label class="field-label">Hours Worked</label>
+              <input type="text" formControlName="hoursWorked" class="field-input" placeholder="e.g. 80" [class.input-error]="f['hoursWorked'].invalid && f['hoursWorked'].touched">
+              <small class="err" *ngIf="f['hoursWorked'].touched && f['hoursWorked'].hasError('required')">Hours worked is required.</small>
+              <small class="err" *ngIf="f['hoursWorked'].touched && f['hoursWorked'].hasError('pattern')">Enter a valid number.</small>
+              <small class="err" *ngIf="f['hoursWorked'].touched && f['hoursWorked'].hasError('min')">Must be at least 1 hour.</small>
+              <small class="err" *ngIf="f['hoursWorked'].touched && f['hoursWorked'].hasError('max')">Cannot exceed 300 hours.</small>
+            </div>
+            <div class="col-md-3">
+              <label class="field-label">Overtime Hours</label>
+              <input type="text" formControlName="overtime" class="field-input" placeholder="e.g. 0" [class.input-error]="f['overtime'].invalid && f['overtime'].touched">
+              <small class="err" *ngIf="f['overtime'].touched && f['overtime'].hasError('pattern')">Enter a valid number.</small>
+            </div>
+            <div class="col-12">
+              <label class="field-label">Notes (optional)</label>
+              <textarea formControlName="notes" class="field-input" rows="3" placeholder="Any additional notes for this pay period..."></textarea>
+            </div>
+          </div>
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-green px-4"><i class="bi bi-send me-1"></i>Submit Timesheet</button>
+            <button type="button" class="btn btn-outline px-4" (click)="timesheetForm.reset()">Clear</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>

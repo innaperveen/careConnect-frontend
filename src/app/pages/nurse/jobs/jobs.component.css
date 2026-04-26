@@ -82,3 +82,66 @@
       background: rgba(255,255,255,0.2);
       margin: 20px 20px 12px 20px;
     }
+
+    .main { margin-left: 280px; background: #f8fafc; min-height: 100vh; }
+    @media (max-width: 767.98px) {
+      .fixed-sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0 !important; padding: 1rem !important; }
+    }
+
+    /* filter card */
+    .filter-card { background: white; border-radius: 20px; padding: 1.25rem 1.5rem; box-shadow: 0 4px 12px -4px rgba(0,32,32,0.08); }
+    .filter-input {
+      width: 100%; padding: 0.7rem 1rem; border-radius: 14px;
+      border: 1.5px solid #e2ece8; background: #fafffe;
+      font-size: 0.88rem; font-family: inherit; outline: none;
+      transition: all 0.2s; color: #1f2e2a;
+    }
+    .filter-input:focus { border-color: #1aa37a; box-shadow: 0 0 0 3px rgba(26,163,122,0.10); }
+    select.filter-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231aa37a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat; background-position: right 0.8rem center; background-size: 1rem;
+    }
+    .results-count { font-size: 0.82rem; color: #6a8a84; font-weight: 500; }
+
+    /* job card */
+    .job-card {
+      background: white; border-radius: 20px; padding: 1.25rem 1.5rem;
+      box-shadow: 0 6px 16px -6px rgba(0,32,32,0.08);
+      border-left: 4px solid transparent; transition: all 0.22s ease;
+    }
+    .job-card:hover { border-left-color: #1aa37a; transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(0,80,60,0.12); }
+    .facility-name { font-size: 0.85rem; color: #5a7a74; }
+
+    /* pills & badges */
+    .meta-pill { font-size: 0.78rem; color: #4e6e68; background: #f0f5f3; padding: 4px 10px; border-radius: 30px; display: inline-flex; align-items: center; }
+    .salary-chip { background: #e3f6ef; color: #0f6b51; border-radius: 50px; padding: 5px 14px; font-size: 0.85rem; font-weight: 700; }
+    .urgency-badge { display: inline-block; padding: 3px 10px; border-radius: 30px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.3px; }
+    .badge-urgent { background: #fde8e8; color: #c0392b; }
+    .badge-high   { background: #fef3e2; color: #d68910; }
+    .badge-normal { background: #eaf6ef; color: #1aa37a; }
+    .applied-badge { background: #d4edda; color: #155724; font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 30px; }
+
+    /* buttons */
+    .btn { border-radius: 40px; font-weight: 500; font-size: 0.85rem; transition: all 0.2s; }
+    .btn-green { background: #118c6b; border-color: #118c6b; color: white; }
+    .btn-green:hover { background: #0e6f54; }
+    .btn-green:disabled { background: #8cbfb0; border-color: #8cbfb0; }
+    .btn-outline-green { border: 1.5px solid #1aa37a; color: #0f6b51; background: transparent; }
+    .btn-outline-green:hover { background: #eef9f5; }
+
+    /* empty state */
+    .empty-state { background: white; border-radius: 20px; padding: 3rem; text-align: center; box-shadow: 0 4px 12px -4px rgba(0,32,32,0.06); }
+
+    /* modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(3px); z-index: 2000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.18s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-box { background: white; border-radius: 28px; width: 90%; max-width: 520px; box-shadow: 0 30px 50px rgba(0,0,0,0.2); overflow: hidden; animation: slideUp 0.22s ease; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header-custom { display: flex; justify-content: space-between; align-items: flex-start; padding: 1.5rem 1.5rem 1rem; border-bottom: 1px solid #eef3f0; }
+    .modal-body-custom { padding: 1.25rem 1.5rem; }
+    .modal-footer-custom { display: flex; gap: 0.75rem; padding: 1rem 1.5rem 1.5rem; border-top: 1px solid #eef3f0; }
+    .req-list { list-style: none; padding: 0; margin: 0; }
+    .req-list li { font-size: 0.87rem; color: #3a5a54; padding: 4px 0; }
+    .alert-success-toast { background: #eef9f5; border: 1px solid #a8dfc9; color: #0f6b51; border-radius: 12px; padding: 10px 16px; font-size: 0.88rem; font-weight: 500; }

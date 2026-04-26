@@ -1,38 +1,69 @@
+<div class="d-flex">
   <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
-    <div class="sidebar-brand">
-      <i class="bi bi-heart-pulse-fill"></i> 
-      <span>CareConnect</span>
-    </div>
-
+    <div class="sidebar-brand"><i class="bi bi-heart-pulse-fill"></i><span>CareConnect</span></div>
     <ul class="nav flex-column">
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-dashboard"
-           routerLinkActive="active">
-          <i class="bi bi-speedometer2"></i> Dashboard
-        </a>
-      </li>
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-available-jobs"
-           routerLinkActive="active">
-          <i class="bi bi-briefcase"></i> Jobs
-        </a>
-      </li>
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-applications"
-           routerLinkActive="active">
-          <i class="bi bi-journal-bookmark-fill"></i> Applications
-        </a>
-      </li>
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-profile"
-           routerLinkActive="active">
-          <i class="bi bi-person"></i> Profile
-        </a>
-      </li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-dashboard" routerLinkActive="active"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-profile" routerLinkActive="active"><i class="bi bi-person-badge"></i> My Profile</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-available-jobs" routerLinkActive="active"><i class="bi bi-briefcase"></i> Jobs</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-applications" routerLinkActive="active"><i class="bi bi-journal-bookmark-fill"></i> Applications</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-schedule" routerLinkActive="active"><i class="bi bi-calendar3"></i> Schedule</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-payments" routerLinkActive="active"><i class="bi bi-cash-stack"></i> Payments</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-training" routerLinkActive="active"><i class="bi bi-mortarboard"></i> Training</a></li>
       <div class="sidebar-divider"></div>
     </ul>
   </nav>
+
+  <div class="main p-4 w-100">
+    <div class="mb-4">
+      <h4 class="fw-semibold mb-0" style="color:#1a3b3a;">My Applications</h4>
+      <small class="text-muted">Track the status of all your job applications</small>
+    </div>
+
+    <!-- Status filter tabs -->
+    <div class="status-tabs mb-4">
+      <button *ngFor="let s of statuses" class="tab-btn" [class.tab-active]="filterStatus === s" (click)="filterStatus = s">
+        {{ s }}
+        <span class="tab-count" *ngIf="s !== 'All'">{{ countByStatus(s) }}</span>
+      </button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-2">
+        <div class="stat-mini"><p class="stat-num">{{ applications.length }}</p><p class="stat-lbl">Total</p></div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="stat-mini"><p class="stat-num" style="color:#1aa37a;">{{ countByStatus('Accepted') }}</p><p class="stat-lbl">Accepted</p></div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="stat-mini"><p class="stat-num" style="color:#d68910;">{{ countByStatus('Interview Scheduled') }}</p><p class="stat-lbl">Interviews</p></div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="stat-mini"><p class="stat-num" style="color:#5b8dd9;">{{ countByStatus('Under Review') }}</p><p class="stat-lbl">Under Review</p></div>
+      </div>
+    </div>
+
+    <!-- Applications list -->
+    <div *ngIf="filtered.length > 0">
+      <div class="app-card mb-3" *ngFor="let app of filtered">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <h6 class="fw-bold mb-1">{{ app.jobTitle }}</h6>
+            <p class="fac-name mb-1"><i class="bi bi-hospital me-1"></i>{{ app.facility }} &bull; {{ app.location }}</p>
+            <div class="d-flex flex-wrap gap-2 mt-1">
+              <small class="meta-pill"><i class="bi bi-clock me-1"></i>{{ app.shift }}</small>
+              <small class="meta-pill"><i class="bi bi-calendar me-1"></i>Applied {{ app.appliedOn }}</small>
+              <small class="salary-chip">{{ app.salary }}/mo</small>
+            </div>
+          </div>
+          <span class="status-badge" [ngClass]="statusClass(app.status)">{{ app.status }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="filtered.length === 0" class="empty-state">
+      <i class="bi bi-journal-x" style="font-size:2.5rem;color:#b0ccc5;"></i>
+      <p class="mt-2 text-muted">No applications with status "{{ filterStatus }}"</p>
+    </div>
+  </div>
+</div>

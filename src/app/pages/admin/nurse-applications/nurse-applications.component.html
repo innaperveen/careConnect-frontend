@@ -1,0 +1,132 @@
+<div class="d-flex">
+
+  <!-- SIDEBAR -->
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand">
+      <i class="bi bi-heart-pulse-fill"></i>
+      <span>CareConnect</span>
+    </div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-post-job" routerLinkActive="active">
+          <i class="bi bi-briefcase-fill"></i> Post Job
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-applications" routerLinkActive="active">
+          <i class="bi bi-file-person-fill"></i> Applications
+        </a>
+      </li>
+      <div class="sidebar-divider"></div>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-compliance" routerLinkActive="active">
+          <i class="bi bi-shield-check"></i> Compliance
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-credentialing" routerLinkActive="active">
+          <i class="bi bi-award-fill"></i> Credentialing
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-team" routerLinkActive="active">
+          <i class="bi bi-people-fill"></i> Team
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-analytics" routerLinkActive="active">
+          <i class="bi bi-bar-chart-fill"></i> Analytics
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content p-4 w-100">
+
+    <!-- HEADER -->
+    <div class="mb-4">
+      <h4 class="page-title">Nurse Applications</h4>
+      <p class="page-subtitle">Review, approve or reject incoming nurse applications</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num">{{ applications.length }}</div>
+          <div class="stat-lbl">Total</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num c-amber">{{ countByStatus('Pending') }}</div>
+          <div class="stat-lbl">Pending</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num c-green">{{ countByStatus('Approved') }}</div>
+          <div class="stat-lbl">Approved</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num c-red">{{ countByStatus('Rejected') }}</div>
+          <div class="stat-lbl">Rejected</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-row mb-4">
+      <button class="tab-btn" *ngFor="let tab of tabs"
+              [class.tab-active]="activeTab === tab"
+              (click)="activeTab = tab">
+        {{ tab }}
+        <span class="tab-count" *ngIf="tab !== 'All'">{{ countByStatus(tab) }}</span>
+      </button>
+    </div>
+
+    <!-- APPLICATION CARDS -->
+    <div *ngFor="let app of filteredApplications" class="app-card mb-3">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div class="d-flex align-items-start gap-3">
+          <div class="nurse-avatar"><i class="bi bi-person-fill"></i></div>
+          <div>
+            <p class="nurse-name">{{ app.name }}</p>
+            <p class="nurse-role">{{ app.role }}</p>
+            <div class="app-meta">
+              <span><i class="bi bi-mortarboard-fill"></i> {{ app.education }}</span>
+              <span><i class="bi bi-briefcase"></i> {{ app.experience }}</span>
+              <span><i class="bi bi-tag"></i> {{ app.specialization }}</span>
+              <span><i class="bi bi-calendar3"></i> {{ app.date }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex flex-column align-items-end gap-2">
+          <span class="status-badge" [ngClass]="getStatusClass(app.status)">{{ app.status }}</span>
+          <div class="d-flex gap-2" *ngIf="app.status === 'Pending'">
+            <button class="btn-approve" (click)="approve(app.id)">
+              <i class="bi bi-check-lg me-1"></i>Approve
+            </button>
+            <button class="btn-reject" (click)="reject(app.id)">
+              <i class="bi bi-x-lg me-1"></i>Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="filteredApplications.length === 0" class="empty-state">
+      <i class="bi bi-file-person fs-2 d-block mb-2"></i>
+      No {{ activeTab === 'All' ? '' : activeTab.toLowerCase() }} applications found.
+    </div>
+
+  </div>
+</div>

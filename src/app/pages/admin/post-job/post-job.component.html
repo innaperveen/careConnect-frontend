@@ -1,0 +1,192 @@
+<div class="d-flex">
+
+  <!-- SIDEBAR -->
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand">
+      <i class="bi bi-heart-pulse-fill"></i>
+      <span>CareConnect</span>
+    </div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-post-job" routerLinkActive="active">
+          <i class="bi bi-briefcase-fill"></i> Post Job
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-applications" routerLinkActive="active">
+          <i class="bi bi-file-person-fill"></i> Applications
+        </a>
+      </li>
+      <div class="sidebar-divider"></div>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-compliance" routerLinkActive="active">
+          <i class="bi bi-shield-check"></i> Compliance
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-credentialing" routerLinkActive="active">
+          <i class="bi bi-award-fill"></i> Credentialing
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-team" routerLinkActive="active">
+          <i class="bi bi-people-fill"></i> Team
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-analytics" routerLinkActive="active">
+          <i class="bi bi-bar-chart-fill"></i> Analytics
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content p-4 w-100">
+
+    <!-- HEADER -->
+    <div class="mb-4">
+      <h4 class="page-title">Post a Job</h4>
+      <p class="page-subtitle">Create a new nursing job listing for the platform</p>
+    </div>
+
+    <!-- SUCCESS TOAST -->
+    <div *ngIf="submitted" class="toast-success mb-4">
+      <i class="bi bi-check-circle-fill me-2"></i> Job posted successfully!
+    </div>
+
+    <form [formGroup]="jobForm" (ngSubmit)="onSubmit()">
+      <div class="row g-4">
+
+        <!-- LEFT COLUMN -->
+        <div class="col-md-8">
+
+          <!-- Basic Info -->
+          <div class="form-card mb-4">
+            <div class="form-card-title"><i class="bi bi-briefcase me-2"></i>Job Details</div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="field-label">Job Title *</label>
+                <input class="field-input" formControlName="jobTitle" placeholder="e.g., ICU Nurse"
+                       [class.input-err]="f['jobTitle'].touched && f['jobTitle'].invalid">
+                <small class="err" *ngIf="f['jobTitle'].touched && f['jobTitle'].hasError('required')">Job title is required.</small>
+                <small class="err" *ngIf="f['jobTitle'].touched && f['jobTitle'].hasError('minlength')">Minimum 3 characters.</small>
+              </div>
+              <div class="col-md-6">
+                <label class="field-label">Department *</label>
+                <select class="field-input" formControlName="department"
+                        [class.input-err]="f['department'].touched && f['department'].invalid">
+                  <option value="">Select department</option>
+                  <option>Critical Care</option>
+                  <option>Home Care</option>
+                  <option>Pediatrics</option>
+                  <option>Geriatrics</option>
+                  <option>General Ward</option>
+                  <option>Rehabilitation</option>
+                </select>
+                <small class="err" *ngIf="f['department'].touched && f['department'].hasError('required')">Department is required.</small>
+              </div>
+              <div class="col-md-6">
+                <label class="field-label">Location *</label>
+                <input class="field-input" formControlName="location" placeholder="e.g., New Delhi"
+                       [class.input-err]="f['location'].touched && f['location'].invalid">
+                <small class="err" *ngIf="f['location'].touched && f['location'].hasError('required')">Location is required.</small>
+              </div>
+              <div class="col-md-6">
+                <label class="field-label">Job Type *</label>
+                <select class="field-input" formControlName="jobType"
+                        [class.input-err]="f['jobType'].touched && f['jobType'].invalid">
+                  <option value="">Select type</option>
+                  <option>Full-time</option>
+                  <option>Part-time</option>
+                  <option>Contract</option>
+                  <option>On-call</option>
+                </select>
+                <small class="err" *ngIf="f['jobType'].touched && f['jobType'].hasError('required')">Job type is required.</small>
+              </div>
+              <div class="col-12">
+                <label class="field-label">Required Specialization *</label>
+                <select class="field-input" formControlName="specialization"
+                        [class.input-err]="f['specialization'].touched && f['specialization'].invalid">
+                  <option value="">Select specialization</option>
+                  <option *ngFor="let s of specializations">{{ s }}</option>
+                </select>
+                <small class="err" *ngIf="f['specialization'].touched && f['specialization'].hasError('required')">Specialization is required.</small>
+              </div>
+              <div class="col-12">
+                <label class="field-label">Job Description *</label>
+                <textarea class="field-input" rows="4" formControlName="description"
+                          placeholder="Describe responsibilities, requirements and expectations..."
+                          [class.input-err]="f['description'].touched && f['description'].invalid"></textarea>
+                <small class="err" *ngIf="f['description'].touched && f['description'].hasError('required')">Description is required.</small>
+                <small class="err" *ngIf="f['description'].touched && f['description'].hasError('minlength')">Minimum 20 characters.</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Salary -->
+          <div class="form-card mb-4">
+            <div class="form-card-title"><i class="bi bi-currency-rupee me-2"></i>Salary Range (Optional)</div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="field-label">Minimum (₹/month)</label>
+                <input type="number" class="field-input" formControlName="salaryMin" placeholder="e.g., 25000">
+              </div>
+              <div class="col-md-6">
+                <label class="field-label">Maximum (₹/month)</label>
+                <input type="number" class="field-input" formControlName="salaryMax" placeholder="e.g., 50000">
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="col-md-4">
+
+          <!-- Priority & Deadline -->
+          <div class="form-card mb-4">
+            <div class="form-card-title"><i class="bi bi-flag me-2"></i>Priority & Deadline</div>
+            <div class="mb-3">
+              <label class="field-label">Priority *</label>
+              <div class="d-flex gap-2 flex-wrap mt-1">
+                <label class="priority-pill" [class.active-normal]="jobForm.value.priority === 'Normal'">
+                  <input type="radio" formControlName="priority" value="Normal"> Normal
+                </label>
+                <label class="priority-pill" [class.active-urgent]="jobForm.value.priority === 'Urgent'">
+                  <input type="radio" formControlName="priority" value="Urgent"> Urgent
+                </label>
+                <label class="priority-pill" [class.active-critical]="jobForm.value.priority === 'Critical'">
+                  <input type="radio" formControlName="priority" value="Critical"> Critical
+                </label>
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Application Deadline *</label>
+              <input type="date" class="field-input" formControlName="deadline"
+                     [class.input-err]="f['deadline'].touched && f['deadline'].invalid">
+              <small class="err" *ngIf="f['deadline'].touched && f['deadline'].hasError('required')">Deadline is required.</small>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div class="form-card">
+            <button type="submit" class="btn-post w-100">
+              <i class="bi bi-send-fill me-2"></i>Post Job
+            </button>
+            <button type="button" class="btn-cancel-sm w-100 mt-2" (click)="jobForm.reset({priority:'Normal'})">
+              Clear Form
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </form>
+
+  </div>
+</div>

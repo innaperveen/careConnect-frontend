@@ -1,0 +1,48 @@
+/* SIDEBAR */
+.fixed-sidebar { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; overflow-y: auto; z-index: 1030; background: linear-gradient(145deg, #0a3d2b, #0f5241, #145a4a); box-shadow: 6px 0 18px rgba(0,0,0,0.12); transition: all 0.2s ease; }
+.fixed-sidebar::-webkit-scrollbar { width: 5px; }
+.fixed-sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 10px; }
+.fixed-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 10px; }
+.sidebar-brand { font-weight: 800; font-size: 1.7rem; letter-spacing: -0.3px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.2); padding: 24px 20px 20px; margin-bottom: 1rem; }
+.sidebar-brand i { font-size: 1.9rem; }
+.sidebar-brand span { background: linear-gradient(120deg, #fff, #e3f3ef); background-clip: text; -webkit-background-clip: text; color: transparent; }
+.nav-link-custom { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 16px; font-weight: 500; color: rgba(255,255,255,0.9); text-decoration: none; transition: all 0.2s ease; margin-bottom: 6px; }
+.nav-link-custom i { font-size: 1.25rem; width: 28px; text-align: center; }
+.nav-link-custom:hover { background: rgba(255,255,255,0.15); transform: translateX(4px); color: white; }
+.nav-link-custom.active { background: rgba(255,255,255,0.25); backdrop-filter: blur(2px); color: white; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+.sidebar-divider { border-top: 1px solid rgba(255,255,255,0.2); margin: 1.2rem 0 0.8rem; }
+.main-content { margin-left: 280px; background: #f4f7f6; min-height: 100vh; }
+@media (max-width: 767.98px) { .fixed-sidebar { display: none; } .main-content { margin-left: 0 !important; padding: 1rem !important; } }
+
+/* PAGE */
+.page-title { color: #0f2d22; font-size: 1.25rem; font-weight: 700; margin: 0; }
+.page-subtitle { color: #6a8c80; font-size: 0.84rem; margin: 3px 0 0; }
+
+/* FORM CARDS */
+.form-card { background: white; border-radius: 18px; padding: 1.3rem 1.4rem; box-shadow: 0 4px 14px -4px rgba(0,20,15,0.08); }
+.form-card-title { font-size: 0.92rem; font-weight: 700; color: #0f2d22; margin-bottom: 1.1rem; display: flex; align-items: center; }
+
+.field-label { font-size: 0.8rem; font-weight: 600; color: #4e6e68; margin-bottom: 5px; display: block; }
+.field-input { width: 100%; padding: 9px 13px; border: 1.5px solid #d4e5df; border-radius: 10px; font-size: 0.87rem; color: #0f2d22; background: #fafffe; outline: none; transition: border-color 0.18s, box-shadow 0.18s; }
+.field-input:focus { border-color: #0f5241; box-shadow: 0 0 0 4px rgba(15,82,65,0.1); }
+textarea.field-input { resize: vertical; border-radius: 12px; }
+.input-err { border-color: #e05252 !important; }
+.input-err:focus { box-shadow: 0 0 0 4px rgba(224,82,82,0.12) !important; }
+.err { display: block; color: #e05252; font-size: 11.5px; font-weight: 500; margin-top: 5px; }
+
+/* PRIORITY PILLS */
+.priority-pill { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 20px; border: 1.5px solid #d4e5df; background: white; font-size: 0.82rem; font-weight: 600; color: #4e6e68; cursor: pointer; transition: all 0.18s; }
+.priority-pill input[type="radio"] { display: none; }
+.priority-pill:hover { background: #eef9f5; }
+.active-normal   { background: #e3f6ef; border-color: #0f5241; color: #0f5241; }
+.active-urgent   { background: #fff4e0; border-color: #d97706; color: #d97706; }
+.active-critical { background: #fde8e8; border-color: #c0392b; color: #c0392b; }
+
+/* BUTTONS */
+.btn-post { background: #0f5241; color: white; border: none; border-radius: 20px; padding: 11px 0; font-size: 0.9rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.18s; }
+.btn-post:hover { background: #0a3d2e; }
+.btn-cancel-sm { background: white; color: #4e6e68; border: 1.5px solid #d4e5df; border-radius: 20px; padding: 9px 0; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.18s; display: block; text-align: center; }
+.btn-cancel-sm:hover { background: #eef9f5; }
+
+/* TOAST */
+.toast-success { background: #d4edda; color: #155724; border-radius: 12px; padding: 10px 16px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; }

@@ -7,6 +7,19 @@ import { Component } from '@angular/core';
 })
 export class NurseDashboardComponent {
 
+  upcomingShifts = 3;
+  monthlyEarnings = '₹42,000';
+  profileCompletion = 85;
+
+  quickActions = [
+    { icon: 'bi-briefcase-fill',       label: 'Browse Jobs',    route: '/nurse-available-jobs', bgColor: '#e3f6ef', color: '#1aa37a' },
+    { icon: 'bi-journal-bookmark-fill', label: 'Applications',   route: '/nurse-applications',   bgColor: '#e8f0fe', color: '#1a73e8' },
+    { icon: 'bi-calendar3',            label: 'My Schedule',    route: '/nurse-schedule',        bgColor: '#fef3e2', color: '#d68910' },
+    { icon: 'bi-cash-stack',           label: 'Payments',       route: '/nurse-payments',        bgColor: '#eaf6f2', color: '#0f6b51' },
+    { icon: 'bi-mortarboard',          label: 'Training',       route: '/nurse-training',        bgColor: '#f3e8fd', color: '#8e44ad' },
+    { icon: 'bi-person-badge',         label: 'My Profile',     route: '/nurse-profile',         bgColor: '#fde8e8', color: '#c0392b' },
+  ];
+
   // Availability toggle
   isAvailable: boolean = true;
 
@@ -66,5 +79,15 @@ export class NurseDashboardComponent {
 
   apply(job: any) {
     alert('Applied for ' + job.title);
+  }
+
+  getStatusClass(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'accepted':  return 's-accepted';
+      case 'rejected':  return 's-rejected';
+      case 'review':    return 's-review';
+      case 'applied':   return 's-applied';
+      default:          return 's-default';
+    }
   }
 }

@@ -1,201 +1,193 @@
-<div class="container-fluid p-0 position-relative">
-    <!-- ========== SIDEBAR (FIXED, FULL HEIGHT, GREEN GRADIENT) ========== -->
-    <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
-        <div class="sidebar-brand">
-            <i class="bi bi-heart-pulse-fill"></i> 
-            <span>CareConnect</span>
+<div class="d-flex">
+
+  <!-- SIDEBAR -->
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand">
+      <i class="bi bi-heart-pulse-fill"></i>
+      <span>CareConnect</span>
+    </div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient" routerLinkActive="active">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-book-appointment" routerLinkActive="active">
+          <i class="bi bi-calendar-plus"></i> Book Nurse
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-appointments" routerLinkActive="active">
+          <i class="bi bi-journal-bookmark-fill"></i> My Appointments
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-medical-records" routerLinkActive="active">
+          <i class="bi bi-folder-medical"></i> Medical Records
+        </a>
+      </li>
+      <div class="sidebar-divider"></div>
+      <li class="nav-item mt-2">
+        <a class="nav-link-custom" routerLink="/patient-settings" routerLinkActive="active">
+          <i class="bi bi-gear"></i> Settings
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content p-4 w-100">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="page-title">{{ greeting }}, {{ patientName }} 👋</h4>
+        <p class="page-subtitle">Here's a summary of your health activity</p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="patient-id-badge"><i class="bi bi-person-vcard me-1"></i>ID: {{ patientId }}</span>
+        <div class="avatar-circle"><i class="bi bi-person-fill"></i></div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num">{{ appointments.length }}</div>
+          <div class="stat-lbl">Total Appointments</div>
         </div>
-        <ul class="nav flex-column">
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient" routerLinkActive="active">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient-book-appointment" routerLinkActive="active">
-                    <i class="bi bi-calendar-plus"></i> Book Nurse
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient-appointments" routerLinkActive="active">
-                    <i class="bi bi-journal-bookmark-fill"></i> My Appointments
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient-medical-records" routerLinkActive="active">
-                    <i class="bi bi-folder-medical"></i> Medical Records
-                </a>
-            </li>
-            <div class="sidebar-divider"></div>
-            <li class="nav-item mt-2">
-                <a class="nav-link-custom" routerLink="/patient-settings" routerLinkActive="active">
-                    <i class="bi bi-gear"></i> Settings
-                </a>
-            </li>
-        </ul>
-    </nav>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num c-blue">{{ countByStatus('Scheduled') }}</div>
+          <div class="stat-lbl">Scheduled</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num c-green">{{ countByStatus('Completed') }}</div>
+          <div class="stat-lbl">Completed</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num c-purple">{{ records.length }}</div>
+          <div class="stat-lbl">Medical Records</div>
+        </div>
+      </div>
+    </div>
 
-    <!-- ========== MAIN CONTENT (RESPONSIVE OFFSET) ========== -->
-    <main class="main-offset bg-soft min-vh-100 px-md-4 px-3 py-3">
-        <!-- Top bar placeholder -->
-        <div class="d-flex justify-content-between align-items-center py-2"></div>
+    <!-- QUICK ACTIONS -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <a routerLink="/patient-book-appointment" class="action-card">
+          <div class="action-icon"><i class="bi bi-calendar-plus"></i></div>
+          <div>
+            <p class="action-title">Book Nurse</p>
+            <p class="action-sub">Schedule a home visit</p>
+          </div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a routerLink="/patient-appointments" class="action-card">
+          <div class="action-icon"><i class="bi bi-clock-history"></i></div>
+          <div>
+            <p class="action-title">My Appointments</p>
+            <p class="action-sub">View scheduled visits</p>
+          </div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a routerLink="/patient-medical-records" class="action-card">
+          <div class="action-icon"><i class="bi bi-upload"></i></div>
+          <div>
+            <p class="action-title">Upload Record</p>
+            <p class="action-sub">Add lab reports & docs</p>
+          </div>
+        </a>
+      </div>
+    </div>
 
-        <!-- Welcome section + patient info -->
-        <div class="greeting-wrap mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
-            <div>
-                <h4 class="fw-bold" style="color: #1e3a2f;">
-                    {{ greeting }}, {{ patientName }} <span class="wave">✨</span>
-                </h4>
-                <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
-                    <span class="badge-soft-id">
-                        <i class="bi bi-person-vcard me-1"></i> ID: {{ patientId }}
-                    </span>
-                    <span class="badge bg-white text-dark border px-3 py-1 rounded-pill shadow-sm">
-                        <i class="bi bi-shield-check text-success"></i> Active
-                    </span>
+    <!-- BOTTOM ROW -->
+    <div class="row g-4">
+
+      <!-- Upcoming Appointments -->
+      <div class="col-md-8">
+        <div class="dash-card">
+          <div class="dash-card-title">
+            <i class="bi bi-calendar-week"></i> Upcoming Appointments
+          </div>
+
+          <div *ngIf="appointments.length === 0" class="empty-state">
+            <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+            No upcoming appointments
+          </div>
+
+          <div *ngFor="let appt of appointments" class="appt-row">
+            <div class="d-flex align-items-center gap-3">
+              <div class="appt-avatar"><i class="bi bi-person-fill"></i></div>
+              <div>
+                <p class="appt-nurse">{{ appt.nurseName }}</p>
+                <div class="appt-meta">
+                  <span><i class="bi bi-calendar3"></i> {{ appt.date }}</span>
+                  <span><i class="bi bi-clock"></i> {{ appt.time }}</span>
                 </div>
+              </div>
             </div>
-            <div class="d-none d-sm-block">
-                <div class="rounded-circle bg-white shadow-sm p-2 text-center" style="width: 50px; height: 50px; line-height: 1.2;">
-                    <i class="bi bi-person-circle fs-3 text-success"></i>
-                </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="status-badge badge-scheduled">{{ appt.status }}</span>
+              <button class="btn-cancel-sm">Cancel</button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel -->
+      <div class="col-md-4 d-flex flex-column gap-4">
+
+        <!-- Recent Records -->
+        <div class="dash-card">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="dash-card-title mb-0"><i class="bi bi-file-medical"></i> Recent Records</div>
+            <a routerLink="/patient-medical-records" class="btn-sm-link">View all</a>
+          </div>
+
+          <div *ngIf="records.length === 0" class="empty-state">
+            <i class="bi bi-folder2-open fs-2 d-block mb-2"></i>
+            No records uploaded
+          </div>
+
+          <div *ngFor="let rec of records" class="rec-row">
+            <div class="d-flex align-items-center gap-2">
+              <div class="rec-icon"><i class="bi bi-file-earmark-text"></i></div>
+              <div>
+                <p class="rec-name">{{ rec.fileName }}</p>
+                <p class="rec-date"><i class="bi bi-calendar3"></i> {{ rec.date }}</p>
+              </div>
+            </div>
+            <button class="btn-view-sm"><i class="bi bi-eye"></i></button>
+          </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-4">
-                <div class="card action-card-green p-3 shadow-sm" (click)="goToBookAppointment()">
-                    <div class="d-flex align-items-center">
-                        <div class="action-icon"><i class="bi bi-calendar-check"></i></div>
-                        <div [routerLink]=" '/patient-book-appointment' ">
-                            <h6 class="mb-1 fw-bold">Book Nurse Appointment</h6>
-                            <small class="text-muted">Schedule a home visit</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card action-card-green p-3 shadow-sm" (click)="goToMyAppointments()">
-                    <div class="d-flex align-items-center">
-                        <div class="action-icon"><i class="bi bi-clock-history"></i></div>
-                        <div>
-                            <h6 class="mb-1 fw-bold">My Appointments</h6>
-                            <small class="text-muted">View scheduled visits</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card action-card-green p-3 shadow-sm" (click)="goToMedicalRecords()">
-                    <div class="d-flex align-items-center">
-                        <div class="action-icon"><i class="bi bi-upload"></i></div>
-                        <div>
-                            <h6 class="mb-1 fw-bold">Upload Record</h6>
-                            <small class="text-muted">Add lab reports & documents</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Notifications -->
+        <div class="dash-card">
+          <div class="dash-card-title"><i class="bi bi-bell"></i> Notifications</div>
+
+          <div *ngIf="notifications.length === 0" class="empty-state">
+            <i class="bi bi-envelope-open fs-2 d-block mb-2"></i>
+            No new notifications
+          </div>
+
+          <div *ngFor="let note of notifications" class="notif-item">
+            <i class="bi bi-info-circle-fill notif-icon"></i>
+            <span>{{ note }}</span>
+          </div>
         </div>
 
-        <!-- Two columns: appointments (left) + right panel (records & notifications) -->
-        <div class="row g-4">
-            <!-- Left: Upcoming Appointments -->
-            <div class="col-md-8">
-                <div class="card card-modern p-4 mb-4">
-                    <div class="section-title mb-3">
-                        <i class="bi bi-calendar-week fs-4" style="color: #158467;"></i>
-                        <h5 class="mb-0">Upcoming Appointments</h5>
-                    </div>
+      </div>
+    </div>
 
-                    <!-- No appointments placeholder -->
-                    <div *ngIf="appointments.length === 0" class="text-center py-5 text-muted bg-light rounded-4">
-                        <i class="bi bi-calendar-x fs-1 d-block mb-2 opacity-50"></i>
-                        <span>No upcoming appointments</span>
-                    </div>
-
-                    <!-- Appointment list -->
-                    <div class="appointment-scroll-area" *ngIf="appointments.length > 0">
-                        <div *ngFor="let appt of appointments"
-                             class="d-flex flex-wrap flex-sm-nowrap justify-content-between align-items-center border-bottom py-3 appointment-item">
-                            <div class="mb-2 mb-sm-0">
-                                <strong class="fs-6"><i class="bi bi-person-heart me-1" style="color:#158467;"></i> {{ appt.nurseName }}</strong><br>
-                                <small class="text-muted">
-                                    <i class="bi bi-calendar3 me-1"></i> {{ appt.date }} &nbsp;|&nbsp;
-                                    <i class="bi bi-clock me-1"></i> {{ appt.time }}
-                                </small>
-                            </div>
-                            <span class="badge-primary-green px-3 py-1 my-1 my-sm-0">{{ appt.status }}</span>
-                            <div class="d-flex gap-2 mt-2 mt-sm-0">
-                                <button class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                                    <i class="bi bi-x-circle"></i> Cancel
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary-soft rounded-pill px-3">
-                                    <i class="bi bi-arrow-repeat"></i> Reschedule
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Panel: Medical Records + Notifications -->
-            <div class="col-md-4">
-                <!-- Medical Records Card -->
-                <div class="card card-modern p-4 mb-4">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
-                        <div class="section-title mb-0">
-                            <i class="bi bi-file-medical fs-4" style="color:#158467;"></i>
-                            <h5 class="mb-0">Recent Records</h5>
-                        </div>
-                        <button class="btn btn-primary-green btn-sm rounded-pill px-3">
-                            <i class="bi bi-plus-lg"></i> Upload
-                        </button>
-                    </div>
-
-                    <!-- Empty state for records -->
-                    <div *ngIf="records.length === 0" class="text-muted text-center py-4">
-                        <i class="bi bi-folder2-open fs-2 d-block opacity-50"></i>
-                        <small>No records uploaded</small>
-                    </div>
-
-                    <!-- Records list -->
-                    <div *ngFor="let record of records" class="record-item d-flex justify-content-between align-items-center mt-2">
-                        <div>
-                            <strong class="fs-6"><i class="bi bi-file-earmark-text me-1"></i> {{ record.fileName }}</strong><br>
-                            <small class="text-muted"><i class="bi bi-calendar"></i> {{ record.date }}</small>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-primary-green rounded-pill px-3">
-                                <i class="bi bi-eye"></i> View
-                            </button>
-                            <button class="btn btn-sm btn-outline-secondary-soft rounded-pill px-3">
-                                <i class="bi bi-download"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notifications Card -->
-                <div class="card card-modern p-4">
-                    <div class="section-title mb-3">
-                        <i class="bi bi-bell fs-4" style="color:#158467;"></i>
-                        <h5 class="mb-0">Notifications</h5>
-                    </div>
-                    <!-- Empty state notifications -->
-                    <div *ngIf="notifications.length === 0" class="text-center py-4 text-muted">
-                        <i class="bi bi-envelope-open fs-2 d-block opacity-50 mb-2"></i>
-                        <small>No new notifications</small>
-                    </div>
-                    <!-- Notification list -->
-                    <div *ngFor="let note of notifications" class="alert-notif mt-2 d-flex align-items-start gap-2">
-                        <i class="bi bi-info-circle-fill mt-0" style="color:#158467;"></i>
-                        <span>{{ note }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+  </div>
 </div>
-

@@ -1,38 +1,128 @@
-  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
-    <div class="sidebar-brand">
-      <i class="bi bi-heart-pulse-fill"></i> 
-      <span>CareConnect</span>
-    </div>
+<div class="d-flex">
 
+  <!-- SIDEBAR -->
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand"><i class="bi bi-heart-pulse-fill"></i><span>CareConnect</span></div>
     <ul class="nav flex-column">
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-dashboard"
-           routerLinkActive="active">
-          <i class="bi bi-speedometer2"></i> Dashboard
-        </a>
-      </li>
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-available-jobs"
-           routerLinkActive="active">
-          <i class="bi bi-briefcase"></i> Jobs
-        </a>
-      </li>
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-applications"
-           routerLinkActive="active">
-          <i class="bi bi-journal-bookmark-fill"></i> Applications
-        </a>
-      </li>
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-profile"
-           routerLinkActive="active">
-          <i class="bi bi-person"></i> Profile
-        </a>
-      </li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-dashboard" routerLinkActive="active"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-profile" routerLinkActive="active"><i class="bi bi-person-badge"></i> My Profile</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-available-jobs" routerLinkActive="active"><i class="bi bi-briefcase"></i> Jobs</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-applications" routerLinkActive="active"><i class="bi bi-journal-bookmark-fill"></i> Applications</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-schedule" routerLinkActive="active"><i class="bi bi-calendar3"></i> Schedule</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-payments" routerLinkActive="active"><i class="bi bi-cash-stack"></i> Payments</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-training" routerLinkActive="active"><i class="bi bi-mortarboard"></i> Training</a></li>
       <div class="sidebar-divider"></div>
     </ul>
   </nav>
+
+  <!-- MAIN -->
+  <div class="main p-4 w-100">
+
+    <div class="mb-4">
+      <h4 class="fw-semibold mb-0" style="color:#1a3b3a;">Available Jobs</h4>
+      <small class="text-muted">Search and apply for nursing assignments matching your skills</small>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-card mb-4" [formGroup]="filterForm">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-4 col-12">
+          <input type="text" formControlName="search" class="filter-input" placeholder="🔍  Search by title or facility...">
+        </div>
+        <div class="col-md-2 col-6">
+          <select formControlName="location" class="filter-input">
+            <option *ngFor="let l of locations" [value]="l">{{ l === 'All' ? 'All Locations' : l }}</option>
+          </select>
+        </div>
+        <div class="col-md-2 col-6">
+          <select formControlName="specialty" class="filter-input">
+            <option *ngFor="let s of specialties" [value]="s">{{ s === 'All' ? 'All Specialties' : s }}</option>
+          </select>
+        </div>
+        <div class="col-md-2 col-6">
+          <select formControlName="shift" class="filter-input">
+            <option *ngFor="let sh of shifts" [value]="sh">{{ sh === 'All' ? 'All Shifts' : sh }}</option>
+          </select>
+        </div>
+        <div class="col-md-2 col-6">
+          <select formControlName="jobType" class="filter-input">
+            <option *ngFor="let t of jobTypes" [value]="t">{{ t === 'All' ? 'All Types' : t }}</option>
+          </select>
+        </div>
+      </div>
+      <p class="results-count mt-2 mb-0">{{ filteredJobs.length }} job{{ filteredJobs.length !== 1 ? 's' : '' }} found</p>
+    </div>
+
+    <!-- JOB LIST -->
+    <div *ngIf="filteredJobs.length > 0">
+      <div class="job-card mb-3" *ngFor="let job of filteredJobs">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+              <h6 class="fw-bold mb-0">{{ job.title }}</h6>
+              <span class="urgency-badge" [ngClass]="urgencyClass(job.urgency)">{{ job.urgency }}</span>
+              <span *ngIf="job.applied" class="applied-badge"><i class="bi bi-check-circle-fill me-1"></i>Applied</span>
+            </div>
+            <p class="facility-name mb-1"><i class="bi bi-hospital me-1"></i>{{ job.facility }}</p>
+            <div class="d-flex flex-wrap gap-3">
+              <small class="meta-pill"><i class="bi bi-geo-alt-fill me-1"></i>{{ job.location }}</small>
+              <small class="meta-pill"><i class="bi bi-clock me-1"></i>{{ job.shift }} Shift</small>
+              <small class="meta-pill"><i class="bi bi-briefcase me-1"></i>{{ job.type }}</small>
+              <small class="meta-pill"><i class="bi bi-calendar me-1"></i>{{ job.postedDaysAgo === 0 ? 'Today' : job.postedDaysAgo + 'd ago' }}</small>
+            </div>
+          </div>
+          <div class="d-flex flex-column align-items-end gap-2">
+            <span class="salary-chip">{{ job.salary }}/mo</span>
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-green btn-sm" (click)="openDetails(job)"><i class="bi bi-eye me-1"></i>Details</button>
+              <button class="btn btn-green btn-sm" [disabled]="job.applied" (click)="applyToJob(job)">
+                {{ job.applied ? 'Applied' : 'Apply Now' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="filteredJobs.length === 0" class="empty-state">
+      <i class="bi bi-search" style="font-size:2.5rem; color:#b0ccc5;"></i>
+      <p class="mt-2 text-muted">No jobs match your filters. Try adjusting your search.</p>
+    </div>
+
+    <!-- DETAILS MODAL -->
+    <div class="modal-overlay" *ngIf="selectedJob" (click)="closeModal()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-header-custom">
+          <div>
+            <h5 class="fw-bold mb-1">{{ selectedJob.title }}</h5>
+            <p class="mb-0 text-muted small">{{ selectedJob.facility }} &bull; {{ selectedJob.location }}</p>
+          </div>
+          <button class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body-custom">
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="meta-pill"><i class="bi bi-clock me-1"></i>{{ selectedJob.shift }}</span>
+            <span class="meta-pill"><i class="bi bi-briefcase me-1"></i>{{ selectedJob.type }}</span>
+            <span class="salary-chip">{{ selectedJob.salary }}/mo</span>
+            <span class="urgency-badge" [ngClass]="urgencyClass(selectedJob.urgency)">{{ selectedJob.urgency }}</span>
+          </div>
+          <p class="small text-muted mb-3">{{ selectedJob.description }}</p>
+          <h6 class="fw-semibold mb-2" style="color:#0f6b51;">Requirements</h6>
+          <ul class="req-list">
+            <li *ngFor="let r of selectedJob.requirements"><i class="bi bi-check2-circle me-2" style="color:#1aa37a;"></i>{{ r }}</li>
+          </ul>
+          <div *ngIf="applySuccess" class="alert-success-toast mt-3">
+            <i class="bi bi-check-circle-fill me-2"></i>Application submitted successfully!
+          </div>
+        </div>
+        <div class="modal-footer-custom">
+          <button class="btn btn-green rounded-pill px-4" [disabled]="selectedJob.applied || applySuccess" (click)="applyToJob(selectedJob)">
+            <i class="bi bi-send-check me-1"></i>{{ selectedJob.applied ? 'Already Applied' : 'Apply Now' }}
+          </button>
+          <button class="btn btn-outline-secondary rounded-pill px-4" (click)="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

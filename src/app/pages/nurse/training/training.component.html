@@ -1,0 +1,134 @@
+<div class="d-flex">
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand"><i class="bi bi-heart-pulse-fill"></i><span>CareConnect</span></div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-dashboard" routerLinkActive="active"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-profile" routerLinkActive="active"><i class="bi bi-person-badge"></i> My Profile</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-available-jobs" routerLinkActive="active"><i class="bi bi-briefcase"></i> Jobs</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-applications" routerLinkActive="active"><i class="bi bi-journal-bookmark-fill"></i> Applications</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-schedule" routerLinkActive="active"><i class="bi bi-calendar3"></i> Schedule</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-payments" routerLinkActive="active"><i class="bi bi-cash-stack"></i> Payments</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-training" routerLinkActive="active"><i class="bi bi-mortarboard"></i> Training</a></li>
+      <div class="sidebar-divider"></div>
+    </ul>
+  </nav>
+
+  <div class="main p-4 w-100">
+    <div class="mb-4">
+      <h4 class="fw-semibold mb-0" style="color:#1a3b3a;">Training & Development</h4>
+      <small class="text-muted">Continuing education, certifications, and professional growth</small>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card"><i class="bi bi-award stat-icon"></i><p class="stat-num">{{ totalCredits }}</p><p class="stat-lbl">Credits Earned</p></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card"><i class="bi bi-check-circle stat-icon"></i><p class="stat-num">{{ completedCount }}</p><p class="stat-lbl">Completed</p></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card"><i class="bi bi-play-circle stat-icon" style="color:#d68910;"></i><p class="stat-num" style="color:#d68910;">{{ inProgressCount }}</p><p class="stat-lbl">In Progress</p></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card"><i class="bi bi-exclamation-triangle stat-icon" style="color:#c0392b;"></i><p class="stat-num" style="color:#c0392b;">{{ certifications.length }}</p><p class="stat-lbl">Certs to Review</p></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar mb-4">
+      <button class="tab-btn" [class.tab-active]="activeTab === 'courses'" (click)="activeTab = 'courses'"><i class="bi bi-book me-1"></i>Courses</button>
+      <button class="tab-btn" [class.tab-active]="activeTab === 'certifications'" (click)="activeTab = 'certifications'"><i class="bi bi-patch-check me-1"></i>Certifications</button>
+      <button class="tab-btn" [class.tab-active]="activeTab === 'transcripts'" (click)="activeTab = 'transcripts'"><i class="bi bi-file-text me-1"></i>Transcripts</button>
+    </div>
+
+    <!-- COURSES TAB -->
+    <div *ngIf="activeTab === 'courses'">
+      <!-- Category filter chips -->
+      <div class="chip-group mb-4">
+        <span *ngFor="let cat of categories" class="chip" [class.chip-active]="filterCategory === cat" (click)="filterCategory = cat">{{ cat }}</span>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6" *ngFor="let course of filteredCourses">
+          <div class="course-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span *ngIf="course.mandatory" class="mandatory-tag">Required</span>
+                <span class="category-tag">{{ course.category }}</span>
+              </div>
+              <span class="course-status" [ngClass]="statusClass(course.status)">{{ course.status }}</span>
+            </div>
+            <h6 class="course-title">{{ course.title }}</h6>
+            <p class="course-provider"><i class="bi bi-building me-1"></i>{{ course.provider }}</p>
+            <div class="d-flex gap-3 mb-3">
+              <small class="meta-pill"><i class="bi bi-clock me-1"></i>{{ course.duration }}</small>
+              <small class="meta-pill"><i class="bi bi-award me-1"></i>{{ course.credits }} credits</small>
+              <small class="meta-pill"><i class="bi bi-calendar me-1"></i>Due {{ course.dueDate }}</small>
+            </div>
+            <!-- Progress bar -->
+            <div class="progress-wrap mb-3" *ngIf="course.status !== 'Not Started'">
+              <div class="d-flex justify-content-between mb-1">
+                <small style="color:#4e6e68;font-size:0.78rem;">Progress</small>
+                <small style="color:#0f6b51;font-weight:600;font-size:0.78rem;">{{ course.progress }}%</small>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" [style.width.%]="course.progress"></div>
+              </div>
+            </div>
+            <button class="btn btn-course w-100"
+              [class.btn-course-done]="course.status === 'Completed'"
+              [disabled]="course.status === 'Completed'"
+              (click)="enrollCourse(course)">
+              <i class="bi me-1" [ngClass]="course.status === 'Completed' ? 'bi-check-circle-fill' : course.status === 'In Progress' ? 'bi-play-fill' : 'bi-plus-circle'"></i>
+              {{ course.status === 'Completed' ? 'Completed' : course.status === 'In Progress' ? 'Continue' : 'Enroll' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CERTIFICATIONS TAB -->
+    <div *ngIf="activeTab === 'certifications'">
+      <div class="section-card">
+        <h6 class="section-title"><i class="bi bi-patch-check me-2"></i>My Certifications</h6>
+        <div class="cert-row" *ngFor="let cert of certifications">
+          <div class="cert-icon" [ngClass]="certClass(cert.daysLeft)">
+            <i class="bi bi-patch-check-fill"></i>
+          </div>
+          <div class="flex-grow-1">
+            <p class="mb-0 fw-semibold" style="font-size:0.92rem;">{{ cert.name }}</p>
+            <small class="text-muted">{{ cert.issuedBy }} &bull; Issued {{ cert.issuedOn }}</small>
+          </div>
+          <div class="text-end">
+            <span class="cert-badge" [ngClass]="certClass(cert.daysLeft)">{{ certLabel(cert.daysLeft) }}</span>
+            <p class="mb-0 mt-1" style="font-size:0.75rem;color:#6a8a84;">Expires {{ cert.expiresOn }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSCRIPTS TAB -->
+    <div *ngIf="activeTab === 'transcripts'">
+      <div class="section-card">
+        <h6 class="section-title"><i class="bi bi-file-text me-2"></i>Professional Development Transcript</h6>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <p class="text-muted small mb-0">Completed courses contributing to your professional record</p>
+          <button class="btn btn-outline-small"><i class="bi bi-download me-1"></i>Download PDF</button>
+        </div>
+        <div *ngFor="let c of courses" class="transcript-row" [class.d-none]="c.status !== 'Completed'">
+          <div class="transcript-check"><i class="bi bi-check-circle-fill" style="color:#1aa37a;"></i></div>
+          <div class="flex-grow-1">
+            <p class="mb-0 fw-semibold" style="font-size:0.9rem;">{{ c.title }}</p>
+            <small class="text-muted">{{ c.provider }} &bull; {{ c.credits }} credits &bull; {{ c.duration }}</small>
+          </div>
+          <span class="credit-chip">+{{ c.credits }} CEU</span>
+        </div>
+        <div class="transcript-total mt-3 pt-3">
+          <strong style="color:#0f6b51;">Total Credits Earned: {{ totalCredits }} CEU</strong>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

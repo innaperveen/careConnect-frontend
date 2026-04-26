@@ -1,0 +1,153 @@
+<div class="d-flex">
+
+  <!-- SIDEBAR -->
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand">
+      <i class="bi bi-heart-pulse-fill"></i>
+      <span>CareConnect</span>
+    </div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-post-job" routerLinkActive="active">
+          <i class="bi bi-briefcase-fill"></i> Post Job
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-applications" routerLinkActive="active">
+          <i class="bi bi-file-person-fill"></i> Applications
+        </a>
+      </li>
+      <div class="sidebar-divider"></div>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-compliance" routerLinkActive="active">
+          <i class="bi bi-shield-check"></i> Compliance
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-credentialing" routerLinkActive="active">
+          <i class="bi bi-award-fill"></i> Credentialing
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-team" routerLinkActive="active">
+          <i class="bi bi-people-fill"></i> Team
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom active" routerLink="/admin-analytics" routerLinkActive="active">
+          <i class="bi bi-bar-chart-fill"></i> Analytics
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content p-4 w-100">
+
+    <!-- HEADER -->
+    <div class="mb-4">
+      <h4 class="page-title">Staffing Analytics</h4>
+      <p class="page-subtitle">Insights on hiring trends, nurse performance and specialization distribution</p>
+    </div>
+
+    <!-- KPI STATS -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon si-blue"><i class="bi bi-people-fill"></i></div>
+          <div>
+            <div class="stat-num">48</div>
+            <div class="stat-lbl">Total Staff</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon si-green"><i class="bi bi-graph-up-arrow"></i></div>
+          <div>
+            <div class="stat-num">87%</div>
+            <div class="stat-lbl">Utilization Rate</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon si-amber"><i class="bi bi-person-check-fill"></i></div>
+          <div>
+            <div class="stat-num">5</div>
+            <div class="stat-lbl">Monthly Hires</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon si-purple"><i class="bi bi-clock-history"></i></div>
+          <div>
+            <div class="stat-num">2.4h</div>
+            <div class="stat-lbl">Avg Response Time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Monthly Hires Bar Chart -->
+      <div class="col-md-7">
+        <div class="dash-card">
+          <div class="dash-card-title"><i class="bi bi-bar-chart"></i> Monthly Hires (Last 6 Months)</div>
+          <div class="bar-chart">
+            <div *ngFor="let item of monthlyHires" class="bar-col">
+              <div class="bar-label-top">{{ item.count }}</div>
+              <div class="bar-fill" [style.height.%]="getBarHeight(item.count)"></div>
+              <div class="bar-month">{{ item.month }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Nurses -->
+      <div class="col-md-5">
+        <div class="dash-card">
+          <div class="dash-card-title"><i class="bi bi-trophy"></i> Top Performing Nurses</div>
+          <div *ngFor="let nurse of topNurses; let i = index" class="top-nurse-row">
+            <div class="rank-badge rank-{{ i+1 }}">{{ i+1 }}</div>
+            <div class="flex-grow-1">
+              <p class="nurse-name-sm">{{ nurse.name }}</p>
+              <p class="nurse-spec-sm">{{ nurse.specialty }}</p>
+            </div>
+            <div class="text-end">
+              <p class="jobs-count">{{ nurse.jobs }} jobs</p>
+              <p class="rating"><i class="bi bi-star-fill text-warning" style="font-size:0.7rem;"></i> {{ nurse.rating }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Specialization Distribution -->
+      <div class="col-12">
+        <div class="dash-card">
+          <div class="dash-card-title"><i class="bi bi-pie-chart"></i> Specialization Distribution</div>
+          <div class="spec-list">
+            <div *ngFor="let spec of specializations" class="spec-row">
+              <div class="spec-name">{{ spec.name }}</div>
+              <div class="spec-bar-wrap">
+                <div class="spec-bar-fill" [style.width.%]="spec.pct"></div>
+              </div>
+              <div class="spec-stats">
+                <span class="spec-count">{{ spec.count }}</span>
+                <span class="spec-pct">{{ spec.pct }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

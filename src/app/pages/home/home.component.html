@@ -1,1 +1,166 @@
-<p>home works!</p>
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <span class="brand-icon">❤</span>
+    <span class="brand-name">CareConnect</span>
+  </div>
+  <div class="nav-actions">
+    <button class="btn-outline" (click)="goLogin()">Login</button>
+    <button class="btn-solid"  (click)="goRegister()">Get Started</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">Trusted Healthcare Staffing Platform</div>
+  <h1 class="hero-title">
+    Professional Home Healthcare,<br>
+    <span class="hero-accent">On Demand</span>
+  </h1>
+  <p class="hero-sub">
+    Connect with certified nurses, manage your health records, and get the care
+    you deserve — anytime, anywhere.
+  </p>
+  <div class="hero-ctas">
+    <button class="cta-primary" (click)="goRegister()">
+      <i class="bi bi-arrow-right-circle-fill me-2"></i>Get Started Free
+    </button>
+    <button class="cta-secondary" (click)="goLogin()">
+      <i class="bi bi-box-arrow-in-right me-2"></i>Login
+    </button>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<section class="stats-bar">
+  <div class="stat-item">
+    <span class="stat-num">500+</span>
+    <span class="stat-lbl">Certified Nurses</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-num">2,000+</span>
+    <span class="stat-lbl">Patients Served</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-num">50+</span>
+    <span class="stat-lbl">Partner Hospitals</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-num">98%</span>
+    <span class="stat-lbl">Satisfaction Rate</span>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section">
+  <div class="section-header">
+    <div class="section-tag">How It Works</div>
+    <h2 class="section-title">For Everyone in Healthcare</h2>
+    <p class="section-sub">CareConnect serves three key groups — patients, nurses, and healthcare organizations.</p>
+  </div>
+
+  <div class="role-grid">
+
+    <div class="role-card">
+      <div class="role-icon patient-icon"><i class="bi bi-person-heart"></i></div>
+      <h3>For Patients</h3>
+      <p>Book certified nurses for home visits, manage your medical records, and track your appointments — all in one place.</p>
+      <ul class="role-features">
+        <li><i class="bi bi-check-circle-fill"></i> Book nurse visits instantly</li>
+        <li><i class="bi bi-check-circle-fill"></i> Secure medical records</li>
+        <li><i class="bi bi-check-circle-fill"></i> Real-time appointment tracking</li>
+      </ul>
+      <button class="role-btn patient-btn" (click)="goRegister()">Register as Patient</button>
+    </div>
+
+    <div class="role-card role-card-featured">
+      <div class="featured-badge">Most Popular</div>
+      <div class="role-icon nurse-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+      <h3>For Nurses</h3>
+      <p>Find flexible nursing jobs, manage your schedule, track payments, and grow your career with credentialing support.</p>
+      <ul class="role-features">
+        <li><i class="bi bi-check-circle-fill"></i> Browse & apply for jobs</li>
+        <li><i class="bi bi-check-circle-fill"></i> Flexible scheduling</li>
+        <li><i class="bi bi-check-circle-fill"></i> Transparent payments</li>
+      </ul>
+      <button class="role-btn nurse-btn" (click)="goRegister()">Join as Nurse</button>
+    </div>
+
+    <div class="role-card">
+      <div class="role-icon org-icon"><i class="bi bi-building-fill"></i></div>
+      <h3>For Organizations</h3>
+      <p>Post job listings, review nurse applications, manage compliance, and access staffing analytics for your facility.</p>
+      <ul class="role-features">
+        <li><i class="bi bi-check-circle-fill"></i> Post nursing jobs</li>
+        <li><i class="bi bi-check-circle-fill"></i> Compliance & credentialing</li>
+        <li><i class="bi bi-check-circle-fill"></i> Staffing analytics dashboard</li>
+      </ul>
+      <button class="role-btn org-btn" (click)="goRegister()">Register Organization</button>
+    </div>
+
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section features-section">
+  <div class="section-header">
+    <div class="section-tag">Platform Features</div>
+    <h2 class="section-title">Everything You Need</h2>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feat-icon"><i class="bi bi-shield-fill-check"></i></div>
+      <h4>Verified & Credentialed</h4>
+      <p>Every nurse on our platform is verified, licensed, and background-checked before being listed.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon"><i class="bi bi-clock-history"></i></div>
+      <h4>24/7 Availability</h4>
+      <p>Book care at any time — morning, evening, or emergency. Our nurses are always available.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon"><i class="bi bi-lock-fill"></i></div>
+      <h4>Secure Health Records</h4>
+      <p>Your medical data is encrypted and accessible only to you and the healthcare professionals you authorize.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon"><i class="bi bi-graph-up-arrow"></i></div>
+      <h4>Analytics & Insights</h4>
+      <p>Hospitals and clinics get powerful dashboards to track staffing, compliance, and nurse performance.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-banner">
+  <div class="cta-banner-inner">
+    <h2>Ready to get started?</h2>
+    <p>Join thousands of patients, nurses, and healthcare organizations already on CareConnect.</p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
+      <button class="cta-primary" (click)="goRegister()">
+        <i class="bi bi-person-plus-fill me-2"></i>Create an Account
+      </button>
+      <button class="cta-white" (click)="goLogin()">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-brand">
+    <span class="brand-icon small">❤</span>
+    <span class="brand-name">CareConnect</span>
+  </div>
+  <p class="footer-tagline">Connecting Healthcare Professionals</p>
+  <div class="footer-links">
+    <span routerLink="/login">Login</span>
+    <span routerLink="/register">Register</span>
+    <span routerLink="/forgot-password">Forgot Password</span>
+  </div>
+  <p class="footer-copy">© 2026 CareConnect. All rights reserved.</p>
+</footer>

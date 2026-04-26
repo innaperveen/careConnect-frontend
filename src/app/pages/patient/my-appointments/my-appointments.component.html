@@ -1,49 +1,129 @@
-    <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>CareConnect — Patient Portal</title>
-    <!-- Bootstrap 5 + Icons + Google Fonts -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <style>
+<div class="d-flex">
 
-    </style>
-</head>
-    
-    <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
-        <div class="sidebar-brand">
-            <i class="bi bi-heart-pulse-fill"></i> 
-            <span>CareConnect</span>
+  <!-- SIDEBAR -->
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand">
+      <i class="bi bi-heart-pulse-fill"></i>
+      <span>CareConnect</span>
+    </div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient" routerLinkActive="active">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-book-appointment" routerLinkActive="active">
+          <i class="bi bi-calendar-plus"></i> Book Nurse
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-appointments" routerLinkActive="active">
+          <i class="bi bi-journal-bookmark-fill"></i> My Appointments
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-medical-records" routerLinkActive="active">
+          <i class="bi bi-folder-medical"></i> Medical Records
+        </a>
+      </li>
+      <div class="sidebar-divider"></div>
+      <li class="nav-item mt-2">
+        <a class="nav-link-custom" routerLink="/patient-settings" routerLinkActive="active">
+          <i class="bi bi-gear"></i> Settings
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content p-4 w-100">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="page-title">My Appointments</h4>
+        <p class="page-subtitle">Track and manage your nurse visits</p>
+      </div>
+      <a routerLink="/patient-book-appointment" class="btn-book">
+        <i class="bi bi-plus-lg me-1"></i> Book New
+      </a>
+    </div>
+
+    <!-- STATS -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num">{{ appointments.length }}</div>
+          <div class="stat-lbl">Total</div>
         </div>
-        <ul class="nav flex-column">
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient" routerLinkActive="active">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient-book-appointment" routerLinkActive="active">
-                    <i class="bi bi-calendar-plus"></i> Book Nurse
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient-appointments" routerLinkActive="active">
-                    <i class="bi bi-journal-bookmark-fill"></i> My Appointments
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient-medical-records" routerLinkActive="active">
-                    <i class="bi bi-folder-medical"></i> Medical Records
-                </a>
-            </li>
-            <div class="sidebar-divider"></div>
-            <li class="nav-item mt-2">
-                <a class="nav-link-custom" routerLink="/patient-settings" routerLinkActive="active">
-                    <i class="bi bi-gear"></i> Settings
-                </a>
-            </li>
-        </ul>
-    </nav>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num c-blue">{{ countByStatus('Scheduled') }}</div>
+          <div class="stat-lbl">Scheduled</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num c-green">{{ countByStatus('Completed') }}</div>
+          <div class="stat-lbl">Completed</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+          <div class="stat-num c-red">{{ countByStatus('Cancelled') }}</div>
+          <div class="stat-lbl">Cancelled</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTER TABS -->
+    <div class="tab-row mb-4">
+      <button class="tab-btn" *ngFor="let tab of tabs"
+              [class.tab-active]="activeTab === tab"
+              (click)="activeTab = tab">
+        {{ tab }}
+        <span class="tab-count" *ngIf="tab !== 'All'">{{ countByStatus(tab) }}</span>
+      </button>
+    </div>
+
+    <!-- APPOINTMENTS LIST -->
+    <div *ngFor="let appt of filteredAppointments" class="appt-card mb-3">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div class="d-flex align-items-start gap-3">
+          <div class="nurse-avatar">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <div>
+            <p class="nurse-name">{{ appt.nurseName }}</p>
+            <p class="nurse-spec">{{ appt.specialty }}</p>
+            <div class="appt-meta">
+              <span><i class="bi bi-calendar3"></i> {{ appt.date }}</span>
+              <span><i class="bi bi-clock"></i> {{ appt.time }}</span>
+              <span><i class="bi bi-heart-pulse"></i> {{ appt.careType }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex flex-column align-items-end gap-2">
+          <span class="status-badge" [ngClass]="getStatusClass(appt.status)">{{ appt.status }}</span>
+          <span class="pri-badge" [ngClass]="getPriorityClass(appt.priority)">{{ appt.priority }}</span>
+        </div>
+      </div>
+      <div class="d-flex gap-2 mt-3" *ngIf="appt.status === 'Scheduled'">
+        <button class="btn-cancel" (click)="cancelAppointment(appt.id)">
+          <i class="bi bi-x-circle me-1"></i>Cancel
+        </button>
+        <button class="btn-reschedule">
+          <i class="bi bi-arrow-repeat me-1"></i>Reschedule
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="filteredAppointments.length === 0" class="empty-state">
+      <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+      No {{ activeTab === 'All' ? '' : activeTab.toLowerCase() }} appointments found.
+    </div>
+
+  </div>
+</div>

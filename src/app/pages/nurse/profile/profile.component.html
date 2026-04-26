@@ -1,38 +1,189 @@
+<div class="d-flex">
+
+  <!-- SIDEBAR -->
   <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
     <div class="sidebar-brand">
-      <i class="bi bi-heart-pulse-fill"></i> 
+      <i class="bi bi-heart-pulse-fill"></i>
       <span>CareConnect</span>
     </div>
-
     <ul class="nav flex-column">
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-dashboard"
-           routerLinkActive="active">
-          <i class="bi bi-speedometer2"></i> Dashboard
-        </a>
-      </li>
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-available-jobs"
-           routerLinkActive="active">
-          <i class="bi bi-briefcase"></i> Jobs
-        </a>
-      </li>
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-applications"
-           routerLinkActive="active">
-          <i class="bi bi-journal-bookmark-fill"></i> Applications
-        </a>
-      </li>
-      <li class="nav-item mb-1">
-        <a class="nav-link-custom"
-           routerLink="/nurse-profile"
-           routerLinkActive="active">
-          <i class="bi bi-person"></i> Profile
-        </a>
-      </li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-dashboard" routerLinkActive="active"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-profile" routerLinkActive="active"><i class="bi bi-person-badge"></i> My Profile</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-available-jobs" routerLinkActive="active"><i class="bi bi-briefcase"></i> Jobs</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-applications" routerLinkActive="active"><i class="bi bi-journal-bookmark-fill"></i> Applications</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-schedule" routerLinkActive="active"><i class="bi bi-calendar3"></i> Schedule</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-payments" routerLinkActive="active"><i class="bi bi-cash-stack"></i> Payments</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-training" routerLinkActive="active"><i class="bi bi-mortarboard"></i> Training</a></li>
       <div class="sidebar-divider"></div>
     </ul>
   </nav>
+
+  <!-- MAIN -->
+  <div class="main p-4 w-100">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="fw-semibold mb-0" style="color:#1a3b3a;">My Profile</h4>
+        <small class="text-muted">Manage your professional information and credentials</small>
+      </div>
+      <div class="d-flex gap-2">
+        <button *ngIf="!editMode" class="btn btn-update btn-sm" (click)="enableEdit()">
+          <i class="bi bi-pencil-square me-1"></i> Edit Profile
+        </button>
+        <ng-container *ngIf="editMode">
+          <button class="btn btn-success btn-sm rounded-pill px-3" (click)="saveProfile()">
+            <i class="bi bi-check-lg me-1"></i> Save
+          </button>
+          <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" (click)="cancelEdit()">
+            Cancel
+          </button>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Success toast -->
+    <div *ngIf="saveSuccess" class="alert-success-toast mb-3">
+      <i class="bi bi-check-circle-fill me-2"></i> Profile updated successfully!
+    </div>
+
+    <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+
+      <!-- Basic Info -->
+      <div class="section-card mb-4">
+        <h6 class="section-title"><i class="bi bi-person-circle me-2"></i>Basic Information</h6>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="field-label">Full Name</label>
+            <input type="text" formControlName="fullName" class="field-input" [class.input-error]="f['fullName'].invalid && f['fullName'].touched" placeholder="Full Name">
+            <small class="err" *ngIf="f['fullName'].touched && f['fullName'].hasError('required')">Name is required.</small>
+            <small class="err" *ngIf="f['fullName'].touched && f['fullName'].hasError('minlength')">At least 3 characters.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="field-label">Nursing License Number</label>
+            <input type="text" formControlName="licenseNumber" class="field-input" [class.input-error]="f['licenseNumber'].invalid && f['licenseNumber'].touched" placeholder="e.g. NUR-2024-DL-1234">
+            <small class="err" *ngIf="f['licenseNumber'].touched && f['licenseNumber'].hasError('required')">License number is required.</small>
+            <small class="err" *ngIf="f['licenseNumber'].touched && f['licenseNumber'].hasError('minlength')">Enter a valid license number.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="field-label">Email Address</label>
+            <input type="email" formControlName="email" class="field-input" [class.input-error]="f['email'].invalid && f['email'].touched" placeholder="email@example.com">
+            <small class="err" *ngIf="f['email'].touched && f['email'].hasError('required')">Email is required.</small>
+            <small class="err" *ngIf="f['email'].touched && f['email'].hasError('email')">Enter a valid email.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="field-label">Phone Number</label>
+            <input type="tel" formControlName="phone" class="field-input" [class.input-error]="f['phone'].invalid && f['phone'].touched" placeholder="10-digit number">
+            <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('required')">Phone is required.</small>
+            <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('pattern')">Enter a valid 10-digit number.</small>
+          </div>
+          <div class="col-12">
+            <label class="field-label">Residential Address</label>
+            <input type="text" formControlName="address" class="field-input" [class.input-error]="f['address'].invalid && f['address'].touched" placeholder="Full address">
+            <small class="err" *ngIf="f['address'].touched && f['address'].hasError('required')">Address is required.</small>
+            <small class="err" *ngIf="f['address'].touched && f['address'].hasError('minlength')">Enter at least 10 characters.</small>
+          </div>
+          <div class="col-12">
+            <label class="field-label">Professional Bio</label>
+            <textarea formControlName="bio" class="field-input" rows="3" placeholder="Brief summary of your experience and strengths..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Professional Info -->
+      <div class="section-card mb-4">
+        <h6 class="section-title"><i class="bi bi-hospital me-2"></i>Professional Details</h6>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="field-label">Specialization</label>
+            <select formControlName="specialization" class="field-input" [class.input-error]="f['specialization'].invalid && f['specialization'].touched">
+              <option value="" disabled>Select</option>
+              <option *ngFor="let s of specializations" [value]="s">{{ s }}</option>
+            </select>
+            <small class="err" *ngIf="f['specialization'].touched && f['specialization'].hasError('required')">Please select a specialization.</small>
+          </div>
+          <div class="col-md-4">
+            <label class="field-label">Years of Experience</label>
+            <input type="text" formControlName="experience" class="field-input" [class.input-error]="f['experience'].invalid && f['experience'].touched" placeholder="e.g. 5">
+            <small class="err" *ngIf="f['experience'].touched && f['experience'].hasError('required')">Experience is required.</small>
+            <small class="err" *ngIf="f['experience'].touched && f['experience'].hasError('pattern')">Enter a number (e.g. 5).</small>
+          </div>
+          <div class="col-md-4">
+            <label class="field-label">Availability</label>
+            <select formControlName="availability" class="field-input" [class.input-error]="f['availability'].invalid && f['availability'].touched">
+              <option value="" disabled>Select</option>
+              <option value="Full-Time">Full-Time</option>
+              <option value="Part-Time">Part-Time</option>
+              <option value="On-Call">On-Call</option>
+              <option value="Weekends Only">Weekends Only</option>
+            </select>
+            <small class="err" *ngIf="f['availability'].touched && f['availability'].hasError('required')">Please select availability.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="field-label">Educational Credentials</label>
+            <input type="text" formControlName="education" class="field-input" [class.input-error]="f['education'].invalid && f['education'].touched" placeholder="e.g. B.Sc Nursing – AIIMS, 2016">
+            <small class="err" *ngIf="f['education'].touched && f['education'].hasError('required')">Education is required.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="field-label">Certifications (comma-separated)</label>
+            <input type="text" formControlName="certifications" class="field-input" placeholder="e.g. BLS, ACLS, ICU Cert">
+          </div>
+        </div>
+
+        <!-- Areas of Expertise -->
+        <div class="mt-4">
+          <label class="field-label">Areas of Expertise</label>
+          <div class="chip-group mt-2">
+            <span *ngFor="let area of expertiseAreas"
+              class="chip" [class.chip-active]="selectedExpertise.includes(area)"
+              (click)="toggleExpertise(area)">
+              {{ area }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Preferred Shift Types -->
+        <div class="mt-4">
+          <label class="field-label">Preferred Shift Types</label>
+          <div class="chip-group mt-2">
+            <span *ngFor="let shift of shiftTypes"
+              class="chip" [class.chip-active]="selectedShifts.includes(shift)"
+              (click)="toggleShift(shift)">
+              {{ shift }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- References -->
+      <div class="section-card mb-4">
+        <h6 class="section-title"><i class="bi bi-people me-2"></i>Professional References</h6>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="field-label">Reference 1 – Name</label>
+            <input type="text" formControlName="reference1Name" class="field-input" placeholder="Dr. / Supervisor name">
+          </div>
+          <div class="col-md-6">
+            <label class="field-label">Reference 1 – Phone</label>
+            <input type="tel" formControlName="reference1Phone" class="field-input" [class.input-error]="f['reference1Phone'].invalid && f['reference1Phone'].touched" placeholder="10-digit number">
+            <small class="err" *ngIf="f['reference1Phone'].touched && f['reference1Phone'].hasError('pattern')">Enter a valid 10-digit number.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="field-label">Reference 2 – Name</label>
+            <input type="text" formControlName="reference2Name" class="field-input" placeholder="Dr. / Supervisor name">
+          </div>
+          <div class="col-md-6">
+            <label class="field-label">Reference 2 – Phone</label>
+            <input type="tel" formControlName="reference2Phone" class="field-input" [class.input-error]="f['reference2Phone'].invalid && f['reference2Phone'].touched" placeholder="10-digit number">
+            <small class="err" *ngIf="f['reference2Phone'].touched && f['reference2Phone'].hasError('pattern')">Enter a valid 10-digit number.</small>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="editMode" class="d-flex gap-2 justify-content-end">
+        <button type="submit" class="btn btn-success rounded-pill px-4"><i class="bi bi-check-lg me-1"></i> Save Profile</button>
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="cancelEdit()">Cancel</button>
+      </div>
+
+    </form>
+  </div>
+</div>

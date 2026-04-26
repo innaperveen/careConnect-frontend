@@ -82,3 +82,65 @@
       background: rgba(255,255,255,0.2);
       margin: 20px 20px 12px 20px;
     }
+
+    .main { margin-left: 280px; background: #f8fafc; min-height: 100vh; }
+
+    @media (max-width: 767.98px) {
+      .fixed-sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0 !important; padding: 1rem !important; }
+    }
+
+    .section-card {
+      background: white; border-radius: 24px;
+      padding: 1.5rem 1.75rem;
+      box-shadow: 0 8px 20px -6px rgba(0,32,32,0.08);
+    }
+    .section-title {
+      font-size: 0.95rem; font-weight: 700; color: #0f6b51;
+      margin-bottom: 1.25rem; padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e8f3ef;
+    }
+
+    .field-label {
+      font-size: 0.8rem; font-weight: 600; color: #2c3e3a;
+      display: block; margin-bottom: 6px;
+    }
+    .field-input {
+      width: 100%; padding: 0.75rem 1rem; border-radius: 16px;
+      border: 1.5px solid #e2ece8; background: #fafffe;
+      font-size: 0.9rem; font-family: inherit; color: #1f2e2a;
+      transition: all 0.2s ease; outline: none;
+    }
+    .field-input:focus { border-color: #1aa37a; box-shadow: 0 0 0 4px rgba(26,163,122,0.12); }
+    .field-input:disabled { background: #f4f7f5; color: #5a7070; }
+    .input-error { border-color: #e05252 !important; box-shadow: 0 0 0 3px rgba(224,82,82,0.10) !important; }
+    .err { display: block; color: #e05252; font-size: 11.5px; font-weight: 500; margin-top: 5px; margin-left: 4px; }
+
+    select.field-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231aa37a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.1rem; cursor: pointer;
+    }
+
+    .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      padding: 6px 14px; border-radius: 40px; font-size: 0.8rem; font-weight: 500;
+      background: #f0f5f3; color: #3a5a54; border: 1.5px solid #d4e5e0;
+      cursor: pointer; transition: all 0.18s ease;
+    }
+    .chip:hover { background: #e2f0ec; border-color: #9fcfc3; }
+    .chip-active { background: #1aa37a; color: white; border-color: #1aa37a; }
+
+    .btn { border-radius: 40px; font-weight: 500; transition: all 0.2s; }
+    .btn-success { background: #118c6b; border-color: #118c6b; }
+    .btn-success:hover { background: #0e6f54; }
+    .btn-update {
+      background: rgba(21,132,103,0.1); border: 1px solid rgba(21,132,103,0.3);
+      color: #0f6b51; border-radius: 40px; font-weight: 500;
+    }
+    .btn-update:hover { background: #118c6b; color: white; border-color: #118c6b; }
+
+    .alert-success-toast {
+      background: #eef9f5; border: 1px solid #a8dfc9; color: #0f6b51;
+      border-radius: 16px; padding: 12px 18px; font-size: 0.9rem; font-weight: 500;
+    }

@@ -1,140 +1,123 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+
+export const passwordMatchValidator: ValidatorFn = (group: AbstractControl): ValidationErrors | null => {
+  const pass = group.get('password')?.value;
+  const confirm = group.get('confirmPassword')?.value;
+  return pass && confirm && pass !== confirm ? { passwordMismatch: true } : null;
+};
 
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css']
 })
-export class RegisterComponent {
-
-  constructor(private router: Router) {}
+export class RegisterComponent implements OnInit {
 
   role: string = 'patient';
+  patientForm!: FormGroup;
+  nurseForm!: FormGroup;
+  orgForm!: FormGroup;
 
-  // ================= PATIENT MODEL =================
-  patient = {
-    fullName: '',
-    age: '',
-    gender: '',
-    email: '',
-    phone: '',
-    address: '',
-    password: '',
-    confirmPassword: ''
-  };
+  specializations = [
+    'General Nursing', 'ICU / Critical Care', 'Cardiology', 'Pediatric Nursing',
+    'Geriatric Care', 'Orthopedic Nursing', 'Oncology', 'Emergency / Trauma',
+    'Psychiatric Nursing', 'Home Healthcare'
+  ];
 
-  // ================= NURSE MODEL =================
-  nurse = {
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    specialization: '',
-    experience: '',
-    availability: '',
-    phone: ''
-  };
+  orgTypes = ['Hospital', 'Nursing Home', 'Clinic', 'Care Center', 'Rehabilitation Center', 'Other'];
 
-  // ================= ROLE SWITCH =================
-  selectRole(selected: string) {
-    this.role = selected;
+  constructor(private fb: FormBuilder, private router: Router) {}
+
+  ngOnInit(): void {
+    this.patientForm = this.fb.group({
+      fullName:        ['', [Validators.required, Validators.minLength(3)]],
+      age:             ['', [Validators.required, Validators.pattern('^[0-9]+$'), Validators.min(1)]],
+      gender:          ['', Validators.required],
+      email:           ['', [Validators.required, Validators.email]],
+      phone:           ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      address:         ['', [Validators.required, Validators.minLength(10)]],
+      password:        ['', [Validators.required, Validators.minLength(8)]],
+      confirmPassword: ['', Validators.required]
+    }, { validators: passwordMatchValidator });
+
+    this.nurseForm = this.fb.group({
+      fullName:        ['', [Validators.required, Validators.minLength(3)]],
+      email:           ['', [Validators.required, Validators.email]],
+      phone:           ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      licenseNumber:   ['', [Validators.required, Validators.minLength(5)]],
+      specialization:  ['', Validators.required],
+      experience:      ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      availability:    ['', Validators.required],
+      password:        ['', [Validators.required, Validators.minLength(8)]],
+      confirmPassword: ['', Validators.required]
+    }, { validators: passwordMatchValidator });
+
+    this.orgForm = this.fb.group({
+      orgName:          ['', [Validators.required, Validators.minLength(3)]],
+      orgType:          ['', Validators.required],
+      regNumber:        ['', [Validators.required, Validators.minLength(5)]],
+      contactPerson:    ['', [Validators.required, Validators.minLength(3)]],
+      email:            ['', [Validators.required, Validators.email]],
+      phone:            ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      address:          ['', [Validators.required, Validators.minLength(10)]],
+      city:             ['', Validators.required],
+      state:            ['', Validators.required],
+      website:          [''],
+      password:         ['', [Validators.required, Validators.minLength(8)]],
+      confirmPassword:  ['', Validators.required]
+    }, { validators: passwordMatchValidator });
   }
 
-  // ================= MAIN REGISTER FUNCTION =================
-register(form: any) {
+  selectRole(selected: string): void { this.role = selected; }
 
-  if (form.invalid) {
-    console.log("Form is invalid");
-    return;
-  }
+  // Patient getters
+  get pName()    { return this.patientForm.get('fullName')!; }
+  get pAge()     { return this.patientForm.get('age')!; }
+  get pGender()  { return this.patientForm.get('gender')!; }
+  get pEmail()   { return this.patientForm.get('email')!; }
+  get pPhone()   { return this.patientForm.get('phone')!; }
+  get pAddress() { return this.patientForm.get('address')!; }
+  get pPass()    { return this.patientForm.get('password')!; }
+  get pConfirm() { return this.patientForm.get('confirmPassword')!; }
 
-  // ================= PATIENT =================
-  if (this.role === 'patient') {
+  // Nurse getters
+  get nName()    { return this.nurseForm.get('fullName')!; }
+  get nEmail()   { return this.nurseForm.get('email')!; }
+  get nPhone()   { return this.nurseForm.get('phone')!; }
+  get nLicense() { return this.nurseForm.get('licenseNumber')!; }
+  get nSpec()    { return this.nurseForm.get('specialization')!; }
+  get nExp()     { return this.nurseForm.get('experience')!; }
+  get nAvail()   { return this.nurseForm.get('availability')!; }
+  get nPass()    { return this.nurseForm.get('password')!; }
+  get nConfirm() { return this.nurseForm.get('confirmPassword')!; }
 
-    if (!this.patient.fullName ||
-        !this.patient.age ||
-        !this.patient.gender ||
-        !this.patient.email ||
-        !this.patient.phone ||
-        !this.patient.address ||
-        !this.patient.password ||
-        !this.patient.confirmPassword) {
+  // Organization getters
+  get oName()    { return this.orgForm.get('orgName')!; }
+  get oType()    { return this.orgForm.get('orgType')!; }
+  get oReg()     { return this.orgForm.get('regNumber')!; }
+  get oContact() { return this.orgForm.get('contactPerson')!; }
+  get oEmail()   { return this.orgForm.get('email')!; }
+  get oPhone()   { return this.orgForm.get('phone')!; }
+  get oAddress() { return this.orgForm.get('address')!; }
+  get oCity()    { return this.orgForm.get('city')!; }
+  get oState()   { return this.orgForm.get('state')!; }
+  get oPass()    { return this.orgForm.get('password')!; }
+  get oConfirm() { return this.orgForm.get('confirmPassword')!; }
 
-      alert("Please fill all patient fields");
-      return;
+  register(): void {
+    if (this.role === 'patient') {
+      if (this.patientForm.invalid) { this.patientForm.markAllAsTouched(); return; }
+      this.router.navigate(['/patient']);
+
+    } else if (this.role === 'nurse') {
+      if (this.nurseForm.invalid) { this.nurseForm.markAllAsTouched(); return; }
+      this.router.navigate(['/nurse']);
+
+    } else if (this.role === 'organization') {
+      if (this.orgForm.invalid) { this.orgForm.markAllAsTouched(); return; }
+      this.router.navigate(['/admin']);
     }
-
-    if (!this.validateEmail(this.patient.email)) {
-      alert("Invalid email format");
-      return;
-    }
-
-    if (!this.validatePhone(this.patient.phone)) {
-      alert("Phone must be 10 digits");
-      return;
-    }
-
-    if (this.patient.password.length < 6) {
-      alert("Password must be at least 6 characters");
-      return;
-    }
-
-    if (this.patient.password !== this.patient.confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-
-    console.log("✅ Patient Data Valid:", this.patient);
-
-    // 🔥 ROUTE TO PATIENT DASHBOARD
-    this.router.navigate(['/patient']);
-  }
-
-  // ================= NURSE =================
-  else if (this.role === 'nurse') {
-
-    if (!this.nurse.fullName ||
-        !this.nurse.email ||
-        !this.nurse.phone ||
-        !this.nurse.password ||
-        !this.nurse.confirmPassword) {
-
-      alert("Please fill all nurse fields");
-      return;
-    }
-
-    if (!this.validateEmail(this.nurse.email)) {
-      alert("Invalid email format");
-      return;
-    }
-
-    if (!this.validatePhone(this.nurse.phone)) {
-      alert("Phone must be 10 digits");
-      return;
-    }
-
-    if (this.nurse.password !== this.nurse.confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-
-    console.log("✅ Nurse Data Valid:", this.nurse);
-
-    // 🔥 ROUTE TO NURSE DASHBOARD
-    this.router.navigate(['/nurse']);
-  }
-
-}
-  // ================= HELPER FUNCTIONS =================
-
-  validateEmail(email: string): boolean {
-    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return pattern.test(email);
-  }
-
-  validatePhone(phone: string): boolean {
-    const pattern = /^[0-9]{10}$/;
-    return pattern.test(phone);
   }
 }

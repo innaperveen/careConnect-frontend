@@ -77,8 +77,36 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.05);
       backdrop-filter: blur(2px);
     }
-    .sidebar-divider {
-      height: 1px;
-      background: rgba(255,255,255,0.2);
-      margin: 20px 20px 12px 20px;
-    }
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,0.2); margin: 20px 20px 12px 20px; }
+    .main { margin-left: 280px; background: #f8fafc; min-height: 100vh; }
+    @media (max-width: 767.98px) { .fixed-sidebar { transform: translateX(-100%); } .main { margin-left: 0 !important; padding: 1rem !important; } }
+
+    /* status tabs */
+    .status-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tab-btn { padding: 6px 16px; border-radius: 40px; border: 1.5px solid #d4e5e0; background: white; color: #4e6e68; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; gap: 6px; }
+    .tab-btn:hover { background: #eef9f5; border-color: #9fcfc3; }
+    .tab-active { background: #1aa37a; color: white; border-color: #1aa37a; }
+    .tab-count { background: rgba(255,255,255,0.25); border-radius: 20px; padding: 1px 7px; font-size: 0.75rem; }
+    .tab-active .tab-count { background: rgba(255,255,255,0.3); }
+
+    /* stat mini cards */
+    .stat-mini { background: white; border-radius: 16px; padding: 1rem; text-align: center; box-shadow: 0 4px 10px -4px rgba(0,32,32,0.07); }
+    .stat-num { font-size: 1.8rem; font-weight: 800; color: #1a3b3a; margin: 0; line-height: 1.2; }
+    .stat-lbl { font-size: 0.75rem; color: #6a8a84; font-weight: 500; margin: 0; }
+
+    /* app card */
+    .app-card { background: white; border-radius: 20px; padding: 1.25rem 1.5rem; box-shadow: 0 6px 16px -6px rgba(0,32,32,0.08); border-left: 4px solid #e2ece8; transition: all 0.2s; }
+    .app-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(0,80,60,0.1); }
+    .fac-name { font-size: 0.85rem; color: #5a7a74; }
+    .meta-pill { font-size: 0.78rem; color: #4e6e68; background: #f0f5f3; padding: 4px 10px; border-radius: 30px; display: inline-flex; align-items: center; }
+    .salary-chip { background: #e3f6ef; color: #0f6b51; border-radius: 50px; padding: 4px 12px; font-size: 0.8rem; font-weight: 700; }
+
+    /* status badges */
+    .status-badge { padding: 5px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+    .badge-applied    { background: #e8f0fe; color: #1a73e8; }
+    .badge-review     { background: #fef3e2; color: #d68910; }
+    .badge-interview  { background: #e8f5e9; color: #2e7d32; }
+    .badge-accepted   { background: #d4edda; color: #155724; }
+    .badge-rejected   { background: #fde8e8; color: #c0392b; }
+
+    .empty-state { background: white; border-radius: 20px; padding: 3rem; text-align: center; box-shadow: 0 4px 12px -4px rgba(0,32,32,0.06); }

@@ -41,8 +41,8 @@
 
         /* ----- LOGIN CARD (elevated, modern, clean) ----- */
         .login-card {
-            width: 420px;
-            max-width: 90%;
+            width: 460px;
+            max-width: 92%;
             padding: 36px 32px 40px;
             border-radius: 32px;
             background: #ffffff;
@@ -185,6 +185,20 @@
         /* ----- FORM (modern inputs, spacing) ----- */
         form {
             margin-top: 8px;
+        }
+
+        .form-group small {
+            display: block;
+            color: #e05252;
+            font-size: 11.5px;
+            font-weight: 500;
+            margin-top: 6px;
+            margin-left: 4px;
+        }
+
+        .input-error {
+            border-color: #e05252 !important;
+            box-shadow: 0 0 0 3px rgba(224, 82, 82, 0.12) !important;
         }
 
         .form-group {
@@ -365,6 +379,15 @@
         /* improve eye candy for input icons (CSS only, no extra markup) */
         .form-group input[type="email"] {
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%231aa37a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>');
+            background-repeat: no-repeat;
+            background-position: 16px center;
+            background-size: 18px;
+            padding-left: 46px;
+        }
+
+        /* license/registration number field icon */
+        .form-group input.field-text {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%231aa37a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>');
             background-repeat: no-repeat;
             background-position: 16px center;
             background-size: 18px;

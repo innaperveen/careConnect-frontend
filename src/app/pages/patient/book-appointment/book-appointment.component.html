@@ -1,191 +1,211 @@
-    <!-- ========== SIDEBAR (EXACTLY AS PROVIDED, ONLY WIDTH FIXED FOR LAYOUT) ========== -->
-    <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
-        <div class="sidebar-brand">
-            <i class="bi bi-heart-pulse-fill"></i> 
-            <span>CareConnect</span>
-        </div>
-        <ul class="nav flex-column">
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient" routerLinkActive="active">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient-book-appointment" routerLinkActive="active">
-                    <i class="bi bi-calendar-plus"></i> Book Nurse
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient-appointments" routerLinkActive="active">
-                    <i class="bi bi-journal-bookmark-fill"></i> My Appointments
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link-custom" routerLink="/patient-medical-records" routerLinkActive="active">
-                    <i class="bi bi-folder-medical"></i> Medical Records
-                </a>
-            </li>
-            <div class="sidebar-divider"></div>
-            <li class="nav-item mt-2">
-                <a class="nav-link-custom" routerLink="/patient-settings" routerLinkActive="active">
-                    <i class="bi bi-gear"></i> Settings
-                </a>
-            </li>
-        </ul>
-    </nav>
+<div class="d-flex">
 
-    <!-- MAIN CONTENT: ORIGINAL ANGULAR FORM (FULLY INTACT) -->
-    <div class="container mt-4 content-area">
-        <div class="mb-4">
-            <h3 class="mb-2 fw-semibold">Book Nurse Appointment</h3>
-            <p class="text-muted small">
-                Fill in the details below to request a nurse. Our team will confirm your appointment.
-            </p>
-        </div>
+  <!-- SIDEBAR -->
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand">
+      <i class="bi bi-heart-pulse-fill"></i>
+      <span>CareConnect</span>
+    </div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient" routerLinkActive="active">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-book-appointment" routerLinkActive="active">
+          <i class="bi bi-calendar-plus"></i> Book Nurse
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-appointments" routerLinkActive="active">
+          <i class="bi bi-journal-bookmark-fill"></i> My Appointments
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-medical-records" routerLinkActive="active">
+          <i class="bi bi-folder-medical"></i> Medical Records
+        </a>
+      </li>
+      <div class="sidebar-divider"></div>
+      <li class="nav-item mt-2">
+        <a class="nav-link-custom" routerLink="/patient-settings" routerLinkActive="active">
+          <i class="bi bi-gear"></i> Settings
+        </a>
+      </li>
+    </ul>
+  </nav>
 
-        <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()">
-
-            <!-- Patient Details Card -->
-            <div class="card p-3 mb-4">
-                <h5><i class="bi bi-person-circle"></i> Patient Details</h5>
-                <div class="row mt-2">
-                    <div class="col-md-6 mb-3">
-                        <label>Full Name *</label>
-                        <input class="form-control" formControlName="fullName" placeholder="e.g., Emily Johnson">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label>Phone *</label>
-                        <input class="form-control" formControlName="phone" placeholder="+1 234 567 890">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label>Email *</label>
-                        <input class="form-control" formControlName="email" placeholder="hello@example.com">
-                    </div>
-                    <div class="col-12 mb-2">
-                        <label>Address *</label>
-                        <input class="form-control" formControlName="address" placeholder="Street, City, ZIP">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Care Requirements Card -->
-            <div class="card p-3 mb-4">
-                <h5><i class="bi bi-heart-pulse"></i> Care Requirements</h5>
-                <div class="mt-2">
-                    <label>Type of Care *</label>
-                    <select class="form-select" formControlName="careType">
-                        <option value="">Select</option>
-                        <option *ngFor="let type of careTypes" [value]="type">{{type}}</option>
-                    </select>
-                </div>
-                <div class="mt-4">
-                    <label>Specialization *</label>
-                    <div class="d-flex flex-wrap gap-2 mt-2">
-                        <button type="button"
-                            class="btn"
-                            *ngFor="let spec of specializations"
-                            [class.btn-success]="bookingForm.value.specialization === spec"
-                            [class.btn-outline-secondary]="bookingForm.value.specialization !== spec"
-                            (click)="selectSpecialization(spec)">
-                            {{spec}}
-                        </button>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <label>Additional Skills</label>
-                    <div class="d-flex flex-wrap gap-2 mt-2">
-                        <button type="button"
-                            class="btn btn-outline-secondary"
-                            *ngFor="let skill of skillsList"
-                            (click)="toggleSkill(skill)"
-                            [class.btn-success]="bookingForm.value.skills.includes(skill)">
-                            {{skill}}
-                        </button>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <label>Description (symptoms / special requests)</label>
-                    <textarea class="form-control" rows="3" formControlName="description" placeholder="Provide any additional details about the required care..."></textarea>
-                </div>
-            </div>
-
-            <!-- Schedule Card -->
-            <div class="card p-3 mb-4">
-                <h5><i class="bi bi-calendar-week"></i> Schedule</h5>
-                <div class="row mt-2">
-                    <div class="col-md-6 mb-3">
-                        <label>Start Date *</label>
-                        <input type="date" class="form-control" formControlName="startDate">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label>End Date (optional)</label>
-                        <input type="date" class="form-control" formControlName="endDate">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label>Time Slot *</label>
-                        <select class="form-select" formControlName="timeSlot">
-                            <option value="">Select</option>
-                            <option>Morning</option>
-                            <option>Afternoon</option>
-                            <option>Evening</option>
-                            <option>Night</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label>Duration *</label>
-                        <select class="form-select" formControlName="durationType">
-                            <option value="">Select</option>
-                            <option>One-time</option>
-                            <option>Daily</option>
-                            <option>Weekly</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Priority Card -->
-            <div class="card p-3 mb-4">
-                <h5><i class="bi bi-exclamation-triangle"></i> Priority</h5>
-                <div class="d-flex flex-wrap gap-4 mt-2">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" value="Normal" formControlName="priority" id="priorityNormal">
-                        <label class="form-check-label" for="priorityNormal">Normal</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" value="Urgent" formControlName="priority" id="priorityUrgent">
-                        <label class="form-check-label text-warning fw-semibold" for="priorityUrgent">Urgent</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" value="Emergency" formControlName="priority" id="priorityEmergency">
-                        <label class="form-check-label text-danger fw-semibold" for="priorityEmergency">Emergency</label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Preferences Card -->
-            <div class="card p-3 mb-4">
-                <h5><i class="bi bi-sliders2"></i> Preferences</h5>
-                <div class="row mt-2">
-                    <div class="col-md-6 mb-3">
-                        <label>Gender Preference</label>
-                        <select class="form-select" formControlName="genderPreference">
-                            <option>No Preference</option>
-                            <option>Male</option>
-                            <option>Female</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label>Special Notes (optional)</label>
-                        <input class="form-control" formControlName="notes" placeholder="e.g., language preference, allergies...">
-                    </div>
-                </div>
-            </div>
-
-            <button class="btn btn-success w-100 py-3" type="submit">
-                <i class="bi bi-check-circle-fill me-2"></i> Book Appointment
-            </button>
-        </form>
+  <!-- MAIN CONTENT -->
+  <div class="main-content p-4 w-100">
+    <div class="mb-4">
+      <h3 class="mb-2 fw-semibold">Book Nurse Appointment</h3>
+      <p class="text-muted small">Fill in the details below to request a nurse. Our team will confirm your appointment.</p>
     </div>
 
+    <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()">
+
+      <!-- Patient Details -->
+      <div class="card p-3 mb-4">
+        <h5><i class="bi bi-person-circle"></i> Patient Details</h5>
+        <div class="row mt-2">
+          <div class="col-md-6 mb-3">
+            <label>Full Name *</label>
+            <input class="form-control" formControlName="fullName" placeholder="e.g., Emily Johnson"
+                   [class.input-err]="bookingForm.get('fullName')?.touched && bookingForm.get('fullName')?.invalid">
+            <small class="err" *ngIf="bookingForm.get('fullName')?.touched && bookingForm.get('fullName')?.hasError('required')">Full name is required.</small>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label>Phone *</label>
+            <input class="form-control" formControlName="phone" placeholder="10-digit mobile number"
+                   [class.input-err]="bookingForm.get('phone')?.touched && bookingForm.get('phone')?.invalid">
+            <small class="err" *ngIf="bookingForm.get('phone')?.touched && bookingForm.get('phone')?.hasError('required')">Phone number is required.</small>
+            <small class="err" *ngIf="bookingForm.get('phone')?.touched && bookingForm.get('phone')?.hasError('pattern')">Enter a valid 10-digit mobile number.</small>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label>Email *</label>
+            <input class="form-control" formControlName="email" placeholder="hello@example.com"
+                   [class.input-err]="bookingForm.get('email')?.touched && bookingForm.get('email')?.invalid">
+            <small class="err" *ngIf="bookingForm.get('email')?.touched && bookingForm.get('email')?.hasError('required')">Email is required.</small>
+            <small class="err" *ngIf="bookingForm.get('email')?.touched && bookingForm.get('email')?.hasError('email')">Enter a valid email address.</small>
+          </div>
+          <div class="col-12 mb-2">
+            <label>Address *</label>
+            <input class="form-control" formControlName="address" placeholder="Street, City, ZIP"
+                   [class.input-err]="bookingForm.get('address')?.touched && bookingForm.get('address')?.invalid">
+            <small class="err" *ngIf="bookingForm.get('address')?.touched && bookingForm.get('address')?.hasError('required')">Address is required.</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Care Requirements -->
+      <div class="card p-3 mb-4">
+        <h5><i class="bi bi-heart-pulse"></i> Care Requirements</h5>
+        <div class="mt-2">
+          <label>Type of Care *</label>
+          <select class="form-select" formControlName="careType"
+                  [class.input-err]="bookingForm.get('careType')?.touched && bookingForm.get('careType')?.invalid">
+            <option value="">Select</option>
+            <option *ngFor="let type of careTypes" [value]="type">{{type}}</option>
+          </select>
+          <small class="err" *ngIf="bookingForm.get('careType')?.touched && bookingForm.get('careType')?.hasError('required')">Please select a care type.</small>
+        </div>
+        <div class="mt-4">
+          <label>Specialization *</label>
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            <button type="button" class="btn"
+                    *ngFor="let spec of specializations"
+                    [class.btn-success]="bookingForm.value.specialization === spec"
+                    [class.btn-outline-secondary]="bookingForm.value.specialization !== spec"
+                    (click)="selectSpecialization(spec)">
+              {{spec}}
+            </button>
+          </div>
+          <small class="err d-block mt-1" *ngIf="bookingForm.get('specialization')?.touched && bookingForm.get('specialization')?.hasError('required')">Please select a specialization.</small>
+        </div>
+        <div class="mt-4">
+          <label>Additional Skills</label>
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            <button type="button" class="btn btn-outline-secondary"
+                    *ngFor="let skill of skillsList"
+                    (click)="toggleSkill(skill)"
+                    [class.btn-success]="bookingForm.value.skills.includes(skill)">
+              {{skill}}
+            </button>
+          </div>
+        </div>
+        <div class="mt-4">
+          <label>Description (symptoms / special requests)</label>
+          <textarea class="form-control" rows="3" formControlName="description"
+                    placeholder="Provide any additional details about the required care..."></textarea>
+        </div>
+      </div>
+
+      <!-- Schedule -->
+      <div class="card p-3 mb-4">
+        <h5><i class="bi bi-calendar-week"></i> Schedule</h5>
+        <div class="row mt-2">
+          <div class="col-md-6 mb-3">
+            <label>Start Date *</label>
+            <input type="date" class="form-control" formControlName="startDate"
+                   [class.input-err]="bookingForm.get('startDate')?.touched && bookingForm.get('startDate')?.invalid">
+            <small class="err" *ngIf="bookingForm.get('startDate')?.touched && bookingForm.get('startDate')?.hasError('required')">Start date is required.</small>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label>End Date (optional)</label>
+            <input type="date" class="form-control" formControlName="endDate">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label>Time Slot *</label>
+            <select class="form-select" formControlName="timeSlot"
+                    [class.input-err]="bookingForm.get('timeSlot')?.touched && bookingForm.get('timeSlot')?.invalid">
+              <option value="">Select</option>
+              <option>Morning</option>
+              <option>Afternoon</option>
+              <option>Evening</option>
+              <option>Night</option>
+            </select>
+            <small class="err" *ngIf="bookingForm.get('timeSlot')?.touched && bookingForm.get('timeSlot')?.hasError('required')">Please select a time slot.</small>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label>Duration *</label>
+            <select class="form-select" formControlName="durationType"
+                    [class.input-err]="bookingForm.get('durationType')?.touched && bookingForm.get('durationType')?.invalid">
+              <option value="">Select</option>
+              <option>One-time</option>
+              <option>Daily</option>
+              <option>Weekly</option>
+            </select>
+            <small class="err" *ngIf="bookingForm.get('durationType')?.touched && bookingForm.get('durationType')?.hasError('required')">Please select a duration type.</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Priority -->
+      <div class="card p-3 mb-4">
+        <h5><i class="bi bi-exclamation-triangle"></i> Priority</h5>
+        <div class="d-flex flex-wrap gap-4 mt-2">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" value="Normal" formControlName="priority" id="pNormal">
+            <label class="form-check-label" for="pNormal">Normal</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" value="Urgent" formControlName="priority" id="pUrgent">
+            <label class="form-check-label text-warning fw-semibold" for="pUrgent">Urgent</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" value="Emergency" formControlName="priority" id="pEmergency">
+            <label class="form-check-label text-danger fw-semibold" for="pEmergency">Emergency</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences -->
+      <div class="card p-3 mb-4">
+        <h5><i class="bi bi-sliders2"></i> Preferences</h5>
+        <div class="row mt-2">
+          <div class="col-md-6 mb-3">
+            <label>Gender Preference</label>
+            <select class="form-select" formControlName="genderPreference">
+              <option>No Preference</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label>Special Notes (optional)</label>
+            <input class="form-control" formControlName="notes"
+                   placeholder="e.g., language preference, allergies...">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-success w-100 py-3" type="submit">
+        <i class="bi bi-check-circle-fill me-2"></i> Book Appointment
+      </button>
+    </form>
+  </div>
+
+</div>

@@ -38,7 +38,7 @@ export class BookAppointmentComponent implements OnInit {
   ngOnInit(): void {
     this.bookingForm = this.fb.group({
       fullName: ['Prakhar', Validators.required],
-      phone: ['', Validators.required],
+      phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
       email: ['', [Validators.required, Validators.email]],
       address: ['', Validators.required],
 

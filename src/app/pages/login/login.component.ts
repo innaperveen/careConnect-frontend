@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 @Component({
@@ -6,31 +7,60 @@ import { Router } from '@angular/router';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent {
-  
-  constructor(private router: Router) {}
+export class LoginComponent implements OnInit {
 
-  selectedRole: string = 'nurse';
-  email: string = '';
-  password: string = '';
+  loginForm!: FormGroup;
+  selectedRole: string = 'patient';
 
+  constructor(private fb: FormBuilder, private router: Router) {}
 
-  selectRole(role: string) {
-    this.selectedRole = role;
+  ngOnInit(): void {
+    this.buildForm();
   }
 
-  goToRegister() {
-  this.router.navigate(['/register']);
-}
+  buildForm(): void {
+    const identifierValidators = this.selectedRole === 'organization'
+      ? [Validators.required, Validators.minLength(5)]
+      : [Validators.required, Validators.email];
 
-onLogin(form: any) {
-  if (form.invalid) return;
+    this.loginForm = this.fb.group({
+      identifier: ['', identifierValidators],
+      password:   ['', [Validators.required, Validators.minLength(6)]]
+    });
+  }
 
-  console.log({
-    email: this.email,
-    password: this.password,
-    role: this.selectedRole
-  });
-  // this.router.navigate(['/patient']);
-}
+  get identifier() { return this.loginForm.get('identifier')!; }
+  get password()   { return this.loginForm.get('password')!; }
+
+  get identifierLabel(): string {
+    return this.selectedRole === 'organization'
+      ? 'Registration / License Number'
+      : 'Email Address';
+  }
+
+  get identifierPlaceholder(): string {
+    return this.selectedRole === 'organization'
+      ? 'Enter your registration number'
+      : 'Enter your email address';
+  }
+
+  get identifierType(): string {
+    return this.selectedRole === 'organization' ? 'text' : 'email';
+  }
+
+  selectRole(role: string): void {
+    this.selectedRole = role;
+    this.buildForm();
+  }
+
+  onLogin(): void {
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+
+    if (this.selectedRole === 'patient')      this.router.navigate(['/patient']);
+    else if (this.selectedRole === 'nurse')   this.router.navigate(['/nurse']);
+    else if (this.selectedRole === 'organization') this.router.navigate(['/admin']);
+  }
 }

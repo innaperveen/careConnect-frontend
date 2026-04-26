@@ -1,1 +1,151 @@
-<p>admin-dashboard works!</p>
+<div class="d-flex">
+
+  <!-- SIDEBAR -->
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand">
+      <i class="bi bi-heart-pulse-fill"></i>
+      <span>CareConnect</span>
+    </div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-post-job" routerLinkActive="active">
+          <i class="bi bi-briefcase-fill"></i> Post Job
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-applications" routerLinkActive="active">
+          <i class="bi bi-file-person-fill"></i> Applications
+        </a>
+      </li>
+      <div class="sidebar-divider"></div>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-compliance" routerLinkActive="active">
+          <i class="bi bi-shield-check"></i> Compliance
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-credentialing" routerLinkActive="active">
+          <i class="bi bi-award-fill"></i> Credentialing
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-team" routerLinkActive="active">
+          <i class="bi bi-people-fill"></i> Team
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/admin-analytics" routerLinkActive="active">
+          <i class="bi bi-bar-chart-fill"></i> Analytics
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content p-4 w-100">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="page-title">Admin Dashboard</h4>
+        <p class="page-subtitle">Welcome back — here's what's happening today</p>
+      </div>
+      <a routerLink="/admin-post-job" class="btn-primary-action">
+        <i class="bi bi-plus-lg me-1"></i> Post Job
+      </a>
+    </div>
+
+    <!-- STATS -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon si-blue"><i class="bi bi-people-fill"></i></div>
+          <div class="stat-num">48</div>
+          <div class="stat-lbl">Total Nurses</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon si-green"><i class="bi bi-briefcase-fill"></i></div>
+          <div class="stat-num">12</div>
+          <div class="stat-lbl">Active Jobs</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon si-amber"><i class="bi bi-file-person-fill"></i></div>
+          <div class="stat-num">7</div>
+          <div class="stat-lbl">Pending Applications</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon si-purple"><i class="bi bi-person-check-fill"></i></div>
+          <div class="stat-num">5</div>
+          <div class="stat-lbl">Monthly Hires</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="row g-4">
+
+      <!-- Recent Applications -->
+      <div class="col-md-8">
+        <div class="dash-card">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="dash-card-title mb-0"><i class="bi bi-file-person"></i> Recent Applications</div>
+            <a routerLink="/admin-applications" class="btn-sm-link">View all</a>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Nurse</th>
+                  <th>Role</th>
+                  <th>Experience</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let app of recentApplications">
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="nurse-mini-avatar"><i class="bi bi-person-fill"></i></div>
+                      {{ app.name }}
+                    </div>
+                  </td>
+                  <td>{{ app.role }}</td>
+                  <td>{{ app.experience }}</td>
+                  <td>{{ app.date }}</td>
+                  <td><span class="status-badge" [ngClass]="getStatusClass(app.status)">{{ app.status }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="col-md-4">
+        <div class="dash-card">
+          <div class="dash-card-title"><i class="bi bi-activity"></i> Recent Activity</div>
+          <div *ngFor="let act of recentActivity" class="activity-row">
+            <div class="act-icon" [ngClass]="act.color"><i class="bi" [ngClass]="act.icon"></i></div>
+            <div class="act-body">
+              <p class="act-text">{{ act.text }}</p>
+              <p class="act-time">{{ act.time }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
