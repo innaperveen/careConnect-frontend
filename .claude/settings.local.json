@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($mysqlPath = Get-ChildItem \"C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin\\\\mysql.exe\" -ErrorAction SilentlyContinue; $mysqlPath.FullName)",
+      "PowerShell(& \"C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin\\\\mysql.exe\" -u root \"-pPrakhar@411\" -e \"CREATE DATABASE IF NOT EXISTS careconnect_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; SHOW DATABASES LIKE 'careconnect_db';\" 2>&1)",
+      "PowerShell($env:JAVA_HOME = \\(Get-Command java -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source | Split-Path -Parent | Split-Path -Parent\\); Get-Command mvn -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source)",
+      "PowerShell(java -version 2>&1)",
+      "PowerShell($env:PATH -split \";\" | Where-Object { $_ -match \"maven|mvn\" })",
+      "PowerShell(Get-Content \"C:\\\\tools\\\\careconnect-boot.log\" -Raw | Select-String -Pattern \"cannot find symbol|error:\" -AllMatches | ForEach-Object { $_.Matches } | Select-Object -First 30 Value)",
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:8080/actuator/health\" -Method GET 2>&1)",
+      "PowerShell(& \"C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin\\\\mysql.exe\" -u root \"-pPrakhar@411\" careconnect_db -e \"SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA='careconnect_db' AND REFERENCED_TABLE_NAME IS NOT NULL ORDER BY TABLE_NAME;\" 2>&1 | Where-Object { $_ -notmatch \"Warning\" })",
+      "PowerShell(Stop-Process -Name \"java\" -Force -ErrorAction SilentlyContinue)",
+      "Read(//c/Users/prakhar/Music/Angular/CareConnect/careConnect-backend/src/main/java/com/careconnect/entity/**)",
+      "Read(//c/Users/prakhar/Music/Angular/CareConnect/careConnect-backend/src/main/java/com/careconnect/dto/request/**)",
+      "Bash(npm install *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend\\src\\main\\java\\com\\careconnect\\entity",
+      "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend\\src\\main\\java\\com\\careconnect\\dto\\request",
+      "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend\\src\\main\\java\\com\\careconnect\\service"
+    ]
+  }
+}

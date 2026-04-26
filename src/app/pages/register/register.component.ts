@@ -59,11 +59,13 @@ export class RegisterComponent implements OnInit {
       orgType:          ['', Validators.required],
       regNumber:        ['', [Validators.required, Validators.minLength(5)]],
       contactPerson:    ['', [Validators.required, Validators.minLength(3)]],
+      designation:      ['', [Validators.required, Validators.minLength(3)]],
       email:            ['', [Validators.required, Validators.email]],
       phone:            ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
       address:          ['', [Validators.required, Validators.minLength(10)]],
       city:             ['', Validators.required],
       state:            ['', Validators.required],
+      pincode:          ['', [Validators.required, Validators.pattern('^[0-9]{6}$')]],
       website:          [''],
       password:         ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword:  ['', Validators.required]
@@ -98,11 +100,13 @@ export class RegisterComponent implements OnInit {
   get oType()    { return this.orgForm.get('orgType')!; }
   get oReg()     { return this.orgForm.get('regNumber')!; }
   get oContact() { return this.orgForm.get('contactPerson')!; }
+  get oDesig()   { return this.orgForm.get('designation')!; }
   get oEmail()   { return this.orgForm.get('email')!; }
   get oPhone()   { return this.orgForm.get('phone')!; }
   get oAddress() { return this.orgForm.get('address')!; }
   get oCity()    { return this.orgForm.get('city')!; }
   get oState()   { return this.orgForm.get('state')!; }
+  get oPincode() { return this.orgForm.get('pincode')!; }
   get oPass()    { return this.orgForm.get('password')!; }
   get oConfirm() { return this.orgForm.get('confirmPassword')!; }
 
@@ -121,3 +125,5 @@ export class RegisterComponent implements OnInit {
     }
   }
 }
+
+

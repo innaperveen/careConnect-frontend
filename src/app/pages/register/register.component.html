@@ -190,22 +190,29 @@
         </div>
       </div>
 
+      <div class="field-wrap">
+        <input type="text" placeholder="Registration / License Number *" formControlName="regNumber"
+          [class.input-error]="oReg.invalid && oReg.touched">
+        <small *ngIf="oReg.touched && oReg.hasError('required')">Registration number is required.</small>
+        <small *ngIf="oReg.touched && oReg.hasError('minlength')">Enter a valid registration number.</small>
+      </div>
+
+      <div class="section-label">Contact Information</div>
+
       <div class="row">
-        <div class="field-wrap">
-          <input type="text" placeholder="Registration / License Number *" formControlName="regNumber"
-            [class.input-error]="oReg.invalid && oReg.touched">
-          <small *ngIf="oReg.touched && oReg.hasError('required')">Registration number is required.</small>
-          <small *ngIf="oReg.touched && oReg.hasError('minlength')">Enter a valid registration number.</small>
-        </div>
         <div class="field-wrap">
           <input type="text" placeholder="Contact Person Name *" formControlName="contactPerson"
             [class.input-error]="oContact.invalid && oContact.touched">
           <small *ngIf="oContact.touched && oContact.hasError('required')">Contact person is required.</small>
           <small *ngIf="oContact.touched && oContact.hasError('minlength')">Minimum 3 characters.</small>
         </div>
+        <div class="field-wrap">
+          <input type="text" placeholder="Designation (e.g. Hospital Administrator) *" formControlName="designation"
+            [class.input-error]="oDesig.invalid && oDesig.touched">
+          <small *ngIf="oDesig.touched && oDesig.hasError('required')">Designation is required.</small>
+          <small *ngIf="oDesig.touched && oDesig.hasError('minlength')">Minimum 3 characters.</small>
+        </div>
       </div>
-
-      <div class="section-label">Contact Information</div>
 
       <div class="row">
         <div class="field-wrap">
@@ -241,8 +248,15 @@
           <small *ngIf="oState.touched && oState.hasError('required')">State is required.</small>
         </div>
         <div class="field-wrap">
-          <input type="url" placeholder="Website (optional)" formControlName="website">
+          <input type="text" placeholder="Pincode *" formControlName="pincode"
+            [class.input-error]="oPincode.invalid && oPincode.touched">
+          <small *ngIf="oPincode.touched && oPincode.hasError('required')">Pincode is required.</small>
+          <small *ngIf="oPincode.touched && oPincode.hasError('pattern')">Enter a valid 6-digit pincode.</small>
         </div>
+      </div>
+
+      <div class="field-wrap">
+        <input type="url" placeholder="Website (optional)" formControlName="website">
       </div>
 
       <div class="section-label">Set Password</div>
