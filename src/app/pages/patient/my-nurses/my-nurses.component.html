@@ -1,0 +1,112 @@
+<div class="d-flex">
+
+  <!-- SIDEBAR -->
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand">
+      <i class="bi bi-heart-pulse-fill"></i>
+      <span>CareConnect</span>
+    </div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-book-appointment" routerLinkActive="active">
+          <i class="bi bi-calendar-plus"></i> Book Nurse
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-appointments" routerLinkActive="active">
+          <i class="bi bi-journal-bookmark-fill"></i> My Appointments
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-my-nurses" routerLinkActive="active">
+          <i class="bi bi-people-fill"></i> My Nurses
+        </a>
+      </li>
+      <li class="nav-item mb-1">
+        <a class="nav-link-custom" routerLink="/patient-medical-records" routerLinkActive="active">
+          <i class="bi bi-journal-medical"></i> Medical Records
+        </a>
+      </li>
+      <div class="sidebar-divider"></div>
+      <li class="nav-item mt-2">
+        <a class="nav-link-custom" routerLink="/patient-settings" routerLinkActive="active">
+          <i class="bi bi-gear"></i> Settings
+        </a>
+      </li>
+      <div class="sidebar-divider mt-auto"></div>
+      <li class="nav-item">
+        <a class="nav-link-custom logout-link" style="cursor:pointer;" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content p-4 w-100">
+
+    <div class="mb-4">
+      <h4 class="page-title">My Nurses</h4>
+      <p class="page-subtitle">Nurses assigned to your care appointments</p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="text-center py-5 text-muted">
+      <div class="spinner-border text-success" role="status"></div>
+      <p class="mt-2">Loading your nurses…</p>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!isLoading && assignedNurses.length === 0" class="empty-card text-center py-5">
+      <i class="bi bi-person-x-fill fs-1 d-block mb-3" style="color:#c8ddd8;"></i>
+      <h6 style="color:#7a9e98;">No nurses assigned yet</h6>
+      <p style="font-size:0.85rem; color:#9ab8b0;">Book an appointment and a nurse will be assigned to your care.</p>
+    </div>
+
+    <!-- Nurse cards -->
+    <div *ngFor="let nurse of assignedNurses" class="nurse-card mb-4">
+
+      <!-- Nurse header -->
+      <div class="nurse-header">
+        <div class="nurse-avatar-lg">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="nurse-info">
+          <h5 class="nurse-name-lg">{{ nurse.nurseName }}</h5>
+          <span class="nurse-spec-badge">{{ nurse.nurseSpecialization || 'General Nursing' }}</span>
+        </div>
+        <div class="nurse-appt-count">
+          <span class="appt-count-num">{{ appointmentsForNurse(nurse.nurseId).length }}</span>
+          <span class="appt-count-lbl">appointment{{ appointmentsForNurse(nurse.nurseId).length !== 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+
+      <!-- Appointment history with this nurse -->
+      <div class="appt-list">
+        <div *ngFor="let appt of appointmentsForNurse(nurse.nurseId)" class="appt-row">
+          <div class="appt-date">
+            <i class="bi bi-calendar3 me-1"></i>
+            {{ appt.appointmentDate | date:'mediumDate' }}
+          </div>
+          <div class="appt-time text-muted" style="font-size:0.8rem;">
+            {{ appt.appointmentDate | date:'shortTime' }}
+          </div>
+          <div class="appt-care">{{ appt.careNeeds || '—' }}</div>
+          <div class="appt-duration text-muted" style="font-size:0.8rem;">
+            <i class="bi bi-clock me-1"></i>{{ appt.duration || '—' }}
+          </div>
+          <span class="appt-status-badge" [ngClass]="getStatusClass(appt.status)">
+            {{ appt.status | titlecase }}
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

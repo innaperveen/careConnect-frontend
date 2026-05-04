@@ -1,3 +1,4 @@
+﻿import { AuthService } from '../../../services/auth.service';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -8,8 +9,7 @@ interface MedicalRecord {
   date: string;
   size: string;
   doctor: string;
-  notes: string;
-}
+  notes: string;}
 
 @Component({
   selector: 'app-medical-records',
@@ -32,7 +32,7 @@ export class MedicalRecordsComponent {
 
   uploadForm: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private auth: AuthService, private fb: FormBuilder) {
     this.uploadForm = this.fb.group({
       fileName: ['', [Validators.required, Validators.minLength(3)]],
       type:     ['', Validators.required],
@@ -81,4 +81,5 @@ export class MedicalRecordsComponent {
     this.uploadSuccess = true;
     setTimeout(() => this.uploadSuccess = false, 3000);
   }
+  logout(): void { this.auth.logout(); }
 }

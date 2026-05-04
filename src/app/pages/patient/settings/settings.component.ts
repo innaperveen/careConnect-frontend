@@ -1,3 +1,4 @@
+﻿import { AuthService } from '../../../services/auth.service';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
@@ -22,7 +23,7 @@ export class SettingsComponent {
   showNew     = false;
   showConfirm = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private auth: AuthService, private fb: FormBuilder) {
     this.profileForm = this.fb.group({
       fullName:    ['Prakhar Verma',          [Validators.required, Validators.minLength(3)]],
       email:       ['prakhar@example.com',    [Validators.required, Validators.email]],
@@ -55,4 +56,5 @@ export class SettingsComponent {
     this.passwordForm.reset();
     setTimeout(() => this.passwordSaved = false, 3000);
   }
+  logout(): void { this.auth.logout(); }
 }

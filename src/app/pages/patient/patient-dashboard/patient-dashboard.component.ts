@@ -1,3 +1,4 @@
+﻿import { AuthService } from '../../../services/auth.service';
 import { Component, OnInit } from '@angular/core';
 
 @Component({
@@ -6,6 +7,8 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./patient-dashboard.component.css']
 })
 export class PatientDashboardComponent implements OnInit {
+
+  constructor(private auth: AuthService) {}
 
   patientName = 'Prakhar';
   patientId = 'P12345';
@@ -37,4 +40,5 @@ export class PatientDashboardComponent implements OnInit {
   countByStatus(status: string): number {
     return this.appointments.filter(a => a.status === status).length;
   }
+  logout(): void { this.auth.logout(); }
 }

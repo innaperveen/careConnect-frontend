@@ -1,3 +1,4 @@
+﻿import { AuthService } from '../../../services/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -33,7 +34,7 @@ export class BookAppointmentComponent implements OnInit {
     'Vitals Monitoring'
   ];
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private auth: AuthService, private fb: FormBuilder) {}
 
   ngOnInit(): void {
     this.bookingForm = this.fb.group({
@@ -85,4 +86,5 @@ export class BookAppointmentComponent implements OnInit {
     console.log(this.bookingForm.value);
     alert('Appointment Booked!');
   }
+  logout(): void { this.auth.logout(); }
 }

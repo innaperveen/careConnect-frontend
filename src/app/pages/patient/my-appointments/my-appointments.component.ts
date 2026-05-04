@@ -1,3 +1,4 @@
+﻿import { AuthService } from '../../../services/auth.service';
 import { Component } from '@angular/core';
 
 interface Appointment {
@@ -17,6 +18,9 @@ interface Appointment {
   styleUrls: ['./my-appointments.component.css']
 })
 export class MyAppointmentsComponent {
+
+  constructor(private auth: AuthService) {}
+
 
   activeTab = 'All';
   tabs = ['All', 'Scheduled', 'Completed', 'Cancelled'];
@@ -59,4 +63,5 @@ export class MyAppointmentsComponent {
       default:          return 'pri-normal';
     }
   }
+  logout(): void { this.auth.logout(); }
 }
