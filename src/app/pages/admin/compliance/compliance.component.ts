@@ -1,49 +1,59 @@
-import { Component } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-
-interface ComplianceRecord {
-  id: number;
-  nurseName: string;
-  requirement: string;
-  dueDate: string;
-  status: 'Compliant' | 'Pending' | 'Non-Compliant';
-  notes: string;
-}
+import { AdminService } from '../../../services/admin.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-compliance',
   templateUrl: './compliance.component.html',
   styleUrls: ['./compliance.component.css']
 })
-export class ComplianceComponent {
+export class ComplianceComponent implements OnInit {
 
-  activeTab: string = 'All';
-  tabs = ['All', 'Compliant', 'Pending', 'Non-Compliant'];
-  formOpen = false;
+  activeTab = 'All';
+  tabs       = ['All', 'COMPLIANT', 'PENDING', 'NON_COMPLIANT'];
+  tabLabels: Record<string, string> = { All: 'All', COMPLIANT: 'Compliant', PENDING: 'Pending', NON_COMPLIANT: 'Non-Compliant' };
+
+  formOpen  = false;
+  isSaving  = false;
   formSaved = false;
+  errorMsg  = '';
 
-  records: ComplianceRecord[] = [
-    { id: 1, nurseName: 'Priya Sharma',  requirement: 'Annual Health Check',     dueDate: 'May 15, 2026', status: 'Compliant',     notes: 'Completed on time' },
-    { id: 2, nurseName: 'Rahul Mehta',   requirement: 'BLS Certification',       dueDate: 'Apr 30, 2026', status: 'Pending',       notes: 'Awaiting certificate' },
-    { id: 3, nurseName: 'Anika Joshi',   requirement: 'Hepatitis B Vaccination', dueDate: 'Mar 01, 2026', status: 'Compliant',     notes: '' },
-    { id: 4, nurseName: 'Karan Singh',   requirement: 'Background Check',        dueDate: 'Apr 10, 2026', status: 'Non-Compliant', notes: 'Failed background check' },
-    { id: 5, nurseName: 'Deepa Nair',    requirement: 'HIPAA Training',          dueDate: 'May 31, 2026', status: 'Pending',       notes: 'Training scheduled' },
-    { id: 6, nurseName: 'Sunita Patel',  requirement: 'CPR Certification',       dueDate: 'Jun 20, 2026', status: 'Compliant',     notes: '' }
-  ];
+  records: any[] = [];
+  isLoading = true;
 
   complianceForm: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  private orgUserId!: number;
+
+  constructor(
+    private fb: FormBuilder,
+    private adminService: AdminService,
+    private auth: AuthService
+  ) {
     this.complianceForm = this.fb.group({
       nurseName:   ['', Validators.required],
       requirement: ['', Validators.required],
       dueDate:     ['', Validators.required],
-      status:      ['Pending', Validators.required],
+      status:      ['PENDING', Validators.required],
       notes:       ['']
     });
   }
 
-  get filteredRecords(): ComplianceRecord[] {
+  ngOnInit(): void {
+    this.orgUserId = this.auth.getUserId()!;
+    this.loadRecords();
+  }
+
+  loadRecords(): void {
+    this.isLoading = true;
+    this.adminService.getCompliance(this.orgUserId).subscribe({
+      next: (data) => { this.records = data || []; this.isLoading = false; },
+      error: ()     => { this.isLoading = false; }
+    });
+  }
+
+  get filteredRecords(): any[] {
     return this.activeTab === 'All'
       ? this.records
       : this.records.filter(r => r.status === this.activeTab);
@@ -55,17 +65,47 @@ export class ComplianceComponent {
 
   onSave(): void {
     if (this.complianceForm.invalid) { this.complianceForm.markAllAsTouched(); return; }
+
+    this.isSaving = true;
+    this.errorMsg = '';
     const v = this.complianceForm.value;
-    this.records.push({ id: Date.now(), ...v });
-    this.formSaved = true;
-    this.formOpen = false;
-    this.complianceForm.reset({ status: 'Pending' });
-    setTimeout(() => this.formSaved = false, 3000);
+
+    this.adminService.createCompliance(this.orgUserId, v).subscribe({
+      next: (created) => {
+        this.records.push(created);
+        this.formSaved = true;
+        this.formOpen  = false;
+        this.isSaving  = false;
+        this.complianceForm.reset({ status: 'PENDING' });
+        setTimeout(() => this.formSaved = false, 3000);
+      },
+      error: (err: Error) => {
+        this.isSaving = false;
+        this.errorMsg = err.message;
+      }
+    });
+  }
+
+  updateStatus(id: number, status: string): void {
+    this.adminService.updateComplianceStatus(id, status).subscribe({
+      next: (updated) => {
+        const rec = this.records.find(r => r.id === id);
+        if (rec) rec.status = updated?.status ?? status;
+      }
+    });
+  }
+
+  deleteRecord(id: number): void {
+    this.adminService.deleteCompliance(id).subscribe({
+      next: () => { this.records = this.records.filter(r => r.id !== id); }
+    });
   }
 
   getStatusClass(status: string): string {
-    return status === 'Compliant' ? 'badge-compliant'
-         : status === 'Non-Compliant' ? 'badge-noncompliant'
+    const s = (status ?? '').toUpperCase();
+    return s === 'COMPLIANT'     ? 'badge-compliant'
+         : s === 'NON_COMPLIANT' ? 'badge-noncompliant'
          : 'badge-pending';
   }
+  logout(): void { this.auth.logout(); }
 }

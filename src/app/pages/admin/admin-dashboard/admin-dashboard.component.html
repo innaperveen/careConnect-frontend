@@ -1,4 +1,4 @@
-<div class="d-flex">
+﻿<div class="d-flex">
 
   <!-- SIDEBAR -->
   <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
@@ -53,14 +53,26 @@
           <i class="bi bi-bar-chart-fill"></i> Analytics
         </a>
       </li>
+      <div class="sidebar-divider mt-auto"></div>
+      <li class="nav-item">
+        <a class="nav-link-custom logout-link" style="cursor:pointer;" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </li>
     </ul>
   </nav>
 
   <!-- MAIN CONTENT -->
   <div class="main-content p-4 w-100">
 
+    <!-- LOADING STATE -->
+    <div *ngIf="isLoadingOrg" class="text-center py-5 text-muted">
+      <div class="spinner-border text-success" role="status"></div>
+      <p class="mt-2">Loading dashboard…</p>
+    </div>
+
     <!-- ORG PROFILE BANNER -->
-    <div class="org-profile-card mb-4">
+    <div class="org-profile-card mb-4" *ngIf="!isLoadingOrg && org">
       <div class="org-profile-left">
         <div class="org-avatar">
           <i class="bi bi-hospital-fill"></i>
@@ -84,6 +96,9 @@
         </div>
       </div>
       <div class="org-profile-right">
+        <button class="btn-edit-profile me-2" (click)="openEditForm()">
+          <i class="bi bi-pencil-fill me-1"></i> Edit Profile
+        </button>
         <a routerLink="/admin-post-job" class="btn-primary-action">
           <i class="bi bi-plus-lg me-1"></i> Post Job
         </a>
@@ -91,7 +106,7 @@
     </div>
 
     <!-- ORG DETAILS + STATS ROW -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4" *ngIf="!isLoadingOrg && org">
 
       <!-- Registration & License -->
       <div class="col-md-6">
@@ -198,7 +213,7 @@
     </div>
 
     <!-- BOTTOM ROW -->
-    <div class="row g-4">
+    <div class="row g-4" *ngIf="!isLoadingOrg && org">
 
       <!-- Recent Applications -->
       <div class="col-md-8">
@@ -207,7 +222,13 @@
             <div class="dash-card-title mb-0"><i class="bi bi-file-person"></i> Recent Applications</div>
             <a routerLink="/admin-applications" class="btn-sm-link">View all</a>
           </div>
-          <div class="table-responsive">
+          <div *ngIf="!isLoadingApps && recentApplications.length === 0"
+               class="text-center py-4 text-muted" style="font-size:0.85rem;">
+            <i class="bi bi-file-person d-block mb-2" style="font-size:1.8rem;color:#c8ddd8;"></i>
+            No applications yet. Post a job to start receiving applications.
+          </div>
+
+          <div class="table-responsive" *ngIf="recentApplications.length > 0">
             <table class="admin-table">
               <thead>
                 <tr>
@@ -228,8 +249,8 @@
                   </td>
                   <td>{{ app.role }}</td>
                   <td>{{ app.experience }}</td>
-                  <td>{{ app.date }}</td>
-                  <td><span class="status-badge" [ngClass]="getStatusClass(app.status)">{{ app.status }}</span></td>
+                  <td>{{ app.date | date:'mediumDate' }}</td>
+                  <td><span class="status-badge" [ngClass]="getStatusClass(app.status)">{{ app.status | titlecase }}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -241,6 +262,13 @@
       <div class="col-md-4">
         <div class="dash-card">
           <div class="dash-card-title"><i class="bi bi-activity"></i> Recent Activity</div>
+
+          <div *ngIf="!isLoadingApps && recentActivity.length === 0"
+               class="text-center py-4 text-muted" style="font-size:0.85rem;">
+            <i class="bi bi-clock-history d-block mb-2" style="font-size:1.8rem;color:#c8ddd8;"></i>
+            No activity yet. Start by posting a job.
+          </div>
+
           <div *ngFor="let act of recentActivity" class="activity-row">
             <div class="act-icon" [ngClass]="act.color"><i class="bi" [ngClass]="act.icon"></i></div>
             <div class="act-body">
@@ -251,6 +279,122 @@
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- ===== EDIT PROFILE MODAL ===== -->
+<div class="edit-overlay" *ngIf="editOpen" (click)="editOpen = false">
+  <div class="edit-panel" (click)="$event.stopPropagation()">
+
+    <div class="edit-panel-header">
+      <h5 class="edit-panel-title"><i class="bi bi-pencil-fill me-2"></i>Edit Hospital Details</h5>
+      <button class="edit-close-btn" (click)="editOpen = false"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div class="edit-panel-body" *ngIf="editForm">
+      <form [formGroup]="editForm" (ngSubmit)="onSave()">
+
+        <!-- Basic Info -->
+        <div class="edit-section-label">Basic Information</div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="edit-label">Organization Name *</label>
+            <input class="edit-input" formControlName="orgName" placeholder="Hospital / Clinic name"
+                   [class.input-err]="editForm.get('orgName')?.touched && editForm.get('orgName')?.invalid">
+            <small class="err" *ngIf="editForm.get('orgName')?.touched && editForm.get('orgName')?.hasError('required')">Required.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Organization Type *</label>
+            <select class="edit-input" formControlName="orgType">
+              <option value="">Select type</option>
+              <option>Hospital</option>
+              <option>Nursing Home</option>
+              <option>Clinic</option>
+              <option>Care Center</option>
+              <option>Rehabilitation Center</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Bed Capacity</label>
+            <input type="number" class="edit-input" formControlName="bedCapacity" placeholder="e.g. 200"
+                   [class.input-err]="editForm.get('bedCapacity')?.touched && editForm.get('bedCapacity')?.invalid">
+            <small class="err" *ngIf="editForm.get('bedCapacity')?.hasError('min') || editForm.get('bedCapacity')?.hasError('max')">Enter a valid number (1–10000).</small>
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Accreditation</label>
+            <input class="edit-input" formControlName="accreditation" placeholder="e.g. NABH Accredited">
+          </div>
+        </div>
+
+        <!-- Specializations -->
+        <div class="edit-section-label">Specializations</div>
+        <div class="spec-grid mb-3">
+          <div *ngFor="let s of SPECIALIZATION_OPTIONS" class="spec-chip"
+               [class.spec-chip-active]="selectedSpecs.has(s)"
+               (click)="toggleSpec(s)">
+            <i class="bi" [class]="selectedSpecs.has(s) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+            {{ s }}
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="edit-section-label">Contact Information</div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="edit-label">Contact Person *</label>
+            <input class="edit-input" formControlName="contactPerson" placeholder="Full name">
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Designation *</label>
+            <input class="edit-input" formControlName="designation" placeholder="e.g. Hospital Administrator">
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Phone *</label>
+            <input class="edit-input" formControlName="phone" placeholder="10-digit number"
+                   [class.input-err]="editForm.get('phone')?.touched && editForm.get('phone')?.invalid">
+            <small class="err" *ngIf="editForm.get('phone')?.touched && editForm.get('phone')?.hasError('pattern')">Enter valid 10-digit number.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Website</label>
+            <input class="edit-input" formControlName="website" placeholder="www.hospital.com">
+          </div>
+        </div>
+
+        <!-- Address -->
+        <div class="edit-section-label">Location</div>
+        <div class="row g-3 mb-4">
+          <div class="col-12">
+            <label class="edit-label">Address *</label>
+            <input class="edit-input" formControlName="address" placeholder="Street, Area">
+          </div>
+          <div class="col-md-4">
+            <label class="edit-label">City *</label>
+            <input class="edit-input" formControlName="city" placeholder="City">
+          </div>
+          <div class="col-md-4">
+            <label class="edit-label">State *</label>
+            <input class="edit-input" formControlName="state" placeholder="State">
+          </div>
+          <div class="col-md-4">
+            <label class="edit-label">Pincode *</label>
+            <input class="edit-input" formControlName="pincode" placeholder="6-digit pincode"
+                   [class.input-err]="editForm.get('pincode')?.touched && editForm.get('pincode')?.invalid">
+            <small class="err" *ngIf="editForm.get('pincode')?.touched && editForm.get('pincode')?.hasError('pattern')">Enter valid 6-digit pincode.</small>
+          </div>
+        </div>
+
+        <small class="err d-block mb-2" *ngIf="saveError">{{ saveError }}</small>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn-save-profile" [disabled]="editForm.invalid || isSaving">
+            <span *ngIf="!isSaving"><i class="bi bi-check-lg me-1"></i>Save Changes</span>
+            <span *ngIf="isSaving"><span class="btn-spinner me-2"></span>Saving…</span>
+          </button>
+          <button type="button" class="btn-cancel-edit" (click)="editOpen = false">Cancel</button>
+        </div>
+
+      </form>
     </div>
   </div>
 </div>

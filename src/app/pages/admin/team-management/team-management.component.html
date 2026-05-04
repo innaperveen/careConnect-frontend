@@ -1,4 +1,4 @@
-<div class="d-flex">
+﻿<div class="d-flex">
 
   <!-- SIDEBAR -->
   <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
@@ -43,6 +43,12 @@
           <i class="bi bi-bar-chart-fill"></i> Analytics
         </a>
       </li>
+      <div class="sidebar-divider mt-auto"></div>
+      <li class="nav-item">
+        <a class="nav-link-custom logout-link" style="cursor:pointer;" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </li>
     </ul>
   </nav>
 
@@ -53,114 +59,182 @@
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
       <div>
         <h4 class="page-title">Team Management</h4>
-        <p class="page-subtitle">Manage admin staff, roles and access</p>
+        <p class="page-subtitle">Hired nurses and management staff for your organization</p>
       </div>
       <button class="btn-primary-action" (click)="addOpen = !addOpen">
-        <i class="bi bi-person-plus-fill me-1"></i> Add Member
+        <i class="bi bi-person-plus-fill me-1"></i> Add Staff
       </button>
     </div>
 
-    <!-- TOAST -->
-    <div *ngIf="memberSaved" class="toast-success mb-3">
-      <i class="bi bi-check-circle-fill me-2"></i> Team member added!
+    <!-- LOADING -->
+    <div *ngIf="isLoading" class="text-center py-5 text-muted">
+      <div class="spinner-border text-success" role="status"></div>
+      <p class="mt-2">Loading team…</p>
     </div>
 
-    <!-- ADD FORM -->
-    <div class="form-panel mb-4" *ngIf="addOpen">
-      <div class="form-panel-title"><i class="bi bi-person-plus me-2"></i>Add New Member</div>
-      <form [formGroup]="memberForm" (ngSubmit)="onAdd()">
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="field-label">Full Name *</label>
-            <input class="field-input" formControlName="name" placeholder="Full name"
-                   [class.input-err]="f['name'].touched && f['name'].invalid">
-            <small class="err" *ngIf="f['name'].touched && f['name'].hasError('required')">Name is required.</small>
-            <small class="err" *ngIf="f['name'].touched && f['name'].hasError('minlength')">Minimum 3 characters.</small>
-          </div>
-          <div class="col-md-6">
-            <label class="field-label">Role *</label>
-            <select class="field-input" formControlName="role"
-                    [class.input-err]="f['role'].touched && f['role'].invalid">
-              <option value="">Select role</option>
-              <option>Super Admin</option>
-              <option>HR Manager</option>
-              <option>Operations Manager</option>
-              <option>Compliance Officer</option>
-              <option>Support Staff</option>
-            </select>
-            <small class="err" *ngIf="f['role'].touched && f['role'].hasError('required')">Role is required.</small>
-          </div>
-          <div class="col-md-6">
-            <label class="field-label">Email *</label>
-            <input class="field-input" formControlName="email" placeholder="email@care.com"
-                   [class.input-err]="f['email'].touched && f['email'].invalid">
-            <small class="err" *ngIf="f['email'].touched && f['email'].hasError('required')">Email is required.</small>
-            <small class="err" *ngIf="f['email'].touched && f['email'].hasError('email')">Enter a valid email.</small>
-          </div>
-          <div class="col-md-3">
-            <label class="field-label">Phone *</label>
-            <input class="field-input" formControlName="phone" placeholder="10-digit number"
-                   [class.input-err]="f['phone'].touched && f['phone'].invalid">
-            <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('required')">Phone is required.</small>
-            <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('pattern')">10-digit number required.</small>
-          </div>
-          <div class="col-md-3">
-            <label class="field-label">Join Date *</label>
-            <input type="date" class="field-input" formControlName="joinDate"
-                   [class.input-err]="f['joinDate'].touched && f['joinDate'].invalid">
-            <small class="err" *ngIf="f['joinDate'].touched && f['joinDate'].hasError('required')">Date is required.</small>
-          </div>
-        </div>
-        <div class="d-flex gap-2 mt-3">
-          <button type="submit" class="btn-save">Add Member</button>
-          <button type="button" class="btn-cancel-sm" (click)="addOpen = false; memberForm.reset()">Cancel</button>
-        </div>
-      </form>
-    </div>
+    <ng-container *ngIf="!isLoading">
 
-    <!-- TEAM TABLE -->
-    <div class="dash-card">
-      <div class="dash-card-title"><i class="bi bi-people"></i> Admin Team ({{ members.length }})</div>
-      <div class="table-responsive">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Member</th>
-              <th>Role</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Since</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let m of members">
-              <td>
-                <div class="d-flex align-items-center gap-2">
-                  <div class="member-avatar"><i class="bi bi-person-fill"></i></div>
-                  {{ m.name }}
-                </div>
-              </td>
-              <td><span class="role-badge">{{ m.role }}</span></td>
-              <td>{{ m.email }}</td>
-              <td>{{ m.phone }}</td>
-              <td>{{ m.joinDate }}</td>
-              <td>
-                <span class="status-dot" [ngClass]="m.status === 'Active' ? 'dot-active' : 'dot-inactive'">
-                  <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;"></i>{{ m.status }}
-                </span>
-              </td>
-              <td>
-                <button class="btn-toggle" (click)="toggleStatus(m)">
-                  {{ m.status === 'Active' ? 'Deactivate' : 'Activate' }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- TOAST -->
+      <div *ngIf="successMsg" class="toast-success mb-3">
+        <i class="bi bi-check-circle-fill me-2"></i> {{ successMsg }}
       </div>
-    </div>
+
+      <!-- ADD MANAGEMENT STAFF FORM -->
+      <div class="form-panel mb-4" *ngIf="addOpen">
+        <div class="form-panel-title"><i class="bi bi-person-plus me-2"></i>Add Management Staff</div>
+        <form [formGroup]="memberForm" (ngSubmit)="onAdd()">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="field-label">Full Name *</label>
+              <input class="field-input" formControlName="name" placeholder="Full name"
+                     [class.input-err]="f['name'].touched && f['name'].invalid">
+              <small class="err" *ngIf="f['name'].touched && f['name'].hasError('required')">Name is required.</small>
+              <small class="err" *ngIf="f['name'].touched && f['name'].hasError('minlength')">Minimum 3 characters.</small>
+            </div>
+            <div class="col-md-6">
+              <label class="field-label">Role / Designation *</label>
+              <select class="field-input" formControlName="role" [class.input-err]="f['role'].touched && f['role'].invalid">
+                <option value="">Select role</option>
+                <option>Hospital Administrator</option>
+                <option>HR Manager</option>
+                <option>Operations Manager</option>
+                <option>Compliance Officer</option>
+                <option>Finance Manager</option>
+                <option>Nursing Supervisor</option>
+                <option>Support Staff</option>
+              </select>
+              <small class="err" *ngIf="f['role'].touched && f['role'].hasError('required')">Role is required.</small>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label">Email *</label>
+              <input class="field-input" formControlName="email" placeholder="email@org.com"
+                     [class.input-err]="f['email'].touched && f['email'].invalid">
+              <small class="err" *ngIf="f['email'].touched && f['email'].hasError('required')">Email is required.</small>
+              <small class="err" *ngIf="f['email'].touched && f['email'].hasError('email')">Enter a valid email.</small>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label">Phone *</label>
+              <input class="field-input" formControlName="phone" placeholder="10-digit number"
+                     [class.input-err]="f['phone'].touched && f['phone'].invalid">
+              <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('required')">Phone is required.</small>
+              <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('pattern')">Enter valid 10-digit number.</small>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label">Join Date *</label>
+              <input type="date" class="field-input" formControlName="joinDate"
+                     [class.input-err]="f['joinDate'].touched && f['joinDate'].invalid">
+              <small class="err" *ngIf="f['joinDate'].touched && f['joinDate'].hasError('required')">Date is required.</small>
+            </div>
+          </div>
+          <div class="d-flex gap-2 mt-3 align-items-center">
+            <button type="submit" class="btn-save" [disabled]="isSaving">
+              <span *ngIf="!isSaving">Add Member</span>
+              <span *ngIf="isSaving">Saving…</span>
+            </button>
+            <button type="button" class="btn-cancel-sm" (click)="addOpen = false; memberForm.reset()">Cancel</button>
+            <small class="err ms-2" *ngIf="errorMsg">{{ errorMsg }}</small>
+          </div>
+        </form>
+      </div>
+
+      <!-- SECTION 1: HIRED NURSES -->
+      <div class="dash-card mb-4">
+        <div class="dash-card-title"><i class="bi bi-heart-pulse-fill"></i> Hired Nurses ({{ approvedNurses.length }})</div>
+
+        <div *ngIf="approvedNurses.length === 0" class="text-center py-4 text-muted" style="font-size:0.88rem;">
+          <i class="bi bi-person-x fs-3 d-block mb-2" style="color:#c8ddd8;"></i>
+          No nurses hired yet. Approve applications from the Applications page.
+        </div>
+
+        <div class="table-responsive" *ngIf="approvedNurses.length > 0">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Nurse</th>
+                <th>Specialization</th>
+                <th>Job Role</th>
+                <th>Experience</th>
+                <th>Hired On</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let n of approvedNurses">
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="member-avatar">{{ getInitials(n.nurseName) }}</div>
+                    {{ n.nurseName }}
+                  </div>
+                </td>
+                <td><span class="role-badge">{{ n.nurseSpecialization || '—' }}</span></td>
+                <td>{{ n.jobTitle || '—' }}</td>
+                <td>{{ n.nurseExperience != null ? n.nurseExperience + ' yrs' : '—' }}</td>
+                <td>{{ n.appliedAt | date:'mediumDate' }}</td>
+                <td>
+                  <span class="status-dot dot-active">
+                    <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;"></i>Active
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION 2: MANAGEMENT TEAM -->
+      <div class="dash-card">
+        <div class="dash-card-title"><i class="bi bi-people-fill"></i> Management Staff ({{ teamMembers.length }})</div>
+
+        <div *ngIf="teamMembers.length === 0" class="text-center py-4 text-muted" style="font-size:0.88rem;">
+          <i class="bi bi-person-plus fs-3 d-block mb-2" style="color:#c8ddd8;"></i>
+          No management staff added yet. Click "Add Staff" to get started.
+        </div>
+
+        <div class="table-responsive" *ngIf="teamMembers.length > 0">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Role</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Since</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let m of teamMembers">
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="member-avatar">{{ getInitials(m.name) }}</div>
+                    {{ m.name }}
+                  </div>
+                </td>
+                <td><span class="role-badge">{{ m.role }}</span></td>
+                <td>{{ m.email || '—' }}</td>
+                <td>{{ m.phone || '—' }}</td>
+                <td>{{ m.joinDate | date:'mediumDate' }}</td>
+                <td>
+                  <span class="status-dot" [ngClass]="m.status === 'Active' ? 'dot-active' : 'dot-inactive'">
+                    <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;"></i>{{ m.status }}
+                  </span>
+                </td>
+                <td class="d-flex gap-2">
+                  <button class="btn-toggle" (click)="toggleStatus(m)">
+                    {{ m.status === 'Active' ? 'Deactivate' : 'Activate' }}
+                  </button>
+                  <button class="btn-delete" (click)="deleteMember(m.id)">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </ng-container>
 
   </div>
 </div>

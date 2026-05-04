@@ -19,7 +19,8 @@
       "PowerShell(Stop-Process -Name java -Force -ErrorAction SilentlyContinue)",
       "Bash(java -jar target/careconnect-backend-1.0.0.jar --spring.datasource.url=jdbc:mysql://localhost:3306/careconnect_db --spring.datasource.username=root --spring.datasource.password=Prakhar@411 --spring.jpa.hibernate.ddl-auto=update --spring.cloud.consul.enabled=false)",
       "Bash(curl -s http://localhost:8080/actuator/health)",
-      "Bash(java -jar target/careconnect-backend-1.0.0.jar --spring.datasource.url=jdbc:mysql://localhost:3306/careconnect_db --spring.datasource.username=root \"--spring.datasource.password=Prakhar@411\" --spring.jpa.hibernate.ddl-auto=update --spring.cloud.consul.enabled=false)"
+      "Bash(java -jar target/careconnect-backend-1.0.0.jar --spring.datasource.url=jdbc:mysql://localhost:3306/careconnect_db --spring.datasource.username=root \"--spring.datasource.password=Prakhar@411\" --spring.jpa.hibernate.ddl-auto=update --spring.cloud.consul.enabled=false)",
+      "Bash(ng build *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend\\src\\main\\java\\com\\careconnect\\entity",

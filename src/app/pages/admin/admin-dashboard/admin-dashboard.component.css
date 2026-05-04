@@ -110,3 +110,46 @@
 .act-amber  { background: #fff4e0; color: #d97706; }
 .act-text { font-size: 0.82rem; color: #0f2d22; margin: 0 0 2px; font-weight: 500; }
 .act-time { font-size: 0.75rem; color: #6a8c80; margin: 0; }
+
+/* ── EDIT BUTTON ──────────────────────────────────────── */
+.btn-edit-profile { background: white; border: 1.5px solid #1aa37a; color: #1aa37a; border-radius: 40px; padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-edit-profile:hover { background: #1aa37a; color: white; }
+
+/* ── EDIT MODAL OVERLAY ───────────────────────────────── */
+.edit-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1060; display: flex; justify-content: flex-end; backdrop-filter: blur(2px); animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.edit-panel { background: #fff; width: min(620px, 95vw); height: 100vh; overflow-y: auto; box-shadow: -8px 0 32px rgba(0,0,0,0.15); display: flex; flex-direction: column; animation: slideIn 0.25s ease; }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.edit-panel::-webkit-scrollbar { width: 4px; }
+.edit-panel::-webkit-scrollbar-thumb { background: #c8ddd8; border-radius: 10px; }
+
+.edit-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1.5px solid #e8f3ef; position: sticky; top: 0; background: #fff; z-index: 1; }
+.edit-panel-title { font-size: 1rem; font-weight: 700; color: #0f5241; margin: 0; }
+.edit-close-btn { background: none; border: none; font-size: 1.1rem; color: #6a8c80; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: all 0.2s; }
+.edit-close-btn:hover { background: #f0f5f3; color: #0f5241; }
+
+.edit-panel-body { padding: 1.5rem; flex: 1; }
+
+.edit-section-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #1aa37a; margin: 1rem 0 0.75rem; padding-bottom: 0.4rem; border-bottom: 1.5px solid #e2ece8; }
+.edit-label { font-size: 0.78rem; font-weight: 600; color: #4e6e68; display: block; margin-bottom: 4px; }
+.edit-input { width: 100%; padding: 0.6rem 0.9rem; border-radius: 12px; border: 1.5px solid #e2ece8; background: #fafffe; font-size: 0.88rem; font-family: inherit; outline: none; transition: all 0.2s; }
+.edit-input:focus { border-color: #1aa37a; box-shadow: 0 0 0 3px rgba(26,163,122,0.1); }
+.input-err { border-color: #e05252 !important; }
+.err { color: #e05252; font-size: 11.5px; font-weight: 500; display: block; margin-top: 3px; }
+
+/* ── SPECIALIZATION CHIPS ─────────────────────────────── */
+.spec-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.spec-chip { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 30px; border: 1.5px solid #e2ece8; font-size: 0.78rem; font-weight: 500; color: #4e6e68; cursor: pointer; transition: all 0.2s; background: #fafffe; user-select: none; }
+.spec-chip:hover { border-color: #1aa37a; color: #1aa37a; }
+.spec-chip-active { background: #eef9f5; border-color: #1aa37a; color: #0f5241; font-weight: 600; }
+
+/* ── SAVE / CANCEL BUTTONS ────────────────────────────── */
+.btn-save-profile { background: linear-gradient(105deg, #118c6b, #1aa37a); color: white; border: none; border-radius: 40px; padding: 10px 28px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-save-profile:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-save-profile:not(:disabled):hover { filter: brightness(1.08); }
+.btn-cancel-edit { background: #f0f5f3; border: none; border-radius: 40px; padding: 10px 22px; font-size: 0.9rem; font-weight: 600; color: #4e6e68; cursor: pointer; transition: all 0.2s; }
+.btn-cancel-edit:hover { background: #e2ece8; }
+.btn-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

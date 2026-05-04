@@ -1,36 +1,33 @@
-import { Component } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-
-interface TeamMember {
-  id: number;
-  name: string;
-  role: string;
-  email: string;
-  phone: string;
-  joinDate: string;
-  status: 'Active' | 'Inactive';
-}
+import { forkJoin } from 'rxjs';
+import { AdminService } from '../../../services/admin.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-team-management',
   templateUrl: './team-management.component.html',
   styleUrls: ['./team-management.component.css']
 })
-export class TeamManagementComponent {
+export class TeamManagementComponent implements OnInit {
 
-  addOpen = false;
-  memberSaved = false;
+  isLoading     = true;
+  addOpen       = false;
+  isSaving      = false;
+  successMsg    = '';
+  errorMsg      = '';
 
-  members: TeamMember[] = [
-    { id: 1, name: 'Admin Rajesh Kumar', role: 'Super Admin',       email: 'rajesh@care.com',  phone: '9876543210', joinDate: 'Jan 2024', status: 'Active' },
-    { id: 2, name: 'Neha Gupta',         role: 'HR Manager',        email: 'neha@care.com',    phone: '9876543211', joinDate: 'Feb 2024', status: 'Active' },
-    { id: 3, name: 'Vikram Rao',         role: 'Operations Manager', email: 'vikram@care.com',  phone: '9876543212', joinDate: 'Mar 2024', status: 'Active' },
-    { id: 4, name: 'Sonal Tiwari',       role: 'Compliance Officer', email: 'sonal@care.com',   phone: '9876543213', joinDate: 'Apr 2024', status: 'Inactive' }
-  ];
+  approvedNurses: any[] = [];
+  teamMembers:    any[] = [];
 
   memberForm: FormGroup;
+  private orgUserId!: number;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private adminService: AdminService,
+    private auth: AuthService
+  ) {
     this.memberForm = this.fb.group({
       name:     ['', [Validators.required, Validators.minLength(3)]],
       role:     ['', Validators.required],
@@ -40,19 +37,65 @@ export class TeamManagementComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.orgUserId = this.auth.getUserId()!;
+    this.loadAll();
+  }
+
+  loadAll(): void {
+    this.isLoading = true;
+    forkJoin({
+      nurses: this.adminService.getApprovedNurses(this.orgUserId),
+      team:   this.adminService.getTeamMembers(this.orgUserId)
+    }).subscribe({
+      next: ({ nurses, team }) => {
+        this.approvedNurses = nurses || [];
+        this.teamMembers    = team   || [];
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
+    });
+  }
+
   get f() { return this.memberForm.controls; }
 
   onAdd(): void {
     if (this.memberForm.invalid) { this.memberForm.markAllAsTouched(); return; }
-    const v = this.memberForm.value;
-    this.members.push({ id: Date.now(), ...v, status: 'Active' });
-    this.memberSaved = true;
-    this.addOpen = false;
-    this.memberForm.reset();
-    setTimeout(() => this.memberSaved = false, 3000);
+
+    this.isSaving = true;
+    this.errorMsg = '';
+
+    this.adminService.addTeamMember(this.orgUserId, this.memberForm.value).subscribe({
+      next: (member) => {
+        this.teamMembers.push(member);
+        this.isSaving  = false;
+        this.addOpen   = false;
+        this.successMsg = 'Team member added successfully!';
+        this.memberForm.reset();
+        setTimeout(() => this.successMsg = '', 3000);
+      },
+      error: (err: Error) => {
+        this.isSaving = false;
+        this.errorMsg = err.message;
+      }
+    });
   }
 
-  toggleStatus(member: TeamMember): void {
-    member.status = member.status === 'Active' ? 'Inactive' : 'Active';
+  toggleStatus(member: any): void {
+    this.adminService.toggleTeamMemberStatus(member.id).subscribe({
+      next: (updated) => { member.status = updated.status; }
+    });
   }
+
+  deleteMember(id: number): void {
+    this.adminService.deleteTeamMember(id).subscribe({
+      next: () => { this.teamMembers = this.teamMembers.filter(m => m.id !== id); }
+    });
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+  }
+  logout(): void { this.auth.logout(); }
 }

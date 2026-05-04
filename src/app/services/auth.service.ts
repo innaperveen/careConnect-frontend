@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -8,7 +9,7 @@ export class AuthService {
 
   private readonly API = 'http://localhost:8080/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   login(identifier: string, password: string): Observable<any> {
     return this.http.post(`${this.API}/auth/login`, { identifier, password })
@@ -30,6 +31,28 @@ export class AuthService {
     localStorage.removeItem('cc_token');
     localStorage.removeItem('cc_role');
     localStorage.removeItem('cc_user');
+  }
+
+  logout(): void {
+    this.clearSession();
+    this.router.navigate(['/login']);
+  }
+
+  getUser(): any {
+    const u = localStorage.getItem('cc_user');
+    return u ? JSON.parse(u) : null;
+  }
+
+  getUserId(): number | null {
+    return this.getUser()?.userId ?? null;
+  }
+
+  getRole(): string {
+    return localStorage.getItem('cc_role') ?? '';
+  }
+
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem('cc_token');
   }
 
   private handleError(err: HttpErrorResponse): Observable<never> {

@@ -1,4 +1,4 @@
-<div class="d-flex">
+﻿<div class="d-flex">
 
   <!-- SIDEBAR -->
   <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
@@ -43,6 +43,12 @@
           <i class="bi bi-bar-chart-fill"></i> Analytics
         </a>
       </li>
+      <div class="sidebar-divider mt-auto"></div>
+      <li class="nav-item">
+        <a class="nav-link-custom logout-link" style="cursor:pointer;" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </li>
     </ul>
   </nav>
 
@@ -61,17 +67,17 @@
         <div class="stat-card">
           <div class="stat-icon si-blue"><i class="bi bi-people-fill"></i></div>
           <div>
-            <div class="stat-num">48</div>
+            <div class="stat-num">{{ totalNurses }}</div>
             <div class="stat-lbl">Total Staff</div>
           </div>
         </div>
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-card">
-          <div class="stat-icon si-green"><i class="bi bi-graph-up-arrow"></i></div>
+          <div class="stat-icon si-green"><i class="bi bi-briefcase-fill"></i></div>
           <div>
-            <div class="stat-num">87%</div>
-            <div class="stat-lbl">Utilization Rate</div>
+            <div class="stat-num">{{ activeJobs }}</div>
+            <div class="stat-lbl">Active Jobs</div>
           </div>
         </div>
       </div>
@@ -79,23 +85,30 @@
         <div class="stat-card">
           <div class="stat-icon si-amber"><i class="bi bi-person-check-fill"></i></div>
           <div>
-            <div class="stat-num">5</div>
-            <div class="stat-lbl">Monthly Hires</div>
+            <div class="stat-num">{{ approvedApplications }}</div>
+            <div class="stat-lbl">Total Hires</div>
           </div>
         </div>
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-card">
-          <div class="stat-icon si-purple"><i class="bi bi-clock-history"></i></div>
+          <div class="stat-icon si-purple"><i class="bi bi-hourglass-split"></i></div>
           <div>
-            <div class="stat-num">2.4h</div>
-            <div class="stat-lbl">Avg Response Time</div>
+            <div class="stat-num">{{ pendingApplications }}</div>
+            <div class="stat-lbl">Pending Applications</div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="row g-4">
+    <!-- NO DATA STATE -->
+    <div *ngIf="!isLoading && !hasData" class="dash-card text-center py-5 text-muted mt-4">
+      <i class="bi bi-bar-chart fs-1 d-block mb-3" style="color:#c8ddd8;"></i>
+      <h6 style="color:#7a9e98;">No analytics data yet</h6>
+      <p style="font-size:0.85rem;">Charts will appear once you approve nurse applications.</p>
+    </div>
+
+    <div class="row g-4" *ngIf="!isLoading && hasData">
 
       <!-- Monthly Hires Bar Chart -->
       <div class="col-md-7">
@@ -114,7 +127,7 @@
       <!-- Top Nurses -->
       <div class="col-md-5">
         <div class="dash-card">
-          <div class="dash-card-title"><i class="bi bi-trophy"></i> Top Performing Nurses</div>
+          <div class="dash-card-title"><i class="bi bi-trophy"></i> Most Active Nurses</div>
           <div *ngFor="let nurse of topNurses; let i = index" class="top-nurse-row">
             <div class="rank-badge rank-{{ i+1 }}">{{ i+1 }}</div>
             <div class="flex-grow-1">
@@ -122,8 +135,7 @@
               <p class="nurse-spec-sm">{{ nurse.specialty }}</p>
             </div>
             <div class="text-end">
-              <p class="jobs-count">{{ nurse.jobs }} jobs</p>
-              <p class="rating"><i class="bi bi-star-fill text-warning" style="font-size:0.7rem;"></i> {{ nurse.rating }}</p>
+              <p class="jobs-count">{{ nurse.jobs }} hire{{ nurse.jobs !== 1 ? 's' : '' }}</p>
             </div>
           </div>
         </div>

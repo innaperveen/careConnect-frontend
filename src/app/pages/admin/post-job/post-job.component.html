@@ -1,4 +1,4 @@
-<div class="d-flex">
+﻿<div class="d-flex">
 
   <!-- SIDEBAR -->
   <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
@@ -43,6 +43,12 @@
           <i class="bi bi-bar-chart-fill"></i> Analytics
         </a>
       </li>
+      <div class="sidebar-divider mt-auto"></div>
+      <li class="nav-item">
+        <a class="nav-link-custom logout-link" style="cursor:pointer;" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </li>
     </ul>
   </nav>
 
@@ -50,17 +56,33 @@
   <div class="main-content p-4 w-100">
 
     <!-- HEADER -->
-    <div class="mb-4">
-      <h4 class="page-title">Post a Job</h4>
-      <p class="page-subtitle">Create a new nursing job listing for the platform</p>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="page-title">Jobs</h4>
+        <p class="page-subtitle">Post new jobs and manage your existing listings</p>
+      </div>
     </div>
 
-    <!-- SUCCESS TOAST -->
-    <div *ngIf="submitted" class="toast-success mb-4">
-      <i class="bi bi-check-circle-fill me-2"></i> Job posted successfully!
+    <!-- TABS -->
+    <div class="pj-tab-row mb-4">
+      <button class="pj-tab" [class.pj-tab-active]="activeTab === 'post'" (click)="activeTab = 'post'">
+        <i class="bi bi-plus-circle me-1"></i> Post New Job
+      </button>
+      <button class="pj-tab" [class.pj-tab-active]="activeTab === 'jobs'" (click)="activeTab = 'jobs'">
+        <i class="bi bi-briefcase me-1"></i> My Jobs
+        <span class="pj-tab-count" *ngIf="myJobs.length > 0">{{ myJobs.length }}</span>
+      </button>
     </div>
 
-    <form [formGroup]="jobForm" (ngSubmit)="onSubmit()">
+    <!-- SUCCESS / ERROR TOAST -->
+    <div *ngIf="successMsg" class="toast-success mb-4">
+      <i class="bi bi-check-circle-fill me-2"></i> {{ successMsg }}
+    </div>
+    <div *ngIf="errorMsg" class="toast-error mb-4">
+      <i class="bi bi-x-circle-fill me-2"></i> {{ errorMsg }}
+    </div>
+
+    <form [formGroup]="jobForm" (ngSubmit)="onSubmit()" *ngIf="activeTab === 'post'">
       <div class="row g-4">
 
         <!-- LEFT COLUMN -->
@@ -176,8 +198,9 @@
 
           <!-- Submit -->
           <div class="form-card">
-            <button type="submit" class="btn-post w-100">
-              <i class="bi bi-send-fill me-2"></i>Post Job
+            <button type="submit" class="btn-post w-100" [disabled]="jobForm.invalid || isPosting">
+              <span *ngIf="!isPosting"><i class="bi bi-send-fill me-2"></i>Post Job</span>
+              <span *ngIf="isPosting"><span class="btn-spinner me-2"></span>Posting…</span>
             </button>
             <button type="button" class="btn-cancel-sm w-100 mt-2" (click)="jobForm.reset({priority:'Normal'})">
               Clear Form
@@ -187,6 +210,55 @@
         </div>
       </div>
     </form>
+
+    <!-- ===== MY JOBS TAB ===== -->
+    <div *ngIf="activeTab === 'jobs'">
+
+      <!-- Loading -->
+      <div *ngIf="isLoadingJobs" class="text-center py-5 text-muted">
+        <div class="spinner-border text-success" role="status"></div>
+        <p class="mt-2">Loading jobs…</p>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="!isLoadingJobs && myJobs.length === 0" class="form-card text-center py-5 text-muted">
+        <i class="bi bi-briefcase fs-1 d-block mb-3" style="color:#c8ddd8;"></i>
+        <h6 style="color:#7a9e98;">No jobs posted yet</h6>
+        <p style="font-size:0.85rem;">Switch to the "Post New Job" tab to create your first listing.</p>
+      </div>
+
+      <!-- Jobs list -->
+      <div *ngIf="!isLoadingJobs && myJobs.length > 0">
+        <div *ngFor="let job of myJobs" class="job-row">
+          <div class="job-row-left">
+            <div class="job-title-row">
+              <span class="job-title-text">{{ job.jobTitle }}</span>
+              <span class="job-status-badge" [ngClass]="getStatusClass(job.status)">{{ job.status | titlecase }}</span>
+            </div>
+            <div class="job-meta">
+              <span><i class="bi bi-building me-1"></i>{{ job.department }}</span>
+              <span><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</span>
+              <span><i class="bi bi-tag me-1"></i>{{ job.specialization }}</span>
+              <span><i class="bi bi-calendar3 me-1"></i>Deadline: {{ job.deadline | date:'mediumDate' }}</span>
+            </div>
+          </div>
+          <div class="job-row-actions">
+            <button *ngIf="job.status === 'ACTIVE'" class="btn-job-action btn-close-job"
+                    (click)="updateStatus(job, 'CLOSED')">
+              <i class="bi bi-x-circle me-1"></i>Close
+            </button>
+            <button *ngIf="job.status === 'CLOSED'" class="btn-job-action btn-reopen-job"
+                    (click)="updateStatus(job, 'ACTIVE')">
+              <i class="bi bi-arrow-repeat me-1"></i>Reopen
+            </button>
+            <button class="btn-job-action btn-delete-job" (click)="deleteJob(job.id)">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
 
   </div>
 </div>
