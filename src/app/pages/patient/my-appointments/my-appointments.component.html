@@ -71,19 +71,19 @@
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-card text-center">
-          <div class="stat-num c-blue">{{ countByStatus('Scheduled') }}</div>
+          <div class="stat-num c-blue">{{ scheduledCount }}</div>
           <div class="stat-lbl">Scheduled</div>
         </div>
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-card text-center">
-          <div class="stat-num c-green">{{ countByStatus('Completed') }}</div>
+          <div class="stat-num c-green">{{ completedCount }}</div>
           <div class="stat-lbl">Completed</div>
         </div>
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-card text-center">
-          <div class="stat-num c-red">{{ countByStatus('Cancelled') }}</div>
+          <div class="stat-num c-red">{{ cancelledCount }}</div>
           <div class="stat-lbl">Cancelled</div>
         </div>
       </div>
@@ -94,7 +94,7 @@
       <button class="tab-btn" *ngFor="let tab of tabs"
               [class.tab-active]="activeTab === tab"
               (click)="activeTab = tab">
-        {{ tab }}
+        {{ tabLabels[tab] }}
         <span class="tab-count" *ngIf="tab !== 'All'">{{ countByStatus(tab) }}</span>
       </button>
     </div>
@@ -108,7 +108,7 @@
           </div>
           <div>
             <p class="nurse-name">{{ appt.nurseName }}</p>
-            <p class="nurse-spec">{{ appt.specialty }}</p>
+            <p class="nurse-spec">{{ appt.duration }}</p>
             <div class="appt-meta">
               <span><i class="bi bi-calendar3"></i> {{ appt.date }}</span>
               <span><i class="bi bi-clock"></i> {{ appt.time }}</span>
@@ -117,15 +117,14 @@
           </div>
         </div>
         <div class="d-flex flex-column align-items-end gap-2">
-          <span class="status-badge" [ngClass]="getStatusClass(appt.status)">{{ appt.status }}</span>
-          <span class="pri-badge" [ngClass]="getPriorityClass(appt.priority)">{{ appt.priority }}</span>
+          <span class="status-badge" [ngClass]="getStatusClass(appt.status)">{{ appt.status | titlecase }}</span>
         </div>
       </div>
-      <div class="d-flex gap-2 mt-3" *ngIf="appt.status === 'Scheduled'">
+      <div class="d-flex gap-2 mt-3" *ngIf="appt.status === 'PENDING' || appt.status === 'CONFIRMED'">
         <button class="btn-cancel" (click)="cancelAppointment(appt.id)">
           <i class="bi bi-x-circle me-1"></i>Cancel
         </button>
-        <button class="btn-reschedule">
+        <button class="btn-reschedule" (click)="openReschedule(appt)">
           <i class="bi bi-arrow-repeat me-1"></i>Reschedule
         </button>
       </div>
@@ -134,6 +133,61 @@
     <div *ngIf="filteredAppointments.length === 0" class="empty-state">
       <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
       No {{ activeTab === 'All' ? '' : activeTab.toLowerCase() }} appointments found.
+    </div>
+
+  </div>
+</div>
+
+<!-- RESCHEDULE MODAL -->
+<div class="rs-overlay" *ngIf="rescheduleTarget" (click)="closeReschedule()">
+  <div class="rs-modal" (click)="$event.stopPropagation()">
+
+    <div class="rs-header">
+      <div>
+        <h6 class="rs-title">Reschedule Appointment</h6>
+        <p class="rs-sub">{{ rescheduleTarget.nurseName }} &middot; {{ rescheduleTarget.careType }}</p>
+      </div>
+      <button class="rs-close" (click)="closeReschedule()"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <!-- Current date info -->
+    <div class="rs-current">
+      <i class="bi bi-calendar3 me-2"></i>
+      Current: <strong>{{ rescheduleTarget.date }}</strong> at <strong>{{ rescheduleTarget.time }}</strong>
+    </div>
+
+    <div class="rs-body">
+      <p class="rs-field-label">New Date *</p>
+      <input type="date" class="rs-input" [(ngModel)]="rescheduleDate" [min]="today">
+
+      <p class="rs-field-label mt-3">New Time *</p>
+      <div class="rs-time-picker">
+        <select class="rs-seg" [(ngModel)]="rescheduleHour">
+          <option *ngFor="let h of hours" [value]="h">{{ h }}</option>
+        </select>
+        <span class="rs-colon">:</span>
+        <select class="rs-seg" [(ngModel)]="rescheduleMinute">
+          <option *ngFor="let m of minutes" [value]="m">{{ m }}</option>
+        </select>
+        <div class="rs-ampm">
+          <button type="button" class="rs-ampm-btn" [class.rs-ampm-active]="rescheduleAmPm === 'AM'"
+                  (click)="rescheduleAmPm = 'AM'">AM</button>
+          <button type="button" class="rs-ampm-btn" [class.rs-ampm-active]="rescheduleAmPm === 'PM'"
+                  (click)="rescheduleAmPm = 'PM'">PM</button>
+        </div>
+      </div>
+
+      <div *ngIf="rescheduleError" class="rs-error mt-2">
+        <i class="bi bi-exclamation-circle me-1"></i>{{ rescheduleError }}
+      </div>
+    </div>
+
+    <div class="rs-footer">
+      <button class="rs-btn-confirm" (click)="confirmReschedule()" [disabled]="isRescheduling">
+        <span *ngIf="!isRescheduling"><i class="bi bi-check-circle me-1"></i>Confirm Reschedule</span>
+        <span *ngIf="isRescheduling"><span class="spinner-border spinner-border-sm me-1"></span>Rescheduling…</span>
+      </button>
+      <button class="rs-btn-cancel" (click)="closeReschedule()">Cancel</button>
     </div>
 
   </div>

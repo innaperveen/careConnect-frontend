@@ -56,159 +56,223 @@
       <p class="page-subtitle">Manage your profile and account preferences</p>
     </div>
 
-    <div class="row g-4">
-
-      <!-- LEFT: Profile Form -->
-      <div class="col-md-7">
-        <div class="settings-card">
-          <h6 class="card-sec-title"><i class="bi bi-person-circle me-2"></i>My Profile</h6>
-
-          <div *ngIf="profileSaved" class="toast-success mb-3">
-            <i class="bi bi-check-circle-fill me-2"></i>Profile updated successfully!
-          </div>
-
-          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="field-label">Full Name *</label>
-                <input class="field-input" formControlName="fullName" placeholder="Your full name"
-                       [class.input-err]="pf['fullName'].touched && pf['fullName'].invalid">
-                <small class="err" *ngIf="pf['fullName'].touched && pf['fullName'].hasError('required')">Full name is required.</small>
-                <small class="err" *ngIf="pf['fullName'].touched && pf['fullName'].hasError('minlength')">Minimum 3 characters.</small>
-              </div>
-              <div class="col-md-6">
-                <label class="field-label">Email Address *</label>
-                <input class="field-input" formControlName="email" placeholder="your@email.com"
-                       [class.input-err]="pf['email'].touched && pf['email'].invalid">
-                <small class="err" *ngIf="pf['email'].touched && pf['email'].hasError('required')">Email is required.</small>
-                <small class="err" *ngIf="pf['email'].touched && pf['email'].hasError('email')">Enter a valid email.</small>
-              </div>
-              <div class="col-md-6">
-                <label class="field-label">Phone Number *</label>
-                <input class="field-input" formControlName="phone" placeholder="10-digit number"
-                       [class.input-err]="pf['phone'].touched && pf['phone'].invalid">
-                <small class="err" *ngIf="pf['phone'].touched && pf['phone'].hasError('required')">Phone is required.</small>
-                <small class="err" *ngIf="pf['phone'].touched && pf['phone'].hasError('pattern')">Enter a valid 10-digit number.</small>
-              </div>
-              <div class="col-md-3">
-                <label class="field-label">Date of Birth *</label>
-                <input type="date" class="field-input" formControlName="dateOfBirth"
-                       [class.input-err]="pf['dateOfBirth'].touched && pf['dateOfBirth'].invalid">
-                <small class="err" *ngIf="pf['dateOfBirth'].touched && pf['dateOfBirth'].hasError('required')">Date of birth is required.</small>
-              </div>
-              <div class="col-md-3">
-                <label class="field-label">Gender *</label>
-                <select class="field-input" formControlName="gender"
-                        [class.input-err]="pf['gender'].touched && pf['gender'].invalid">
-                  <option value="">Select</option>
-                  <option>Male</option>
-                  <option>Female</option>
-                  <option>Other</option>
-                </select>
-                <small class="err" *ngIf="pf['gender'].touched && pf['gender'].hasError('required')">Please select gender.</small>
-              </div>
-              <div class="col-md-6">
-                <label class="field-label">Blood Group</label>
-                <select class="field-input" formControlName="bloodGroup">
-                  <option>A+</option><option>A-</option>
-                  <option>B+</option><option>B-</option>
-                  <option>AB+</option><option>AB-</option>
-                  <option>O+</option><option>O-</option>
-                </select>
-              </div>
-              <div class="col-12">
-                <label class="field-label">Address *</label>
-                <input class="field-input" formControlName="address" placeholder="Street, City, PIN code"
-                       [class.input-err]="pf['address'].touched && pf['address'].invalid">
-                <small class="err" *ngIf="pf['address'].touched && pf['address'].hasError('required')">Address is required.</small>
-                <small class="err" *ngIf="pf['address'].touched && pf['address'].hasError('minlength')">Minimum 10 characters.</small>
-              </div>
-            </div>
-            <button type="submit" class="btn-save mt-3">
-              <i class="bi bi-check-lg me-1"></i>Save Changes
-            </button>
-          </form>
-        </div>
+    <!-- PROFILE IDENTITY CARD -->
+    <div class="identity-card mb-4">
+      <div class="identity-avatar">{{ avatarLetter }}</div>
+      <div class="identity-info">
+        <p class="identity-name">{{ displayName }}</p>
+        <p class="identity-email">{{ displayEmail }}</p>
       </div>
+      <span class="identity-badge"><i class="bi bi-circle-fill me-1"></i>Active Patient</span>
+    </div>
 
-      <!-- RIGHT: Password + Info -->
-      <div class="col-md-5 d-flex flex-column gap-4">
+    <!-- TAB NAV -->
+    <div class="tab-nav mb-4">
+      <button class="tab-item" [class.tab-active]="activeTab === 'profile'" (click)="activeTab = 'profile'">
+        <i class="bi bi-person-lines-fill me-2"></i>My Profile
+      </button>
+      <button class="tab-item" [class.tab-active]="activeTab === 'security'" (click)="activeTab = 'security'">
+        <i class="bi bi-shield-lock me-2"></i>Security
+      </button>
+      <button class="tab-item" [class.tab-active]="activeTab === 'account'" (click)="activeTab = 'account'">
+        <i class="bi bi-info-circle me-2"></i>Account
+      </button>
+    </div>
 
-        <!-- Change Password -->
-        <div class="settings-card">
-          <h6 class="card-sec-title"><i class="bi bi-shield-lock me-2"></i>Change Password</h6>
+    <!-- ── PROFILE TAB ─────────────────────────────────── -->
+    <div *ngIf="activeTab === 'profile'">
+      <div class="settings-card">
 
-          <div *ngIf="passwordSaved" class="toast-success mb-3">
-            <i class="bi bi-check-circle-fill me-2"></i>Password updated successfully!
+        <div *ngIf="profileSaved" class="toast-success mb-4">
+          <i class="bi bi-check-circle-fill me-2"></i>Profile updated successfully!
+        </div>
+        <div *ngIf="profileError" class="toast-error mb-4">
+          <i class="bi bi-x-circle-fill me-2"></i>{{ profileError }}
+        </div>
+
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+          <div class="d-flex justify-content-between align-items-center mb-3" style="border-bottom:1.5px solid #f0f5f3; padding-bottom:10px;">
+            <span class="form-section-label mb-0" style="border:none; padding:0;">Personal Information</span>
+            <button *ngIf="!isEditing" type="button" class="btn-edit-profile" (click)="startEditing()">
+              <i class="bi bi-pencil me-1"></i>Edit Profile
+            </button>
           </div>
 
-          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
-            <div class="mb-3">
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="field-label">Full Name</label>
+              <input class="field-input" formControlName="fullName" placeholder="Your full name"
+                     [class.field-readonly]="!isEditing"
+                     [class.input-err]="pf['fullName'].touched && pf['fullName'].invalid">
+              <small class="err" *ngIf="pf['fullName'].touched && pf['fullName'].hasError('required')">Full name is required.</small>
+              <small class="err" *ngIf="pf['fullName'].touched && pf['fullName'].hasError('minlength')">Minimum 3 characters.</small>
+            </div>
+            <div class="col-md-6">
+              <label class="field-label">Email Address</label>
+              <input class="field-input field-readonly" formControlName="email">
+              <small class="hint">Email cannot be changed here.</small>
+            </div>
+            <div class="col-md-6">
+              <label class="field-label">Phone Number</label>
+              <input class="field-input" formControlName="phone" placeholder="10-digit mobile number"
+                     [class.field-readonly]="!isEditing"
+                     [class.input-err]="pf['phone'].touched && pf['phone'].invalid">
+              <small class="err" *ngIf="pf['phone'].touched && pf['phone'].hasError('required')">Phone number is required.</small>
+              <small class="err" *ngIf="pf['phone'].touched && pf['phone'].hasError('pattern')">Enter a valid 10-digit number.</small>
+            </div>
+            <div class="col-md-3">
+              <label class="field-label">Date of Birth</label>
+              <input type="date" class="field-input" formControlName="dateOfBirth"
+                     [class.field-readonly]="!isEditing">
+            </div>
+            <div class="col-md-3">
+              <label class="field-label">Blood Group</label>
+              <select class="field-input" formControlName="bloodGroup"
+                      [class.field-readonly]="!isEditing">
+                <option value="">Select</option>
+                <option>A+</option><option>A-</option>
+                <option>B+</option><option>B-</option>
+                <option>AB+</option><option>AB-</option>
+                <option>O+</option><option>O-</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="field-label">Gender</label>
+              <select class="field-input" formControlName="gender"
+                      [class.field-readonly]="!isEditing">
+                <option value="">Select</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+                <option>Prefer not to say</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="field-label">Address</label>
+              <input class="field-input" formControlName="address" placeholder="Street, City, PIN code"
+                     [class.field-readonly]="!isEditing">
+            </div>
+          </div>
+
+          <div class="form-actions" *ngIf="isEditing">
+            <button type="submit" class="btn-primary-action" [disabled]="profileForm.invalid || isSavingProfile">
+              <span *ngIf="!isSavingProfile"><i class="bi bi-check-lg me-1"></i>Save Changes</span>
+              <span *ngIf="isSavingProfile"><span class="spinner-border spinner-border-sm me-1"></span>Saving…</span>
+            </button>
+            <button type="button" class="btn-cancel-edit" (click)="cancelEditing()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── SECURITY TAB ────────────────────────────────── -->
+    <div *ngIf="activeTab === 'security'">
+      <div class="settings-card">
+
+        <div *ngIf="passwordSaved" class="toast-success mb-4">
+          <i class="bi bi-check-circle-fill me-2"></i>Password updated successfully!
+        </div>
+        <div *ngIf="passwordError" class="toast-error mb-4">
+          <i class="bi bi-x-circle-fill me-2"></i>{{ passwordError }}
+        </div>
+
+        <div class="form-section-label">Change Password</div>
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
               <label class="field-label">Current Password *</label>
               <div class="input-eye-wrap">
                 <input class="field-input" [type]="showCurrent ? 'text' : 'password'"
                        formControlName="currentPassword" placeholder="Enter current password"
                        [class.input-err]="pwf['currentPassword'].touched && pwf['currentPassword'].invalid">
                 <button type="button" class="eye-btn" (click)="showCurrent = !showCurrent">
-                  <i class="bi" [ngClass]="showCurrent ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  <i class="bi" [class.bi-eye]="!showCurrent" [class.bi-eye-slash]="showCurrent"></i>
                 </button>
               </div>
               <small class="err" *ngIf="pwf['currentPassword'].touched && pwf['currentPassword'].hasError('required')">Current password is required.</small>
-              <small class="err" *ngIf="pwf['currentPassword'].touched && pwf['currentPassword'].hasError('minlength')">Minimum 6 characters.</small>
             </div>
-            <div class="mb-3">
+            <div class="col-md-6">
               <label class="field-label">New Password *</label>
               <div class="input-eye-wrap">
                 <input class="field-input" [type]="showNew ? 'text' : 'password'"
                        formControlName="newPassword" placeholder="At least 8 characters"
                        [class.input-err]="pwf['newPassword'].touched && pwf['newPassword'].invalid">
                 <button type="button" class="eye-btn" (click)="showNew = !showNew">
-                  <i class="bi" [ngClass]="showNew ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  <i class="bi" [class.bi-eye]="!showNew" [class.bi-eye-slash]="showNew"></i>
                 </button>
               </div>
               <small class="err" *ngIf="pwf['newPassword'].touched && pwf['newPassword'].hasError('required')">New password is required.</small>
               <small class="err" *ngIf="pwf['newPassword'].touched && pwf['newPassword'].hasError('minlength')">Minimum 8 characters.</small>
             </div>
-            <div class="mb-3">
+            <div class="col-md-6">
               <label class="field-label">Confirm New Password *</label>
               <div class="input-eye-wrap">
                 <input class="field-input" [type]="showConfirm ? 'text' : 'password'"
                        formControlName="confirmPassword" placeholder="Repeat new password"
                        [class.input-err]="pwf['confirmPassword'].touched && (pwf['confirmPassword'].hasError('required') || passwordForm.hasError('mismatch'))">
                 <button type="button" class="eye-btn" (click)="showConfirm = !showConfirm">
-                  <i class="bi" [ngClass]="showConfirm ? 'bi-eye-slash' : 'bi-eye'"></i>
+                  <i class="bi" [class.bi-eye]="!showConfirm" [class.bi-eye-slash]="showConfirm"></i>
                 </button>
               </div>
               <small class="err" *ngIf="pwf['confirmPassword'].touched && pwf['confirmPassword'].hasError('required')">Please confirm your password.</small>
               <small class="err" *ngIf="pwf['confirmPassword'].touched && passwordForm.hasError('mismatch')">Passwords do not match.</small>
             </div>
-            <button type="submit" class="btn-save w-100">
-              <i class="bi bi-shield-check me-1"></i>Update Password
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary-action" [disabled]="passwordForm.invalid || isSavingPassword">
+              <span *ngIf="!isSavingPassword"><i class="bi bi-shield-check me-1"></i>Update Password</span>
+              <span *ngIf="isSavingPassword"><span class="spinner-border spinner-border-sm me-1"></span>Updating…</span>
             </button>
-          </form>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── ACCOUNT TAB ─────────────────────────────────── -->
+    <div *ngIf="activeTab === 'account'">
+      <div class="settings-card">
+        <div class="form-section-label">Account Details</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-icon"><i class="bi bi-person-badge"></i></span>
+            <div>
+              <p class="info-key">User ID</p>
+              <p class="info-val">{{ displayUserId }}</p>
+            </div>
+          </div>
+          <div class="info-item">
+            <span class="info-icon"><i class="bi bi-envelope"></i></span>
+            <div>
+              <p class="info-key">Email</p>
+              <p class="info-val">{{ displayEmail }}</p>
+            </div>
+          </div>
+          <div class="info-item">
+            <span class="info-icon"><i class="bi bi-person-heart"></i></span>
+            <div>
+              <p class="info-key">Account Type</p>
+              <p class="info-val">Patient</p>
+            </div>
+          </div>
+          <div class="info-item">
+            <span class="info-icon"><i class="bi bi-circle-fill" style="color:#1aa37a;font-size:0.7rem;"></i></span>
+            <div>
+              <p class="info-key">Status</p>
+              <p class="info-val" style="color:#1aa37a;">Active</p>
+            </div>
+          </div>
         </div>
 
-        <!-- Account Info -->
-        <div class="settings-card">
-          <h6 class="card-sec-title"><i class="bi bi-info-circle me-2"></i>Account Info</h6>
-          <div class="info-row">
-            <span class="info-label">Patient ID</span>
-            <span class="info-value">P-12345</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Account Type</span>
-            <span class="info-value">Patient</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Member Since</span>
-            <span class="info-value">January 2024</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Status</span>
-            <span class="status-active"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i>Active</span>
-          </div>
+        <div class="danger-zone mt-4">
+          <div class="form-section-label" style="color:#d63030;">Danger Zone</div>
+          <p class="danger-desc">Deleting your account is permanent and cannot be undone. All your appointments and records will be removed.</p>
+          <button class="btn-danger" type="button">
+            <i class="bi bi-trash me-1"></i>Delete Account
+          </button>
         </div>
-
       </div>
     </div>
 

@@ -1,45 +1,70 @@
-﻿import { AuthService } from '../../../services/auth.service';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AuthService } from '../../../services/auth.service';
+import { MedicalRecordService } from '../../../services/medical-record.service';
 
 interface MedicalRecord {
   id: number;
   fileName: string;
   type: string;
   date: string;
-  size: string;
-  doctor: string;
-  notes: string;}
+  notes: string;
+}
 
 @Component({
   selector: 'app-medical-records',
   templateUrl: './medical-records.component.html',
   styleUrls: ['./medical-records.component.css']
 })
-export class MedicalRecordsComponent {
+export class MedicalRecordsComponent implements OnInit {
 
-  activeFilter = 'All';
-  filters = ['All', 'Lab Report', 'Prescription', 'Imaging', 'Discharge Summary'];
-  uploadOpen = false;
+  activeFilter  = 'All';
+  filters       = ['All', 'Lab Report', 'Prescription', 'Imaging', 'Discharge Summary'];
+  uploadOpen    = false;
   uploadSuccess = false;
+  isLoading     = true;
+  errorMsg      = '';
 
-  records: MedicalRecord[] = [
-    { id: 1, fileName: 'Blood_Test_Oct2025.pdf',    type: 'Lab Report',        date: 'Oct 15, 2025', size: '1.2 MB', doctor: 'Dr. Anil Sharma', notes: 'CBC and Lipid Panel' },
-    { id: 2, fileName: 'Chest_Xray_Oct2025.jpg',    type: 'Imaging',           date: 'Oct 10, 2025', size: '3.4 MB', doctor: 'Dr. Priya Mehta',  notes: 'Annual chest screening' },
-    { id: 3, fileName: 'Prescription_Oct2025.pdf',  type: 'Prescription',      date: 'Oct 8, 2025',  size: '0.3 MB', doctor: 'Dr. Rakesh Gupta', notes: 'Blood pressure medication' },
-    { id: 4, fileName: 'Discharge_Summary_Sep.pdf', type: 'Discharge Summary', date: 'Sep 28, 2025', size: '0.8 MB', doctor: 'Dr. Neha Singh',   notes: 'Post-surgery discharge notes' },
-  ];
-
+  records: MedicalRecord[] = [];
   uploadForm: FormGroup;
 
-  constructor(private auth: AuthService, private fb: FormBuilder) {
+  constructor(
+    private auth: AuthService,
+    private fb: FormBuilder,
+    private recordService: MedicalRecordService
+  ) {
     this.uploadForm = this.fb.group({
       fileName: ['', [Validators.required, Validators.minLength(3)]],
       type:     ['', Validators.required],
-      date:     ['', Validators.required],
-      doctor:   [''],
       notes:    ['']
     });
+  }
+
+  ngOnInit(): void { this.loadRecords(); }
+
+  private loadRecords(): void {
+    const userId = this.auth.getUserId();
+    if (!userId) { this.isLoading = false; return; }
+
+    this.recordService.getByPatient(userId).subscribe({
+      next: (data) => {
+        this.records   = (data || []).map((r: any) => this.mapRecord(r));
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
+    });
+  }
+
+  private mapRecord(r: any): MedicalRecord {
+    return {
+      id:       r.id,
+      fileName: r.title || r.fileName || 'Record',
+      type:     r.recordType || '—',
+      date:     r.createdAt
+        ? new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : '—',
+      notes: r.description || ''
+    };
   }
 
   get filteredRecords(): MedicalRecord[] {
@@ -73,13 +98,30 @@ export class MedicalRecordsComponent {
 
   onUpload(): void {
     if (this.uploadForm.invalid) { this.uploadForm.markAllAsTouched(); return; }
+    const userId = this.auth.getUserId();
+    if (!userId) return;
+
     const v = this.uploadForm.value;
-    const dateStr = v.date ? new Date(v.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-    this.records.unshift({ id: Date.now(), fileName: v.fileName, type: v.type, date: dateStr, size: 'N/A', doctor: v.doctor || 'Self', notes: v.notes || '' });
-    this.uploadForm.reset();
-    this.uploadOpen = false;
-    this.uploadSuccess = true;
-    setTimeout(() => this.uploadSuccess = false, 3000);
+    this.errorMsg = '';
+
+    this.recordService.upload(userId, userId, v.type, v.fileName, v.notes || undefined).subscribe({
+      next: (record) => {
+        this.records.unshift(this.mapRecord(record));
+        this.uploadForm.reset();
+        this.uploadOpen    = false;
+        this.uploadSuccess = true;
+        setTimeout(() => this.uploadSuccess = false, 3000);
+      },
+      error: (err: Error) => { this.errorMsg = err.message; }
+    });
   }
+
+  deleteRecord(id: number): void {
+    this.recordService.delete(id).subscribe({
+      next: () => { this.records = this.records.filter(r => r.id !== id); },
+      error: () => {}
+    });
+  }
+
   logout(): void { this.auth.logout(); }
 }

@@ -63,3 +63,30 @@
 .btn-reschedule:hover { background: #eef9f5; }
 
 .empty-state { background: white; border-radius: 18px; padding: 3rem; text-align: center; color: #9ab8b2; box-shadow: 0 4px 14px -4px rgba(0,32,32,0.06); }
+
+/* RESCHEDULE MODAL */
+.rs-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(2px); }
+.rs-modal { background: white; border-radius: 20px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px -10px rgba(0,0,0,0.25); overflow: hidden; }
+.rs-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 1.3rem 1.4rem 1rem; background: linear-gradient(135deg, #eef9f5, #f8fffd); border-bottom: 1.5px solid #e8f3ef; }
+.rs-title { font-size: 1rem; font-weight: 700; color: #1a3b3a; margin: 0 0 3px; }
+.rs-sub { font-size: 0.8rem; color: #6a8c80; margin: 0; }
+.rs-close { background: none; border: none; font-size: 1rem; color: #8aaba4; cursor: pointer; padding: 2px; line-height: 1; }
+.rs-close:hover { color: #1a3b3a; }
+.rs-current { padding: 10px 1.4rem; background: #f8fffd; font-size: 0.82rem; color: #4e6e68; border-bottom: 1px solid #e8f3ef; }
+.rs-body { padding: 1.2rem 1.4rem; }
+.rs-field-label { font-size: 0.8rem; font-weight: 600; color: #4e6e68; margin: 0 0 6px; }
+.rs-input { width: 100%; border: 1.5px solid #d8ede6; border-radius: 10px; padding: 9px 13px; font-size: 0.87rem; color: #1a3b3a; background: #fafffe; outline: none; }
+.rs-input:focus { border-color: #1aa37a; box-shadow: 0 0 0 3px rgba(26,163,122,0.1); }
+.rs-time-picker { display: flex; align-items: center; gap: 6px; }
+.rs-seg { border: 1.5px solid #d8ede6; border-radius: 8px; padding: 8px 10px; font-size: 1rem; font-weight: 700; color: #1a3b3a; background: white; cursor: pointer; min-width: 54px; outline: none; text-align: center; }
+.rs-seg:focus { border-color: #1aa37a; box-shadow: 0 0 0 3px rgba(26,163,122,0.1); }
+.rs-colon { font-size: 1.3rem; font-weight: 800; color: #1a3b3a; }
+.rs-ampm { display: flex; border: 1.5px solid #d8ede6; border-radius: 8px; overflow: hidden; margin-left: 4px; }
+.rs-ampm-btn { padding: 8px 12px; font-size: 0.8rem; font-weight: 700; border: none; background: white; color: #6a8c80; cursor: pointer; transition: all 0.15s; }
+.rs-ampm-active { background: #1aa37a; color: white; }
+.rs-error { font-size: 0.82rem; color: #dc2626; display: flex; align-items: center; }
+.rs-footer { display: flex; gap: 10px; padding: 1rem 1.4rem; border-top: 1.5px solid #f0f5f3; }
+.rs-btn-confirm { flex: 1; background: linear-gradient(110deg, #0f6b51, #1ca97c); color: white; border: none; border-radius: 20px; padding: 10px; font-size: 0.87rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.18s; }
+.rs-btn-confirm:disabled { opacity: 0.65; cursor: not-allowed; }
+.rs-btn-cancel { background: white; color: #6a8c80; border: 1.5px solid #d8ede6; border-radius: 20px; padding: 10px 20px; font-size: 0.87rem; font-weight: 600; cursor: pointer; transition: all 0.18s; }
+.rs-btn-cancel:hover { background: #f4faf5; }

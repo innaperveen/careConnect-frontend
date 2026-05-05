@@ -21,6 +21,11 @@ export class AuthService {
       .pipe(catchError(this.handleError));
   }
 
+  changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.API}/auth/change-password`, { userId, currentPassword, newPassword })
+      .pipe(catchError(this.handleError));
+  }
+
   saveSession(data: any): void {
     localStorage.setItem('cc_token', data.token ?? '');
     localStorage.setItem('cc_role',  data.role  ?? '');
