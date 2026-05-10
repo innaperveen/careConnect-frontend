@@ -1,6 +1,9 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
+import { authGuard } from './guards/auth.guard';
+import { roleGuard } from './guards/role.guard';
+
 import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { HomeComponent } from './pages/home/home.component';
@@ -31,39 +34,43 @@ import { TrainingComponent } from './pages/nurse/training/training.component';
 import { MyPatientsComponent } from './pages/nurse/my-patients/my-patients.component';
 
 const routes: Routes = [
-  { path: '', component: HomeComponent },
-  { path: 'login',            component: LoginComponent },
-  { path: 'register',         component: RegisterComponent },
-  { path: 'home',             component: HomeComponent },
-  { path: 'forgot-password',  component: ForgotPasswordComponent },
+  // Public — always accessible
+  { path: '',               component: HomeComponent },
+  { path: 'home',           component: HomeComponent },
+  { path: 'login',          component: LoginComponent },
+  { path: 'register',       component: RegisterComponent },
+  { path: 'forgot-password',component: ForgotPasswordComponent },
 
-  // Admin
-  { path: 'admin',               component: AdminDashboardComponent },
-  { path: 'admin-post-job',      component: PostJobComponent },
-  { path: 'admin-applications',  component: NurseApplicationsComponent },
-  { path: 'admin-compliance',    component: ComplianceComponent },
-  { path: 'admin-credentialing', component: CredentialingComponent },
-  { path: 'admin-team',          component: TeamManagementComponent },
-  { path: 'admin-analytics',     component: StaffingAnalyticsComponent },
+  // Admin (Organization) routes — must be logged in AND role = ORGANIZATION
+  { path: 'admin',               component: AdminDashboardComponent,    canActivate: [authGuard, roleGuard], data: { role: 'ORGANIZATION' } },
+  { path: 'admin-post-job',      component: PostJobComponent,           canActivate: [authGuard, roleGuard], data: { role: 'ORGANIZATION' } },
+  { path: 'admin-applications',  component: NurseApplicationsComponent, canActivate: [authGuard, roleGuard], data: { role: 'ORGANIZATION' } },
+  { path: 'admin-compliance',    component: ComplianceComponent,        canActivate: [authGuard, roleGuard], data: { role: 'ORGANIZATION' } },
+  { path: 'admin-credentialing', component: CredentialingComponent,     canActivate: [authGuard, roleGuard], data: { role: 'ORGANIZATION' } },
+  { path: 'admin-team',          component: TeamManagementComponent,    canActivate: [authGuard, roleGuard], data: { role: 'ORGANIZATION' } },
+  { path: 'admin-analytics',     component: StaffingAnalyticsComponent, canActivate: [authGuard, roleGuard], data: { role: 'ORGANIZATION' } },
 
-  // Patient
-  { path: 'patient',                   component: PatientDashboardComponent },
-  { path: 'patient-book-appointment',  component: BookAppointmentComponent },
-  { path: 'patient-appointments',      component: MyAppointmentsComponent },
-  { path: 'patient-medical-records',   component: MedicalRecordsComponent },
-  { path: 'patient-settings',         component: SettingsComponent },
-  { path: 'patient-my-nurses',        component: MyNursesComponent },
+  // Patient routes — must be logged in AND role = PATIENT
+  { path: 'patient',                  component: PatientDashboardComponent, canActivate: [authGuard, roleGuard], data: { role: 'PATIENT' } },
+  { path: 'patient-book-appointment', component: BookAppointmentComponent,  canActivate: [authGuard, roleGuard], data: { role: 'PATIENT' } },
+  { path: 'patient-appointments',     component: MyAppointmentsComponent,   canActivate: [authGuard, roleGuard], data: { role: 'PATIENT' } },
+  { path: 'patient-medical-records',  component: MedicalRecordsComponent,   canActivate: [authGuard, roleGuard], data: { role: 'PATIENT' } },
+  { path: 'patient-settings',         component: SettingsComponent,         canActivate: [authGuard, roleGuard], data: { role: 'PATIENT' } },
+  { path: 'patient-my-nurses',        component: MyNursesComponent,         canActivate: [authGuard, roleGuard], data: { role: 'PATIENT' } },
 
-  // Nurse
-  { path: 'nurse',               component: NurseDashboardComponent },
-  { path: 'nurse-dashboard',     component: NurseDashboardComponent },
-  { path: 'nurse-profile',       component: ProfileComponent },
-  { path: 'nurse-available-jobs',component: JobsComponent },
-  { path: 'nurse-applications',  component: ApplicationsComponent },
-  { path: 'nurse-schedule',      component: ScheduleComponent },
-  { path: 'nurse-payments',      component: PaymentsComponent },
-  { path: 'nurse-training',      component: TrainingComponent },
-  { path: 'nurse-my-patients',   component: MyPatientsComponent },
+  // Nurse routes — must be logged in AND role = NURSE
+  { path: 'nurse',                component: NurseDashboardComponent, canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
+  { path: 'nurse-dashboard',      component: NurseDashboardComponent, canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
+  { path: 'nurse-profile',        component: ProfileComponent,        canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
+  { path: 'nurse-available-jobs', component: JobsComponent,           canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
+  { path: 'nurse-applications',   component: ApplicationsComponent,   canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
+  { path: 'nurse-schedule',       component: ScheduleComponent,       canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
+  { path: 'nurse-payments',       component: PaymentsComponent,       canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
+  { path: 'nurse-training',       component: TrainingComponent,       canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
+  { path: 'nurse-my-patients',    component: MyPatientsComponent,     canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
+
+  // Fallback
+  { path: '**', redirectTo: '' },
 ];
 
 @NgModule({
