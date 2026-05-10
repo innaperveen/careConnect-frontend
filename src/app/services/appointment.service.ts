@@ -37,6 +37,51 @@ export class AppointmentService {
     }).pipe(map((r: any) => r.data), catchError(this.handleError));
   }
 
+  // All PENDING appointments with no nurse assigned — visible to nurses as "patient requests"
+  getOpen(): Observable<any[]> {
+    return this.http.get<any>(`${this.API}/open`)
+      .pipe(map((r: any) => r.data || []), catchError(this.handleError));
+  }
+
+  // Nurse accepts a patient's appointment request (legacy direct assign — kept for compatibility)
+  assignNurse(appointmentId: number, nurseUserId: number): Observable<any> {
+    return this.http.patch<any>(`${this.API}/${appointmentId}/assign`, null, {
+      params: { nurseUserId: String(nurseUserId) }
+    }).pipe(map((r: any) => r.data), catchError(this.handleError));
+  }
+
+  // Nurse bids on a patient request with salary expectation
+  applyToAppointment(appointmentId: number, nurseUserId: number, salaryExpectation: number | null, note: string): Observable<any> {
+    return this.http.post<any>(`${this.API}/${appointmentId}/apply?nurseUserId=${nurseUserId}`,
+      { salaryExpectation, note })
+      .pipe(map((r: any) => r.data), catchError(this.handleError));
+  }
+
+  // Get all nurse bids for a patient appointment (patient views applicants)
+  getAppointmentApplications(appointmentId: number): Observable<any[]> {
+    return this.http.get<any>(`${this.API}/${appointmentId}/applications`)
+      .pipe(map((r: any) => r.data || []), catchError(this.handleError));
+  }
+
+  // Get all appointment requests a nurse has already applied to
+  getNurseAppointmentApplications(nurseUserId: number): Observable<any[]> {
+    return this.http.get<any>(`${this.API}/applications/nurse/${nurseUserId}`)
+      .pipe(map((r: any) => r.data || []), catchError(this.handleError));
+  }
+
+  // Patient selects a nurse — accepts their application
+  acceptAppointmentApplication(applicationId: number): Observable<any> {
+    return this.http.post<any>(`${this.API}/applications/${applicationId}/accept`, {})
+      .pipe(map((r: any) => r.data), catchError(this.handleError));
+  }
+
+  // Nurse withdraws their bid from a patient request
+  withdrawAppointmentApplication(appointmentId: number, nurseUserId: number): Observable<any> {
+    return this.http.delete<any>(`${this.API}/${appointmentId}/apply`, {
+      params: { nurseUserId: String(nurseUserId) }
+    }).pipe(map((r: any) => r.data), catchError(this.handleError));
+  }
+
   private handleError(err: HttpErrorResponse): Observable<never> {
     const msg = err.error?.message ?? 'Something went wrong. Please try again.';
     return throwError(() => new Error(msg));
