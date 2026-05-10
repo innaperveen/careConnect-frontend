@@ -1,98 +1,125 @@
-﻿import { AuthService } from '../../../services/auth.service';
-import { Component } from '@angular/core';
+import { AuthService } from '../../../services/auth.service';
+import { NurseService } from '../../../services/nurse.service';
+import { AppointmentService } from '../../../services/appointment.service';
+import { Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-nurse-dashboard',
   templateUrl: './nurse-dashboard.component.html',
   styleUrls: ['./nurse-dashboard.component.css']
 })
-export class NurseDashboardComponent {
+export class NurseDashboardComponent implements OnInit {
 
-  constructor(private auth: AuthService) {}
+  isLoading = true;
 
+  nurseName        = 'Nurse';
+  nurseSpecialty   = '—';
+  nurseExperience  = '—';
+  profileCompletion = 0;
+  avatarLetter     = 'N';
 
-  upcomingShifts = 3;
-  monthlyEarnings = '₹42,000';
-  profileCompletion = 85;
+  upcomingShifts  = 0;
+  monthlyEarnings = '—';
+  applicationsCount = 0;
 
   quickActions = [
     { icon: 'bi-briefcase-fill',       label: 'Browse Jobs',    route: '/nurse-available-jobs', bgColor: '#e3f6ef', color: '#1aa37a' },
     { icon: 'bi-journal-bookmark-fill', label: 'Applications',   route: '/nurse-applications',   bgColor: '#e8f0fe', color: '#1a73e8' },
     { icon: 'bi-calendar3',            label: 'My Schedule',    route: '/nurse-schedule',        bgColor: '#fef3e2', color: '#d68910' },
-    { icon: 'bi-cash-stack',           label: 'Payments',       route: '/nurse-payments',        bgColor: '#eaf6f2', color: '#0f6b51' },
-    { icon: 'bi-mortarboard',          label: 'Training',       route: '/nurse-training',        bgColor: '#f3e8fd', color: '#8e44ad' },
     { icon: 'bi-person-badge',         label: 'My Profile',     route: '/nurse-profile',         bgColor: '#fde8e8', color: '#c0392b' },
   ];
 
-  // Availability toggle
-  isAvailable: boolean = true;
-
-  toggleAvailability() {
-    this.isAvailable = !this.isAvailable;
-  }
-
-  // Notifications
+  isAvailable     = true;
   notificationsOpen = false;
-
   notifications = [
-    { message: 'New ICU job posted', time: '2 min ago', read: false },
-    { message: 'Application accepted', time: '1 hr ago', read: false },
-    { message: 'Shift reminder', time: '1 day ago', read: true }
+    { message: 'Welcome to CareConnect!', time: 'just now', read: false }
   ];
 
-  toggleNotifications() {
-    this.notificationsOpen = !this.notificationsOpen;
-  }
+  // Recent items from backend
+  recentAppointments: any[] = [];
+  recentApplications: any[] = [];
 
-  hasUnreadNotifications(): boolean {
-    return this.notifications.some(n => !n.read);
-  }
-
-  // Jobs
+  // Jobs (still hardcoded — job listings module pending)
   jobs = [
-    {
-      title: 'ICU Nurse',
-      location: 'Delhi',
-      shift: 'Night',
-      salary: '₹30,000'
-    },
-    {
-      title: 'Emergency Nurse',
-      location: 'Bangalore',
-      shift: 'Day',
-      salary: '₹28,000'
-    }
+    { title: 'ICU Nurse',       location: 'Delhi',     shift: 'Night', salary: '₹30,000' },
+    { title: 'Emergency Nurse', location: 'Bangalore', shift: 'Day',   salary: '₹28,000' }
   ];
 
-  // Applications
-  applications = [
-    { jobTitle: 'ICU Nurse', status: 'Applied' },
-    { jobTitle: 'Emergency Nurse', status: 'Accepted' }
-  ];
-
-  // Modal
   selectedJob: any = null;
 
-  openDetails(job: any) {
-    this.selectedJob = job;
+  constructor(
+    private auth:        AuthService,
+    private nurseSvc:    NurseService,
+    private apptService: AppointmentService
+  ) {}
+
+  ngOnInit(): void {
+    const userId = this.auth.getUserId();
+    if (!userId) { this.isLoading = false; return; }
+
+    forkJoin({
+      profile:      this.nurseSvc.getProfile(userId),
+      appointments: this.apptService.getByNurse(userId),
+      applications: this.nurseSvc.getApplications(userId)
+    }).subscribe({
+      next: ({ profile, appointments, applications }) => {
+        // Profile
+        this.nurseName        = profile.fullName || 'Nurse';
+        this.nurseSpecialty   = profile.specialization || '—';
+        this.nurseExperience  = profile.experienceYears != null ? profile.experienceYears + ' Yrs Exp' : '—';
+        this.avatarLetter     = (profile.fullName || 'N')[0].toUpperCase();
+        this.profileCompletion = this.calcCompletion(profile);
+
+        // Appointments — upcoming = future dates
+        const now = new Date();
+        const upcoming = (appointments || []).filter((a: any) => {
+          const d = new Date(a.appointmentDate);
+          return d > now && (a.status === 'PENDING' || a.status === 'CONFIRMED');
+        });
+        this.upcomingShifts = upcoming.length;
+        this.recentAppointments = upcoming.slice(0, 3);
+
+        // Applications
+        this.applicationsCount = (applications || []).length;
+        this.recentApplications = (applications || []).slice(0, 3).map((a: any) => ({
+          jobTitle: a.jobTitle,
+          status:   a.status
+        }));
+
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
+    });
   }
 
-  closeModal() {
-    this.selectedJob = null;
+  private calcCompletion(profile: any): number {
+    const fields = ['fullName', 'licenseNumber', 'phone', 'specialization',
+                    'education', 'availability', 'expertise', 'address'];
+    const filled = fields.filter(f => profile[f] && String(profile[f]).trim() !== '').length;
+    return Math.round((filled / fields.length) * 100);
   }
 
-  apply(job: any) {
-    alert('Applied for ' + job.title);
-  }
+  toggleAvailability() { this.isAvailable = !this.isAvailable; }
+  toggleNotifications() { this.notificationsOpen = !this.notificationsOpen; }
+  hasUnreadNotifications(): boolean { return this.notifications.some(n => !n.read); }
+
+  openDetails(job: any) { this.selectedJob = job; }
+  closeModal()          { this.selectedJob = null; }
+  apply(job: any)       { alert('Applied for ' + job.title); }
 
   getStatusClass(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'accepted':  return 's-accepted';
-      case 'rejected':  return 's-rejected';
-      case 'review':    return 's-review';
-      case 'applied':   return 's-applied';
-      default:          return 's-default';
-    }
+    const s = (status ?? '').toUpperCase();
+    return s === 'APPROVED' ? 's-accepted'
+         : s === 'REJECTED' ? 's-rejected'
+         : s === 'PENDING'  ? 's-applied'
+         : 's-default';
   }
+
+  displayStatus(s: string): string {
+    const m: Record<string,string> = { PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected' };
+    return m[(s||'').toUpperCase()] || s;
+  }
+
   logout(): void { this.auth.logout(); }
 }

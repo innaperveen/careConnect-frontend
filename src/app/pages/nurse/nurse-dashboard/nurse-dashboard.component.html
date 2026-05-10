@@ -59,10 +59,16 @@
   <!-- MAIN CONTENT -->
   <div class="main p-4 w-100">
 
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="text-center py-5 text-muted">
+      <div class="spinner-border text-success" role="status"></div>
+      <p class="mt-2">Loading dashboard…</p>
+    </div>
+
     <!-- TOP BAR -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div *ngIf="!isLoading" class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
       <div>
-        <h4 class="page-title">Welcome back, Sarah</h4>
+        <h4 class="page-title">Welcome back, {{ nurseName }}</h4>
         <p class="page-subtitle">Here are your latest updates and opportunities</p>
       </div>
       <div class="d-flex align-items-center gap-3">
@@ -95,11 +101,11 @@
     </div>
 
     <!-- STATS ROW -->
-    <div class="row g-3 mb-4">
+    <div *ngIf="!isLoading" class="row g-3 mb-4">
       <div class="col-6 col-md-3">
         <div class="stat-card">
           <div class="stat-icon si-green"><i class="bi bi-file-earmark-check-fill"></i></div>
-          <div class="stat-val sv-green">{{ applications.length }}</div>
+          <div class="stat-val sv-green">{{ applicationsCount }}</div>
           <div class="stat-lbl">Applications</div>
         </div>
       </div>
@@ -171,16 +177,16 @@
         <!-- Profile Summary -->
         <div class="side-card">
           <div class="d-flex align-items-center gap-3 mb-3">
-            <div class="avatar-circle">
-              <i class="bi bi-person-fill"></i>
+            <div class="avatar-circle" style="font-size:1.2rem; font-weight:700;">
+              {{ avatarLetter }}
             </div>
             <div>
-              <p class="nurse-name">Sarah Jenkins</p>
-              <div class="d-flex flex-wrap gap-1 mt-1">
-                <span class="spec-tag"><i class="bi bi-hospital"></i>ICU Specialist</span>
+              <p class="nurse-name">{{ nurseName }}</p>
+              <div class="d-flex flex-wrap gap-1 mt-1" *ngIf="nurseSpecialty !== '—'">
+                <span class="spec-tag"><i class="bi bi-hospital"></i>{{ nurseSpecialty }}</span>
               </div>
-              <div class="mt-1">
-                <span class="spec-tag"><i class="bi bi-clock-history"></i>8 Yrs Exp</span>
+              <div class="mt-1" *ngIf="nurseExperience !== '—'">
+                <span class="spec-tag"><i class="bi bi-clock-history"></i>{{ nurseExperience }}</span>
               </div>
             </div>
           </div>
@@ -211,12 +217,12 @@
             </a>
           </div>
 
-          <div *ngFor="let app of applications" class="app-row">
+          <div *ngFor="let app of recentApplications" class="app-row">
             <p class="app-name">{{ app.jobTitle }}</p>
-            <span class="s-pill" [ngClass]="getStatusClass(app.status)">{{ app.status }}</span>
+            <span class="s-pill" [ngClass]="getStatusClass(app.status)">{{ displayStatus(app.status) }}</span>
           </div>
 
-          <div *ngIf="applications.length === 0" class="text-center py-3 text-muted small">
+          <div *ngIf="recentApplications.length === 0" class="text-center py-3 text-muted small">
             No applications yet. Apply to jobs!
           </div>
         </div>

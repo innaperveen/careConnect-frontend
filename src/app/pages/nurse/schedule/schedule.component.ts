@@ -1,4 +1,5 @@
-﻿import { AuthService } from '../../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
+import { AppointmentService } from '../../../services/appointment.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -7,7 +8,8 @@ interface Shift {
   facility: string;
   shift: string;
   hours: number;
-  status: 'Upcoming' | 'Completed' | 'Cancelled';}
+  status: 'Upcoming' | 'Completed' | 'Cancelled';
+}
 
 @Component({
   selector: 'app-schedule',
@@ -18,33 +20,72 @@ export class ScheduleComponent implements OnInit {
 
   blackoutForm!: FormGroup;
   blackoutAdded = false;
-  isAvailable = true;
+  isAvailable   = true;
+  isLoading     = true;
 
-  blackoutDates: string[] = ['2026-05-10', '2026-05-11'];
+  blackoutDates: string[] = [];
 
-  upcomingShifts: Shift[] = [
-    { date: '2026-04-28', facility: 'Apollo Hospital', shift: 'Night (10PM–6AM)', hours: 8, status: 'Upcoming' },
-    { date: '2026-04-30', facility: 'Apollo Hospital', shift: 'Night (10PM–6AM)', hours: 8, status: 'Upcoming' },
-    { date: '2026-05-03', facility: 'Fortis Healthcare', shift: 'Day (8AM–4PM)', hours: 8, status: 'Upcoming' }
-  ];
+  upcomingShifts: Shift[] = [];
+  history:        Shift[] = [];
 
-  history: Shift[] = [
-    { date: '2026-04-20', facility: 'Apollo Hospital', shift: 'Night (10PM–6AM)', hours: 8, status: 'Completed' },
-    { date: '2026-04-18', facility: 'Fortis Healthcare', shift: 'Day (8AM–4PM)', hours: 8, status: 'Completed' },
-    { date: '2026-04-15', facility: 'Apollo Hospital', shift: 'Night (10PM–6AM)', hours: 8, status: 'Completed' },
-    { date: '2026-04-10', facility: 'CareConnect Home', shift: 'Flexible', hours: 6, status: 'Completed' },
-    { date: '2026-04-05', facility: 'Apollo Hospital', shift: 'Night (10PM–6AM)', hours: 8, status: 'Cancelled' }
-  ];
+  get totalHoursThisMonth() {
+    return this.history.filter(h => h.status === 'Completed').reduce((s, h) => s + h.hours, 0);
+  }
+  get completedShifts() { return this.history.filter(h => h.status === 'Completed').length; }
 
-  get totalHoursThisMonth() { return this.history.filter(h => h.status === 'Completed').reduce((s, h) => s + h.hours, 0); }
-  get completedShifts()     { return this.history.filter(h => h.status === 'Completed').length; }
-
-  constructor(private auth: AuthService, private fb: FormBuilder) {}
+  constructor(
+    private auth:        AuthService,
+    private apptService: AppointmentService,
+    private fb:          FormBuilder
+  ) {}
 
   ngOnInit(): void {
-    this.blackoutForm = this.fb.group({
-      blackoutDate: ['', Validators.required]
+    this.blackoutForm = this.fb.group({ blackoutDate: ['', Validators.required] });
+
+    const userId = this.auth.getUserId();
+    if (!userId) { this.isLoading = false; return; }
+
+    this.apptService.getByNurse(userId).subscribe({
+      next: (data) => {
+        const now = new Date();
+        const appointments = data || [];
+
+        appointments.forEach((appt: any) => {
+          const date   = new Date(appt.appointmentDate);
+          const shift  = this.buildShift(appt, date, now);
+          if (date >= now && appt.status !== 'CANCELLED') {
+            this.upcomingShifts.push(shift);
+          } else {
+            this.history.push(shift);
+          }
+        });
+
+        // Sort upcoming ascending, history descending
+        this.upcomingShifts.sort((a, b) => a.date.localeCompare(b.date));
+        this.history.sort((a, b) => b.date.localeCompare(a.date));
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
     });
+  }
+
+  private buildShift(appt: any, date: Date, now: Date): Shift {
+    const status: 'Upcoming' | 'Completed' | 'Cancelled' =
+      appt.status === 'CANCELLED' ? 'Cancelled'
+      : date >= now               ? 'Upcoming'
+      : 'Completed';
+
+    return {
+      date:     date.toISOString().slice(0, 10),
+      facility: appt.patientName ? `Patient: ${appt.patientName}` : 'CareConnect',
+      shift:    this.formatTime(date),
+      hours:    appt.duration ? parseInt(appt.duration, 10) || 4 : 4,
+      status
+    };
+  }
+
+  private formatTime(date: Date): string {
+    return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
   }
 
   toggleAvailability() { this.isAvailable = !this.isAvailable; }
@@ -71,5 +112,6 @@ export class ScheduleComponent implements OnInit {
     if (s === 'Completed') return 'badge-completed';
     return 'badge-cancelled';
   }
+
   logout(): void { this.auth.logout(); }
 }

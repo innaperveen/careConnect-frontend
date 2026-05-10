@@ -1,4 +1,4 @@
-﻿<div class="d-flex">
+<div class="d-flex">
 
   <!-- SIDEBAR -->
   <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
@@ -71,19 +71,19 @@
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-card text-center">
-          <div class="stat-num c-amber">{{ countByStatus('Pending') }}</div>
+          <div class="stat-num c-amber">{{ countByStatus('PENDING') }}</div>
           <div class="stat-lbl">Pending</div>
         </div>
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-card text-center">
-          <div class="stat-num c-green">{{ countByStatus('Approved') }}</div>
+          <div class="stat-num c-green">{{ countByStatus('APPROVED') }}</div>
           <div class="stat-lbl">Approved</div>
         </div>
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-card text-center">
-          <div class="stat-num c-red">{{ countByStatus('Rejected') }}</div>
+          <div class="stat-num c-red">{{ countByStatus('REJECTED') }}</div>
           <div class="stat-lbl">Rejected</div>
         </div>
       </div>
@@ -99,40 +99,169 @@
       </button>
     </div>
 
+    <!-- LOADING -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+
     <!-- APPLICATION CARDS -->
-    <div *ngFor="let app of filteredApplications" class="app-card mb-3">
-      <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-        <div class="d-flex align-items-start gap-3">
-          <div class="nurse-avatar"><i class="bi bi-person-fill"></i></div>
-          <div>
-            <p class="nurse-name">{{ app.name }}</p>
-            <p class="nurse-role">{{ app.role }}</p>
-            <div class="app-meta">
-              <span><i class="bi bi-mortarboard-fill"></i> {{ app.education }}</span>
-              <span><i class="bi bi-briefcase"></i> {{ app.experience }}</span>
-              <span><i class="bi bi-tag"></i> {{ app.specialization }}</span>
-              <span><i class="bi bi-calendar3"></i> {{ app.date }}</span>
+    <ng-container *ngIf="!isLoading">
+      <div *ngFor="let app of filteredApplications" class="app-card mb-3">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+          <div class="d-flex align-items-start gap-3">
+            <div class="nurse-avatar"><i class="bi bi-person-fill"></i></div>
+            <div>
+              <p class="nurse-name">{{ app.nurseName }}</p>
+              <p class="nurse-role">Applied for: <strong>{{ app.jobTitle }}</strong></p>
+              <div class="app-meta">
+                <span *ngIf="app.nurseSpecialization"><i class="bi bi-tag"></i> {{ app.nurseSpecialization }}</span>
+                <span *ngIf="app.nurseExperience"><i class="bi bi-briefcase"></i> {{ app.nurseExperience }} yrs exp</span>
+                <span *ngIf="app.appliedAt"><i class="bi bi-calendar3"></i> {{ app.appliedAt | date:'mediumDate' }}</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="d-flex flex-column align-items-end gap-2">
-          <span class="status-badge" [ngClass]="getStatusClass(app.status)">{{ app.status }}</span>
-          <div class="d-flex gap-2" *ngIf="app.status === 'Pending'">
-            <button class="btn-approve" (click)="approve(app.id)">
-              <i class="bi bi-check-lg me-1"></i>Approve
-            </button>
-            <button class="btn-reject" (click)="reject(app.id)">
-              <i class="bi bi-x-lg me-1"></i>Reject
+          <div class="d-flex flex-column align-items-end gap-2">
+            <span class="status-badge" [ngClass]="getStatusClass(app.status)">{{ app.status }}</span>
+            <button class="btn-view" (click)="openDetails(app)">
+              <i class="bi bi-eye me-1"></i>View Details
             </button>
           </div>
         </div>
       </div>
+
+      <div *ngIf="filteredApplications.length === 0" class="empty-state">
+        <i class="bi bi-file-person fs-2 d-block mb-2"></i>
+        No {{ activeTab === 'All' ? '' : tabLabels[activeTab].toLowerCase() }} applications found.
+      </div>
+    </ng-container>
+
+  </div>
+</div>
+
+<!-- ── DETAILS MODAL ─────────────────────────────────────────── -->
+<div class="modal-backdrop" *ngIf="selectedApp" (click)="closeDetails()"></div>
+
+<div class="detail-modal" *ngIf="selectedApp">
+  <div class="detail-modal-header">
+    <div class="d-flex align-items-center gap-3">
+      <div class="nurse-avatar-lg"><i class="bi bi-person-fill"></i></div>
+      <div>
+        <h5 class="mb-0">{{ selectedApp.nurseName }}</h5>
+        <small class="text-muted">Applied for: {{ selectedApp.jobTitle }}</small>
+      </div>
+    </div>
+    <button class="btn-close-modal" (click)="closeDetails()"><i class="bi bi-x-lg"></i></button>
+  </div>
+
+  <div class="detail-modal-body">
+
+    <!-- Status & Applied date -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <span class="status-badge" [ngClass]="getStatusClass(selectedApp.status)">{{ selectedApp.status }}</span>
+      <span class="text-muted" style="font-size:.85rem" *ngIf="selectedApp.appliedAt">
+        <i class="bi bi-calendar3 me-1"></i>Applied on {{ selectedApp.appliedAt | date:'mediumDate' }}
+      </span>
     </div>
 
-    <div *ngIf="filteredApplications.length === 0" class="empty-state">
-      <i class="bi bi-file-person fs-2 d-block mb-2"></i>
-      No {{ activeTab === 'All' ? '' : activeTab.toLowerCase() }} applications found.
+    <!-- Section: Professional Info -->
+    <div class="detail-section">
+      <div class="detail-section-title"><i class="bi bi-person-badge-fill me-2"></i>Professional Details</div>
+      <div class="detail-grid">
+        <div class="detail-item" *ngIf="selectedApp.nurseSpecialization">
+          <span class="detail-label">Specialization</span>
+          <span class="detail-value">{{ selectedApp.nurseSpecialization }}</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedApp.nurseExperience">
+          <span class="detail-label">Experience</span>
+          <span class="detail-value">{{ selectedApp.nurseExperience }} years</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedApp.nurseLicenseNumber">
+          <span class="detail-label">License Number</span>
+          <span class="detail-value">{{ selectedApp.nurseLicenseNumber }}</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedApp.nurseAvailability">
+          <span class="detail-label">Availability</span>
+          <span class="detail-value">{{ selectedApp.nurseAvailability }}</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedApp.nurseEducation">
+          <span class="detail-label">Education</span>
+          <span class="detail-value">{{ selectedApp.nurseEducation }}</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedApp.nurseExpertise">
+          <span class="detail-label">Skills / Expertise</span>
+          <span class="detail-value">{{ selectedApp.nurseExpertise }}</span>
+        </div>
+      </div>
     </div>
 
+    <!-- Section: Contact -->
+    <div class="detail-section" *ngIf="selectedApp.nursePhone || selectedApp.nurseEmail">
+      <div class="detail-section-title"><i class="bi bi-telephone-fill me-2"></i>Contact</div>
+      <div class="detail-grid">
+        <div class="detail-item" *ngIf="selectedApp.nursePhone">
+          <span class="detail-label">Phone</span>
+          <span class="detail-value">{{ selectedApp.nursePhone }}</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedApp.nurseEmail">
+          <span class="detail-label">Email</span>
+          <span class="detail-value">{{ selectedApp.nurseEmail }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Work History -->
+    <div class="detail-section" *ngIf="selectedApp.nursePreviousEmployment">
+      <div class="detail-section-title"><i class="bi bi-building me-2"></i>Previous Employment</div>
+      <p class="detail-text">{{ selectedApp.nursePreviousEmployment }}</p>
+    </div>
+
+    <!-- Section: References -->
+    <div class="detail-section" *ngIf="selectedApp.nurseReferences">
+      <div class="detail-section-title"><i class="bi bi-people-fill me-2"></i>References</div>
+      <p class="detail-text">{{ selectedApp.nurseReferences }}</p>
+    </div>
+
+    <!-- Section: Credentials & Certifications -->
+    <div class="detail-section" *ngIf="selectedApp.nurseCredentials?.length">
+      <div class="detail-section-title"><i class="bi bi-award-fill me-2"></i>Credentials &amp; Certifications</div>
+      <div class="credential-card" *ngFor="let cred of selectedApp.nurseCredentials">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="cred-type">{{ cred.credentialType }}</p>
+            <p class="cred-issuer" *ngIf="cred.issuedBy"><i class="bi bi-building me-1"></i>{{ cred.issuedBy }}</p>
+            <div class="cred-dates">
+              <span *ngIf="cred.issuedDate"><i class="bi bi-calendar-check me-1"></i>Issued: {{ cred.issuedDate | date:'mediumDate' }}</span>
+              <span *ngIf="cred.expiryDate"><i class="bi bi-calendar-x me-1"></i>Expires: {{ cred.expiryDate | date:'mediumDate' }}</span>
+            </div>
+          </div>
+          <span class="cred-status-badge" [ngClass]="'cred-' + (cred.status | lowercase)">{{ cred.status }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section" *ngIf="selectedApp.nurseCredentials !== undefined && !selectedApp.nurseCredentials?.length">
+      <div class="detail-section-title"><i class="bi bi-award-fill me-2"></i>Credentials &amp; Certifications</div>
+      <p class="text-muted" style="font-size:.85rem">No credentials uploaded yet.</p>
+    </div>
+
+    <!-- Section: Cover Note -->
+    <div class="detail-section" *ngIf="selectedApp.coverNote">
+      <div class="detail-section-title"><i class="bi bi-chat-left-text-fill me-2"></i>Cover Note</div>
+      <p class="detail-text">{{ selectedApp.coverNote }}</p>
+    </div>
+
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="detail-modal-footer" *ngIf="selectedApp.status === 'PENDING'">
+    <button class="btn-reject" (click)="reject(selectedApp.id)">
+      <i class="bi bi-x-lg me-1"></i>Reject Application
+    </button>
+    <button class="btn-approve" (click)="approve(selectedApp.id)">
+      <i class="bi bi-check-lg me-1"></i>Approve Application
+    </button>
+  </div>
+  <div class="detail-modal-footer" *ngIf="selectedApp.status !== 'PENDING'">
+    <button class="btn-close-action" (click)="closeDetails()">Close</button>
   </div>
 </div>

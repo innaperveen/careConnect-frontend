@@ -55,3 +55,52 @@
 .btn-reject:hover { background: #f5c6cb; }
 
 .empty-state { background: white; border-radius: 18px; padding: 3rem; text-align: center; color: #9ab8b2; box-shadow: 0 4px 14px -4px rgba(0,20,15,0.06); }
+
+.cover-note { font-size: 0.82rem; color: #6b7280; font-style: italic; max-width: 480px; }
+
+/* VIEW DETAILS BUTTON */
+.btn-view { background: #e8f4fd; color: #1565c0; border: none; border-radius: 20px; padding: 6px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: background 0.18s; display: inline-flex; align-items: center; }
+.btn-view:hover { background: #d0e8fa; }
+
+/* MODAL BACKDROP */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1040; }
+
+/* DETAIL MODAL (slide-in panel) */
+.detail-modal { position: fixed; top: 0; right: 0; width: 480px; max-width: 100vw; height: 100vh; background: #fff; z-index: 1050; display: flex; flex-direction: column; box-shadow: -8px 0 32px rgba(0,0,0,0.15); animation: slideIn 0.22s ease; }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.detail-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 1.4rem; border-bottom: 1px solid #e5ede9; background: #f9fdfb; }
+.nurse-avatar-lg { width: 56px; height: 56px; border-radius: 50%; background: #e3f6ef; color: #0f5241; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; }
+.btn-close-modal { background: #f0f0f0; border: none; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem; color: #555; transition: background 0.18s; }
+.btn-close-modal:hover { background: #ddd; }
+
+.detail-modal-body { flex: 1; overflow-y: auto; padding: 1.4rem; }
+.detail-modal-body::-webkit-scrollbar { width: 5px; }
+.detail-modal-body::-webkit-scrollbar-thumb { background: #cce0d8; border-radius: 10px; }
+
+/* Sections inside modal */
+.detail-section { margin-bottom: 1.6rem; }
+.detail-section-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #0f5241; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid #e5ede9; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem 1.2rem; }
+.detail-item { display: flex; flex-direction: column; gap: 2px; }
+.detail-label { font-size: 0.72rem; color: #9ab8b2; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.detail-value { font-size: 0.9rem; color: #1a3a2e; font-weight: 500; }
+.detail-text { font-size: 0.88rem; color: #374151; line-height: 1.6; margin: 0; background: #f9fdfb; border-radius: 10px; padding: 0.75rem 1rem; }
+
+/* Modal footer */
+.detail-modal-footer { padding: 1rem 1.4rem; border-top: 1px solid #e5ede9; display: flex; gap: 0.75rem; justify-content: flex-end; background: #f9fdfb; }
+.detail-modal-footer .btn-approve, .detail-modal-footer .btn-reject { padding: 9px 20px; font-size: 0.88rem; }
+.btn-close-action { background: #f0f0f0; color: #555; border: none; border-radius: 20px; padding: 9px 20px; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+
+@media (max-width: 520px) { .detail-modal { width: 100vw; } .detail-grid { grid-template-columns: 1fr; } }
+
+/* CREDENTIAL CARDS */
+.credential-card { background: #f4f9f7; border: 1px solid #d5ebe2; border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 0.6rem; }
+.cred-type { font-size: 0.92rem; font-weight: 700; color: #0f2d22; margin: 0 0 3px; }
+.cred-issuer { font-size: 0.8rem; color: #6a8c80; margin: 0 0 5px; }
+.cred-dates { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.78rem; color: #7a9a90; }
+.cred-status-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.cred-verified { background: #d4edda; color: #155724; }
+.cred-pending  { background: #fff4e0; color: #d97706; }
+.cred-expired  { background: #fde8e8; color: #c0392b; }
+.cred-rejected { background: #fde8e8; color: #c0392b; }

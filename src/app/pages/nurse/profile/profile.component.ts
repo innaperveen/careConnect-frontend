@@ -1,4 +1,5 @@
-﻿import { AuthService } from '../../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
+import { NurseService } from '../../../services/nurse.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -10,8 +11,11 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 export class ProfileComponent implements OnInit {
 
   profileForm!: FormGroup;
-  editMode = false;
+  editMode    = false;
   saveSuccess = false;
+  saveError   = '';
+  isLoading   = true;
+  isSaving    = false;
 
   specializations = [
     'General Nursing', 'ICU / Critical Care', 'Cardiology',
@@ -27,57 +31,102 @@ export class ProfileComponent implements OnInit {
 
   shiftTypes = ['Morning', 'Evening', 'Night', 'Rotating', 'Flexible'];
 
-  selectedExpertise: string[] = ['ICU', 'Wound Dressing'];
-  selectedShifts: string[] = ['Morning', 'Night'];
+  selectedExpertise: string[] = [];
+  selectedShifts:    string[] = [];
 
-  constructor(private auth: AuthService, private fb: FormBuilder) {}
+  constructor(
+    private auth:       AuthService,
+    private nurseSvc:   NurseService,
+    private fb:         FormBuilder
+  ) {}
 
   ngOnInit(): void {
     this.profileForm = this.fb.group({
-      fullName:        ['Sarah Jenkins', [Validators.required, Validators.minLength(3)]],
-      licenseNumber:   ['NUR-2024-DL-5892', [Validators.required, Validators.minLength(5)]],
-      email:           ['sarah.jenkins@email.com', [Validators.required, Validators.email]],
-      phone:           ['9876543210', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      specialization:  ['ICU / Critical Care', Validators.required],
-      experience:      ['8', [Validators.required, Validators.pattern('^[0-9]+$')]],
-      availability:    ['Full-Time', Validators.required],
-      address:         ['204, Green Park, New Delhi - 110016', [Validators.required, Validators.minLength(10)]],
-      education:       ['B.Sc Nursing – AIIMS Delhi, 2016', Validators.required],
-      certifications:  ['BLS, ACLS, Critical Care Nursing'],
-      reference1Name:  ['Dr. Ramesh Gupta'],
-      reference1Phone: ['9811223344', [Validators.pattern('^[0-9]{10}$')]],
-      reference2Name:  ['Nurse Supervisor – Apollo Hospital'],
-      reference2Phone: ['9900112233', [Validators.pattern('^[0-9]{10}$')]],
-      bio:             ['Dedicated ICU nurse with 8 years of critical care experience, skilled in ventilator management and cardiac monitoring.']
+      fullName:        ['', [Validators.required, Validators.minLength(3)]],
+      licenseNumber:   ['', [Validators.required]],
+      email:           ['', [Validators.required, Validators.email]],
+      phone:           ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      specialization:  ['', Validators.required],
+      experience:      ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
+      availability:    ['', Validators.required],
+      address:         ['', [Validators.required, Validators.minLength(10)]],
+      education:       ['', Validators.required],
+      certifications:  [''],
+      reference1Name:  [''],
+      reference1Phone: ['', [Validators.pattern('^[0-9]{10}$')]],
+      reference2Name:  [''],
+      reference2Phone: ['', [Validators.pattern('^[0-9]{10}$')]],
+      bio:             ['']
     });
     this.profileForm.disable();
+    this.loadProfile();
   }
 
   get f() { return this.profileForm.controls; }
+
+  private loadProfile(): void {
+    const userId = this.auth.getUserId();
+    if (!userId) { this.isLoading = false; return; }
+
+    this.nurseSvc.getProfile(userId).subscribe({
+      next: (data) => {
+        this.isLoading = false;
+        this.profileForm.patchValue({
+          fullName:       data.fullName       || '',
+          licenseNumber:  data.licenseNumber  || '',
+          email:          data.email          || '',
+          phone:          data.phone          || '',
+          specialization: data.specialization || '',
+          experience:     data.experienceYears != null ? String(data.experienceYears) : '',
+          availability:   data.availability   || '',
+          address:        data.address        || '',
+          education:      data.education      || '',
+          bio:            ''
+        });
+
+        // expertise comma-string → array
+        if (data.expertise) {
+          this.selectedExpertise = data.expertise.split(',')
+            .map((s: string) => s.trim()).filter((s: string) => s);
+        }
+
+        // references field — stored as simple text; parse ref1 / ref2 if available
+        if (data.references) {
+          this.profileForm.patchValue({ reference1Name: data.references });
+        }
+      },
+      error: () => { this.isLoading = false; }
+    });
+  }
 
   toggleExpertise(area: string) {
     if (!this.editMode) return;
     const idx = this.selectedExpertise.indexOf(area);
     if (idx > -1) this.selectedExpertise.splice(idx, 1);
-    else this.selectedExpertise.push(area);
+    else          this.selectedExpertise.push(area);
   }
 
   toggleShift(shift: string) {
     if (!this.editMode) return;
     const idx = this.selectedShifts.indexOf(shift);
     if (idx > -1) this.selectedShifts.splice(idx, 1);
-    else this.selectedShifts.push(shift);
+    else          this.selectedShifts.push(shift);
   }
 
   enableEdit() {
-    this.editMode = true;
+    this.editMode    = true;
     this.saveSuccess = false;
+    this.saveError   = '';
     this.profileForm.enable();
+    // licenseNumber and email are not editable
+    this.profileForm.get('licenseNumber')?.disable();
+    this.profileForm.get('email')?.disable();
   }
 
   cancelEdit() {
     this.editMode = false;
     this.profileForm.disable();
+    this.saveError = '';
   }
 
   saveProfile() {
@@ -85,11 +134,40 @@ export class ProfileComponent implements OnInit {
       this.profileForm.markAllAsTouched();
       return;
     }
-    console.log('Profile saved:', { ...this.profileForm.value, expertise: this.selectedExpertise, shifts: this.selectedShifts });
-    this.editMode = false;
-    this.saveSuccess = true;
-    this.profileForm.disable();
-    setTimeout(() => this.saveSuccess = false, 3000);
+
+    const userId = this.auth.getUserId();
+    if (!userId) return;
+
+    this.isSaving  = true;
+    this.saveError = '';
+
+    const v = this.profileForm.getRawValue();
+    const payload: any = {
+      fullName:        v.fullName?.trim(),
+      phone:           v.phone,
+      specialization:  v.specialization,
+      experienceYears: v.experience ? parseInt(v.experience, 10) : null,
+      availability:    v.availability,
+      address:         v.address?.trim(),
+      education:       v.education?.trim(),
+      expertise:       this.selectedExpertise.join(','),
+      references:      v.reference1Name?.trim() || ''
+    };
+
+    this.nurseSvc.updateProfile(userId, payload).subscribe({
+      next: () => {
+        this.isSaving    = false;
+        this.editMode    = false;
+        this.saveSuccess = true;
+        this.profileForm.disable();
+        setTimeout(() => this.saveSuccess = false, 3000);
+      },
+      error: (err: Error) => {
+        this.isSaving  = false;
+        this.saveError = err.message;
+      }
+    });
   }
+
   logout(): void { this.auth.logout(); }
 }

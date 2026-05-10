@@ -1,21 +1,9 @@
-﻿import { AuthService } from '../../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
+import { NurseService } from '../../../services/nurse.service';
+import { AppointmentService } from '../../../services/appointment.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-
-interface Job {
-  id: number;
-  title: string;
-  facility: string;
-  location: string;
-  shift: string;
-  salary: string;
-  type: string;
-  specialty: string;
-  urgency: string;
-  description: string;
-  requirements: string[];
-  postedDaysAgo: number;
-  applied: boolean;}
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-jobs',
@@ -25,64 +13,245 @@ interface Job {
 export class JobsComponent implements OnInit {
 
   filterForm!: FormGroup;
-  selectedJob: Job | null = null;
-  applySuccess = false;
+  isLoading = true;
+  activeTab: 'available' | 'applied' = 'available';
 
-  allJobs: Job[] = [
-    { id: 1, title: 'ICU Nurse', facility: 'Apollo Hospital', location: 'Delhi', shift: 'Night', salary: '₹55,000', type: 'Permanent', specialty: 'ICU / Critical Care', urgency: 'Urgent', description: 'Provide critical care for ICU patients, monitor vitals, administer medications, and coordinate with attending physicians.', requirements: ['BLS & ACLS Certified', '3+ years ICU experience', 'Ventilator management'], postedDaysAgo: 1, applied: false },
-    { id: 2, title: 'Emergency Nurse', facility: 'Fortis Healthcare', location: 'Bangalore', shift: 'Day', salary: '₹48,000', type: 'Permanent', specialty: 'Emergency / Trauma', urgency: 'High', description: 'Handle emergency cases, triage patients, and support trauma care in a fast-paced ER environment.', requirements: ['Emergency nursing cert', '2+ years ER experience', 'Triage proficiency'], postedDaysAgo: 2, applied: false },
-    { id: 3, title: 'Pediatric Nurse', facility: 'Rainbow Childrens Hospital', location: 'Hyderabad', shift: 'Morning', salary: '₹42,000', type: 'Permanent', specialty: 'Pediatric Nursing', urgency: 'Normal', description: 'Provide compassionate care to pediatric patients, administer medications, and communicate with families.', requirements: ['Pediatric nursing experience', 'Patient family communication skills'], postedDaysAgo: 3, applied: false },
-    { id: 4, title: 'Home Care Nurse', facility: 'CareConnect Platform', location: 'Mumbai', shift: 'Flexible', salary: '₹35,000', type: 'Temporary', specialty: 'Home Healthcare', urgency: 'Normal', description: 'Provide in-home nursing care to elderly and post-surgery patients with personalized care plans.', requirements: ['Home care experience preferred', 'Valid driving license'], postedDaysAgo: 5, applied: false },
-    { id: 5, title: 'Geriatric Care Nurse', facility: 'Silver Leaf Senior Care', location: 'Pune', shift: 'Evening', salary: '₹38,000', type: 'Permanent', specialty: 'Geriatric Care', urgency: 'Normal', description: 'Provide specialized care for elderly patients, manage chronic conditions, and support daily living activities.', requirements: ['Geriatric care experience', 'Compassion and patience'], postedDaysAgo: 7, applied: false },
-    { id: 6, title: 'On-Call ICU Nurse', facility: 'AIIMS', location: 'Delhi', shift: 'Rotating', salary: '₹60,000', type: 'On-Call', specialty: 'ICU / Critical Care', urgency: 'Urgent', description: 'On-call ICU support for critical care unit during emergency shortages.', requirements: ['5+ years ICU experience', 'ACLS certified'], postedDaysAgo: 0, applied: false }
-  ];
+  // ── Available: Org jobs ──────────────────────────────────────
+  allJobs:      any[] = [];   // backend jobs minus already-applied
+  filteredJobs: any[] = [];
 
-  filteredJobs: Job[] = [];
+  // ── Available: Patient requests ──────────────────────────────
+  openRequests: any[] = [];   // backend open minus applied/declined
 
-  locations   = ['All', 'Delhi', 'Bangalore', 'Hyderabad', 'Mumbai', 'Pune'];
-  specialties = ['All', 'ICU / Critical Care', 'Emergency / Trauma', 'Pediatric Nursing', 'Home Healthcare', 'Geriatric Care'];
-  shifts      = ['All', 'Day', 'Night', 'Morning', 'Evening', 'Rotating', 'Flexible'];
-  jobTypes    = ['All', 'Permanent', 'Temporary', 'On-Call'];
+  // ── Applied section ──────────────────────────────────────────
+  appliedOrgJobs:      any[] = [];  // ApplicationResponse list
+  appliedPatientBids:  any[] = [];  // AppointmentApplicationResponse list
 
-  constructor(private auth: AuthService, private fb: FormBuilder) {}
+  // Lookup sets (rebuilt on every load)
+  private appliedJobIds      = new Set<number>();
+  private appliedRequestIds  = new Set<number>();
+  private declinedRequestIds = new Set<number>();
+
+  // ── Org job modal ─────────────────────────────────────────────
+  selectedJob:  any  = null;
+  isApplying        = false;
+  applyError        = '';
+  applySuccess      = false;
+
+  // ── Patient request modal ─────────────────────────────────────
+  selectedRequest:     any  = null;
+  applySalary:         number | null = null;
+  applyNote            = '';
+  isApplyingRequest    = false;
+  applyRequestError    = '';
+  applyRequestSuccess  = false;
+  isWithdrawing        = false;
+  withdrawError        = '';
+
+  // ── Filter dropdowns ─────────────────────────────────────────
+  locations:   string[] = ['All'];
+  specialties: string[] = ['All'];
+  jobTypes    = ['All', 'PERMANENT', 'TEMPORARY', 'CONTRACT', 'EMERGENCY'];
+  jobTypeLabels: Record<string, string> = {
+    All: 'All Types', PERMANENT: 'Permanent', TEMPORARY: 'Temporary',
+    CONTRACT: 'Contract', EMERGENCY: 'Emergency'
+  };
+
+  constructor(
+    private auth:        AuthService,
+    private nurseSvc:    NurseService,
+    private apptService: AppointmentService,
+    private fb:          FormBuilder
+  ) {}
 
   ngOnInit(): void {
-    this.filterForm = this.fb.group({
-      location:  ['All'],
-      specialty: ['All'],
-      shift:     ['All'],
-      jobType:   ['All'],
-      search:    ['']
-    });
-    this.filteredJobs = [...this.allJobs];
+    this.filterForm = this.fb.group({ location: ['All'], specialty: ['All'], jobType: ['All'], search: [''] });
     this.filterForm.valueChanges.subscribe(() => this.applyFilters());
+    this.loadAll();
   }
 
-  applyFilters() {
-    const { location, specialty, shift, jobType, search } = this.filterForm.value;
-    this.filteredJobs = this.allJobs.filter(j => {
-      const matchLoc    = location  === 'All' || j.location  === location;
-      const matchSpec   = specialty === 'All' || j.specialty === specialty;
-      const matchShift  = shift     === 'All' || j.shift     === shift;
-      const matchType   = jobType   === 'All' || j.type      === jobType;
-      const matchSearch = !search   || j.title.toLowerCase().includes(search.toLowerCase()) || j.facility.toLowerCase().includes(search.toLowerCase());
-      return matchLoc && matchSpec && matchShift && matchType && matchSearch;
+  // ── localStorage helpers for declined requests ────────────────
+  private declineKey(): string {
+    return `cc_declined_appts_${this.auth.getUserId()}`;
+  }
+  private loadDeclined(): Set<number> {
+    try {
+      const raw = localStorage.getItem(this.declineKey());
+      if (raw) return new Set<number>(JSON.parse(raw));
+    } catch {}
+    return new Set<number>();
+  }
+  private saveDeclined(): void {
+    localStorage.setItem(this.declineKey(), JSON.stringify([...this.declinedRequestIds]));
+  }
+
+  // ── Data loading ──────────────────────────────────────────────
+  loadAll(): void {
+    const userId = this.auth.getUserId();
+    this.isLoading = true;
+    this.declinedRequestIds = this.loadDeclined();
+
+    forkJoin({
+      jobs:    this.nurseSvc.getJobs(),
+      open:    this.apptService.getOpen(),
+      myJobs:  userId ? this.nurseSvc.getApplications(userId) : [[]],
+      myBids:  userId ? this.apptService.getNurseAppointmentApplications(userId) : [[]]
+    }).subscribe({
+      next: (result: any) => {
+        const myJobs: any[] = result.myJobs || [];
+        const myBids: any[] = result.myBids || [];
+
+        // Build lookup sets from backend data
+        this.appliedJobIds     = new Set(myJobs.map((a: any) => a.jobId));
+        this.appliedRequestIds = new Set(myBids.map((b: any) => b.appointmentId));
+
+        // Applied section arrays
+        this.appliedOrgJobs     = myJobs;
+        this.appliedPatientBids = myBids;
+
+        // Available: exclude already-applied and declined
+        const rawJobs = result.jobs || [];
+        this.allJobs  = rawJobs.filter((j: any) => !this.appliedJobIds.has(j.id));
+        this.filteredJobs = [...this.allJobs];
+
+        this.openRequests = (result.open || []).filter((r: any) =>
+          !this.appliedRequestIds.has(r.id) && !this.declinedRequestIds.has(r.id)
+        );
+
+        // Build filter dropdowns from backend data
+        const locs  = [...new Set(rawJobs.map((j: any) => j.location).filter(Boolean))];
+        const specs = [...new Set(rawJobs.map((j: any) => j.specialization).filter(Boolean))];
+        this.locations   = ['All', ...(locs as string[])];
+        this.specialties = ['All', ...(specs as string[])];
+
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
     });
   }
 
-  openDetails(job: Job) { this.selectedJob = job; this.applySuccess = false; }
-  closeModal()          { this.selectedJob = null; }
-
-  applyToJob(job: Job) {
-    job.applied = true;
-    this.applySuccess = true;
-    setTimeout(() => { this.closeModal(); }, 1500);
+  applyFilters(): void {
+    const { location, specialty, jobType, search } = this.filterForm.value;
+    this.filteredJobs = this.allJobs.filter(j => {
+      const matchLoc  = location  === 'All' || (j.location      || '').toLowerCase().includes(location.toLowerCase());
+      const matchType = jobType   === 'All' || (j.jobType       || '').toUpperCase() === jobType;
+      const matchSpec = specialty === 'All' || (j.specialization || '').toLowerCase().includes(specialty.toLowerCase());
+      const matchSrch = !search   || (j.jobTitle        || '').toLowerCase().includes(search.toLowerCase())
+                                  || (j.organizationName || '').toLowerCase().includes(search.toLowerCase());
+      return matchLoc && matchType && matchSpec && matchSrch;
+    });
   }
 
-  urgencyClass(u: string) {
-    if (u === 'Urgent') return 'badge-urgent';
-    if (u === 'High')   return 'badge-high';
-    return 'badge-normal';
+  // ── Org job actions ──────────────────────────────────────────
+  openDetails(job: any): void { this.selectedJob = job; this.applySuccess = false; this.applyError = ''; }
+  closeModal(): void           { this.selectedJob = null; }
+
+  applyToJob(job: any): void {
+    const userId = this.auth.getUserId();
+    if (!userId) return;
+    this.isApplying = true;
+    this.applyError = '';
+    this.nurseSvc.applyToJob(userId, job.id).subscribe({
+      next: (res: any) => {
+        // Move job from available to applied
+        this.appliedJobIds.add(job.id);
+        this.allJobs      = this.allJobs.filter(j => j.id !== job.id);
+        this.filteredJobs = this.filteredJobs.filter(j => j.id !== job.id);
+        this.appliedOrgJobs = [res, ...this.appliedOrgJobs];
+        this.isApplying   = false;
+        this.applySuccess = true;
+        setTimeout(() => this.closeModal(), 1500);
+      },
+      error: (err: Error) => { this.isApplying = false; this.applyError = err.message; }
+    });
   }
+
+  // ── Patient request modal ─────────────────────────────────────
+  openRequest(appt: any): void {
+    this.selectedRequest     = appt;
+    this.applySalary         = null;
+    this.applyNote           = '';
+    this.applyRequestError   = '';
+    this.applyRequestSuccess = false;
+    this.withdrawError       = '';
+  }
+  closeRequest(): void { this.selectedRequest = null; this.withdrawError = ''; }
+
+  hasAppliedToRequest(apptId: number): boolean { return this.appliedRequestIds.has(apptId); }
+
+  submitRequestApplication(): void {
+    const userId = this.auth.getUserId();
+    if (!userId || !this.selectedRequest) return;
+    this.isApplyingRequest  = true;
+    this.applyRequestError  = '';
+
+    this.apptService.applyToAppointment(this.selectedRequest.id, userId, this.applySalary, this.applyNote).subscribe({
+      next: (res: any) => {
+        const reqId = this.selectedRequest.id;
+        this.appliedRequestIds.add(reqId);
+        this.openRequests      = this.openRequests.filter(r => r.id !== reqId);
+        this.appliedPatientBids = [res, ...this.appliedPatientBids];
+        this.isApplyingRequest   = false;
+        this.applyRequestSuccess = true;
+        setTimeout(() => this.closeRequest(), 1500);
+      },
+      error: (err: Error) => { this.isApplyingRequest = false; this.applyRequestError = err.message; }
+    });
+  }
+
+  declineRequest(): void {
+    if (!this.selectedRequest) return;
+    const id = this.selectedRequest.id;
+    this.declinedRequestIds.add(id);
+    this.saveDeclined();
+    this.openRequests = this.openRequests.filter(r => r.id !== id);
+    this.closeRequest();
+  }
+
+  withdrawApplication(): void {
+    const userId = this.auth.getUserId();
+    if (!userId || !this.selectedRequest) return;
+    this.isWithdrawing = true;
+    this.withdrawError = '';
+
+    this.apptService.withdrawAppointmentApplication(this.selectedRequest.id, userId).subscribe({
+      next: () => {
+        const reqId = this.selectedRequest.id;
+        this.appliedRequestIds.delete(reqId);
+        this.appliedPatientBids = this.appliedPatientBids.filter(b => b.appointmentId !== reqId);
+        // Put it back in available (if not declined)
+        this.loadAll();
+        this.isWithdrawing = false;
+        this.closeRequest();
+      },
+      error: (err: Error) => { this.withdrawError = err.message; this.isWithdrawing = false; }
+    });
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────
+  formatSalary(job: any): string {
+    if (job.salaryMin && job.salaryMax) return `₹${job.salaryMin}–${job.salaryMax}`;
+    if (job.salaryMin) return `₹${job.salaryMin}+`;
+    if (job.salaryMax) return `upto ₹${job.salaryMax}`;
+    return '—';
+  }
+
+  urgencyClass(priority: string): string {
+    const p = (priority || '').toLowerCase();
+    return p === 'urgent' ? 'badge-urgent' : p === 'high' ? 'badge-high' : 'badge-normal';
+  }
+
+  appStatusClass(status: string): string {
+    const s = (status || '').toUpperCase();
+    return s === 'APPROVED' ? 'app-approved' : s === 'REJECTED' ? 'app-rejected' : 'app-pending';
+  }
+
+  formatJobType(jt: string): string { return this.jobTypeLabels[jt] ?? jt; }
+
+  patientFullName(req: any): string {
+    return [req.patientFirstName, req.patientMiddleName, req.patientLastName]
+      .filter((s: string) => !!s).join(' ') || req.patientName || '—';
+  }
+
   logout(): void { this.auth.logout(); }
 }

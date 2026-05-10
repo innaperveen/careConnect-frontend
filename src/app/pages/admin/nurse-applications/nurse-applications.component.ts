@@ -16,6 +16,8 @@ export class NurseApplicationsComponent implements OnInit {
   applications: any[] = [];
   isLoading = true;
 
+  selectedApp: any = null;
+
   constructor(private adminService: AdminService, private auth: AuthService) {}
 
   ngOnInit(): void {
@@ -38,11 +40,15 @@ export class NurseApplicationsComponent implements OnInit {
     return this.applications.filter(a => a.status === status).length;
   }
 
+  openDetails(app: any): void { this.selectedApp = app; }
+  closeDetails(): void       { this.selectedApp = null; }
+
   approve(id: number): void {
     this.adminService.updateApplicationStatus(id, 'APPROVED').subscribe({
       next: (updated) => {
         const app = this.applications.find(a => a.id === id);
         if (app) app.status = updated?.status ?? 'APPROVED';
+        if (this.selectedApp?.id === id) this.selectedApp.status = 'APPROVED';
       }
     });
   }
@@ -52,6 +58,7 @@ export class NurseApplicationsComponent implements OnInit {
       next: (updated) => {
         const app = this.applications.find(a => a.id === id);
         if (app) app.status = updated?.status ?? 'REJECTED';
+        if (this.selectedApp?.id === id) this.selectedApp.status = 'REJECTED';
       }
     });
   }

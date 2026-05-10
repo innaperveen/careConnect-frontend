@@ -145,3 +145,63 @@
     .req-list { list-style: none; padding: 0; margin: 0; }
     .req-list li { font-size: 0.87rem; color: #3a5a54; padding: 4px 0; }
     .alert-success-toast { background: #eef9f5; border: 1px solid #a8dfc9; color: #0f6b51; border-radius: 12px; padding: 10px 16px; font-size: 0.88rem; font-weight: 500; }
+/* VIEW REQUEST MODAL */
+.req-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; }
+.req-modal { position:fixed; top:0; right:0; width:480px; max-width:100vw; height:100vh; background:#fff; z-index:2010; display:flex; flex-direction:column; box-shadow:-8px 0 32px rgba(0,0,0,0.15); animation:slideInRight 0.22s ease; }
+@keyframes slideInRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
+.req-modal-header { display:flex; align-items:center; justify-content:space-between; padding:1.2rem 1.4rem; border-bottom:1px solid #e5ede9; background:#f9fdfb; }
+.req-close-btn { background:#f0f0f0; border:none; border-radius:50%; width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.9rem; color:#555; }
+.req-close-btn:hover { background:#ddd; }
+.req-modal-body { flex:1; overflow-y:auto; padding:1.4rem; }
+.req-modal-body::-webkit-scrollbar { width:5px; }
+.req-modal-body::-webkit-scrollbar-thumb { background:#cce0d8; border-radius:10px; }
+.req-section { margin-bottom:1.5rem; }
+.req-section-title { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#e67e22; margin-bottom:0.75rem; padding-bottom:0.4rem; border-bottom:1px solid #fde8cc; }
+.req-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem 1.2rem; }
+.req-item { display:flex; flex-direction:column; gap:2px; }
+.req-label { font-size:0.72rem; color:#9ab8b2; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
+.req-value { font-size:0.9rem; color:#1a3a2e; font-weight:500; }
+.req-note-line { font-size:0.87rem; color:#374151; background:#fdf6ec; border-radius:8px; padding:0.5rem 0.75rem; margin-bottom:0.4rem; }
+.req-applicant-notice { background:#e8f4fd; border-radius:10px; padding:0.7rem 1rem; font-size:0.85rem; color:#1565c0; font-weight:500; }
+.req-already-applied { background:#d4edda; border-radius:10px; padding:0.7rem 1rem; font-size:0.85rem; color:#155724; font-weight:500; margin-bottom:1rem; }
+.req-field-label { font-size:0.83rem; font-weight:600; color:#374151; margin-bottom:0.4rem; display:block; }
+.req-salary-input { display:flex; align-items:center; border:1.5px solid #d1d5db; border-radius:10px; overflow:hidden; }
+.salary-prefix { padding:0.5rem 0.75rem; background:#f3f4f6; font-weight:700; color:#6b7280; border-right:1.5px solid #d1d5db; }
+.salary-field { flex:1; border:none; outline:none; padding:0.5rem 0.75rem; font-size:0.95rem; }
+.req-textarea { width:100%; border:1.5px solid #d1d5db; border-radius:10px; padding:0.6rem 0.75rem; font-size:0.88rem; resize:vertical; outline:none; }
+.req-textarea:focus { border-color:#e67e22; }
+.req-error { background:#fde8e8; border-radius:8px; padding:0.5rem 0.8rem; font-size:0.82rem; color:#c0392b; }
+.req-success { background:#d4edda; border-radius:8px; padding:0.5rem 0.8rem; font-size:0.82rem; color:#155724; }
+.req-modal-footer { padding:1rem 1.4rem; border-top:1px solid #e5ede9; display:flex; gap:0.75rem; justify-content:flex-end; background:#f9fdfb; }
+.req-btn-submit { background:#e67e22; color:white; border:none; border-radius:20px; padding:9px 20px; font-size:0.88rem; font-weight:600; cursor:pointer; }
+.req-btn-submit:disabled { opacity:0.6; cursor:not-allowed; }
+.req-btn-cancel { background:#f0f0f0; color:#555; border:none; border-radius:20px; padding:9px 20px; font-size:0.88rem; font-weight:600; cursor:pointer; }
+.req-btn-decline { background:#fde8e8; color:#c0392b; border:none; border-radius:20px; padding:9px 16px; font-size:0.88rem; font-weight:600; cursor:pointer; }
+.req-btn-decline:hover { background:#f5c6cb; }
+.req-btn-withdraw { background:#fde8e8; color:#c0392b; border:none; border-radius:20px; padding:9px 16px; font-size:0.88rem; font-weight:600; cursor:pointer; }
+.req-btn-withdraw:hover { background:#f5c6cb; }
+.req-btn-withdraw:disabled { opacity:0.6; cursor:not-allowed; }
+.req-modal-footer--applied { justify-content:space-between; }
+@media(max-width:520px) { .req-modal{width:100vw;} .req-grid{grid-template-columns:1fr;} }
+
+/* TABS */
+.jobs-tab-row { display:flex; gap:8px; }
+.jobs-tab { padding:8px 20px; border-radius:30px; border:1.5px solid #d0e8e0; background:white; color:#4e6e68; font-size:0.88rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all .18s; }
+.jobs-tab:hover { background:#eef9f5; }
+.jobs-tab-active { background:#0f5241; color:white; border-color:#0f5241; }
+.jobs-tab-count { background:rgba(255,255,255,0.25); border-radius:20px; padding:1px 8px; font-size:0.75rem; }
+.jobs-tab:not(.jobs-tab-active) .jobs-tab-count { background:#e3f0ec; color:#4e6e68; }
+
+/* Section heading helpers */
+.sec-title { color:#1a3b3a; font-size:1rem; font-weight:700; }
+.sec-count { padding:3px 10px; border-radius:20px; font-size:0.74rem; font-weight:700; }
+
+/* Applied status chips */
+.app-status-chip { padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:700; }
+.app-pending  { background:#fff4e0; color:#d97706; }
+.app-approved { background:#d4edda; color:#155724; }
+.app-rejected { background:#fde8e8; color:#c0392b; }
+
+/* Withdraw small button in applied tab */
+.btn-withdraw-sm { background:#fde8e8; color:#c0392b; border:none; border-radius:20px; padding:5px 12px; font-size:0.8rem; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.btn-withdraw-sm:hover { background:#f5c6cb; }

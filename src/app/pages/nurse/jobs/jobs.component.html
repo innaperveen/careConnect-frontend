@@ -1,4 +1,4 @@
-﻿<div class="d-flex">
+<div class="d-flex">
 
   <!-- SIDEBAR -->
   <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
@@ -24,106 +24,238 @@
   <!-- MAIN -->
   <div class="main p-4 w-100">
 
-    <div class="mb-4">
-      <h4 class="fw-semibold mb-0" style="color:#1a3b3a;">Available Jobs</h4>
-      <small class="text-muted">Search and apply for nursing assignments matching your skills</small>
+    <div class="mb-3">
+      <h4 class="fw-semibold mb-0" style="color:#1a3b3a;">Jobs</h4>
+      <small class="text-muted">Patient requests + Hospital/Org job postings</small>
     </div>
 
-    <!-- FILTERS -->
-    <div class="filter-card mb-4" [formGroup]="filterForm">
-      <div class="row g-2 align-items-end">
-        <div class="col-md-4 col-12">
-          <input type="text" formControlName="search" class="filter-input" placeholder="🔍  Search by title or facility...">
-        </div>
-        <div class="col-md-2 col-6">
-          <select formControlName="location" class="filter-input">
-            <option *ngFor="let l of locations" [value]="l">{{ l === 'All' ? 'All Locations' : l }}</option>
-          </select>
-        </div>
-        <div class="col-md-2 col-6">
-          <select formControlName="specialty" class="filter-input">
-            <option *ngFor="let s of specialties" [value]="s">{{ s === 'All' ? 'All Specialties' : s }}</option>
-          </select>
-        </div>
-        <div class="col-md-2 col-6">
-          <select formControlName="shift" class="filter-input">
-            <option *ngFor="let sh of shifts" [value]="sh">{{ sh === 'All' ? 'All Shifts' : sh }}</option>
-          </select>
-        </div>
-        <div class="col-md-2 col-6">
-          <select formControlName="jobType" class="filter-input">
-            <option *ngFor="let t of jobTypes" [value]="t">{{ t === 'All' ? 'All Types' : t }}</option>
-          </select>
-        </div>
-      </div>
-      <p class="results-count mt-2 mb-0">{{ filteredJobs.length }} job{{ filteredJobs.length !== 1 ? 's' : '' }} found</p>
+    <!-- TABS -->
+    <div class="jobs-tab-row mb-4">
+      <button class="jobs-tab" [class.jobs-tab-active]="activeTab === 'available'" (click)="activeTab = 'available'">
+        <i class="bi bi-briefcase me-1"></i>Available
+        <span class="jobs-tab-count">{{ openRequests.length + filteredJobs.length }}</span>
+      </button>
+      <button class="jobs-tab" [class.jobs-tab-active]="activeTab === 'applied'" (click)="activeTab = 'applied'">
+        <i class="bi bi-send-check me-1"></i>Applied
+        <span class="jobs-tab-count">{{ appliedOrgJobs.length + appliedPatientBids.length }}</span>
+      </button>
     </div>
 
-    <!-- JOB LIST -->
-    <div *ngIf="filteredJobs.length > 0">
-      <div class="job-card mb-3" *ngFor="let job of filteredJobs">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-          <div>
-            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-              <h6 class="fw-bold mb-0">{{ job.title }}</h6>
-              <span class="urgency-badge" [ngClass]="urgencyClass(job.urgency)">{{ job.urgency }}</span>
-              <span *ngIf="job.applied" class="applied-badge"><i class="bi bi-check-circle-fill me-1"></i>Applied</span>
-            </div>
-            <p class="facility-name mb-1"><i class="bi bi-hospital me-1"></i>{{ job.facility }}</p>
-            <div class="d-flex flex-wrap gap-3">
-              <small class="meta-pill"><i class="bi bi-geo-alt-fill me-1"></i>{{ job.location }}</small>
-              <small class="meta-pill"><i class="bi bi-clock me-1"></i>{{ job.shift }} Shift</small>
-              <small class="meta-pill"><i class="bi bi-briefcase me-1"></i>{{ job.type }}</small>
-              <small class="meta-pill"><i class="bi bi-calendar me-1"></i>{{ job.postedDaysAgo === 0 ? 'Today' : job.postedDaysAgo + 'd ago' }}</small>
-            </div>
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="text-center py-5 text-muted">
+      <div class="spinner-border text-success" role="status"></div>
+      <p class="mt-2">Loading…</p>
+    </div>
+
+    <ng-container *ngIf="!isLoading">
+
+      <!-- ════════════════════════════════════════════
+           TAB: AVAILABLE
+      ════════════════════════════════════════════ -->
+      <ng-container *ngIf="activeTab === 'available'">
+
+        <!-- Patient Requests -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <h5 class="sec-title mb-0"><i class="bi bi-person-raised-hand me-2" style="color:#e67e22;"></i>Patient Requests</h5>
+            <span class="sec-count" style="background:#fdebd0; color:#a04000;">{{ openRequests.length }} open</span>
           </div>
-          <div class="d-flex flex-column align-items-end gap-2">
-            <span class="salary-chip">{{ job.salary }}/mo</span>
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-green btn-sm" (click)="openDetails(job)"><i class="bi bi-eye me-1"></i>Details</button>
-              <button class="btn btn-green btn-sm" [disabled]="job.applied" (click)="applyToJob(job)">
-                {{ job.applied ? 'Applied' : 'Apply Now' }}
+
+          <div *ngFor="let req of openRequests" class="job-card mb-3" style="border-left:4px solid #e67e22;">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+              <div>
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                  <h6 class="fw-bold mb-0"><i class="bi bi-person-fill me-1" style="color:#e67e22;"></i>Patient Request</h6>
+                  <span class="urgency-badge badge-normal">Home Care</span>
+                  <span *ngIf="req.applicantCount > 0" class="badge rounded-pill" style="background:#e8f4fd;color:#1565c0;font-size:.72rem;">
+                    {{ req.applicantCount }} nurse{{ req.applicantCount !== 1 ? 's' : '' }} applied
+                  </span>
+                </div>
+                <div class="d-flex flex-wrap gap-3 mt-1">
+                  <small class="meta-pill" *ngIf="req.careNeeds"><i class="bi bi-heart-pulse me-1"></i>{{ req.careNeeds }}</small>
+                  <small class="meta-pill" *ngIf="req.appointmentDate"><i class="bi bi-calendar3 me-1"></i>{{ req.appointmentDate | date:'mediumDate' }} at {{ req.appointmentDate | date:'shortTime' }}</small>
+                </div>
+              </div>
+              <button class="btn btn-sm rounded-pill px-3" style="background:#e67e22;color:white;border:none;" (click)="openRequest(req)">
+                <i class="bi bi-eye me-1"></i>View Request
               </button>
             </div>
           </div>
+
+          <div *ngIf="openRequests.length === 0" class="empty-state py-3" style="background:#fdf6ec;border-radius:10px;border:1px dashed #f0a04b;">
+            <i class="bi bi-person-raised-hand" style="font-size:1.8rem;color:#f0a04b;display:block;margin-bottom:6px;"></i>
+            <p class="mb-0 text-muted small">No open patient requests right now.</p>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <div *ngIf="filteredJobs.length === 0" class="empty-state">
-      <i class="bi bi-search" style="font-size:2.5rem; color:#b0ccc5;"></i>
-      <p class="mt-2 text-muted">No jobs match your filters. Try adjusting your search.</p>
-    </div>
+        <hr style="border-color:#e8f4f0;margin:24px 0;">
 
-    <!-- DETAILS MODAL -->
+        <!-- Org Jobs -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <h5 class="sec-title mb-0"><i class="bi bi-briefcase-fill me-2" style="color:#0f6b51;"></i>Hospital / Organisation Jobs</h5>
+          <span class="sec-count" style="background:#d1fae5;color:#065f46;">{{ allJobs.length }} posted</span>
+        </div>
+
+        <div class="filter-card mb-4" [formGroup]="filterForm">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4 col-12">
+              <input type="text" formControlName="search" class="filter-input" placeholder="🔍  Search by title or hospital...">
+            </div>
+            <div class="col-md-2 col-6">
+              <select formControlName="location" class="filter-input">
+                <option *ngFor="let l of locations" [value]="l">{{ l === 'All' ? 'All Locations' : l }}</option>
+              </select>
+            </div>
+            <div class="col-md-2 col-6">
+              <select formControlName="specialty" class="filter-input">
+                <option *ngFor="let s of specialties" [value]="s">{{ s === 'All' ? 'All Specialties' : s }}</option>
+              </select>
+            </div>
+            <div class="col-md-2 col-6">
+              <select formControlName="jobType" class="filter-input">
+                <option *ngFor="let t of jobTypes" [value]="t">{{ jobTypeLabels[t] }}</option>
+              </select>
+            </div>
+          </div>
+          <p class="results-count mt-2 mb-0">{{ filteredJobs.length }} job{{ filteredJobs.length !== 1 ? 's' : '' }} found</p>
+        </div>
+
+        <div *ngFor="let job of filteredJobs" class="job-card mb-3">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+              <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                <h6 class="fw-bold mb-0">{{ job.jobTitle }}</h6>
+                <span class="urgency-badge" [ngClass]="urgencyClass(job.priority)">{{ job.priority || 'Normal' }}</span>
+              </div>
+              <p class="facility-name mb-1"><i class="bi bi-hospital me-1"></i>{{ job.organizationName }}</p>
+              <div class="d-flex flex-wrap gap-3">
+                <small class="meta-pill"><i class="bi bi-geo-alt-fill me-1"></i>{{ job.location || '—' }}</small>
+                <small class="meta-pill"><i class="bi bi-briefcase me-1"></i>{{ formatJobType(job.jobType) }}</small>
+                <small class="meta-pill" *ngIf="job.specialization"><i class="bi bi-heart-pulse me-1"></i>{{ job.specialization }}</small>
+                <small class="meta-pill" *ngIf="job.deadline"><i class="bi bi-calendar me-1"></i>Deadline: {{ job.deadline | date:'mediumDate' }}</small>
+              </div>
+            </div>
+            <div class="d-flex flex-column align-items-end gap-2">
+              <span class="salary-chip">{{ formatSalary(job) }}/mo</span>
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-green btn-sm" (click)="openDetails(job)">
+                  <i class="bi bi-eye me-1"></i>Details
+                </button>
+                <button class="btn btn-green btn-sm" [disabled]="isApplying" (click)="applyToJob(job)">Apply Now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="filteredJobs.length === 0" class="empty-state">
+          <i class="bi bi-briefcase" style="font-size:2rem;color:#b0ccc5;"></i>
+          <p class="mt-2 text-muted small">
+            <span *ngIf="allJobs.length === 0">No hospital/org jobs posted yet.</span>
+            <span *ngIf="allJobs.length > 0">No jobs match your filters.</span>
+          </p>
+        </div>
+
+      </ng-container>
+
+      <!-- ════════════════════════════════════════════
+           TAB: APPLIED
+      ════════════════════════════════════════════ -->
+      <ng-container *ngIf="activeTab === 'applied'">
+
+        <!-- Applied patient requests -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <h5 class="sec-title mb-0"><i class="bi bi-person-raised-hand me-2" style="color:#e67e22;"></i>Applied Patient Requests</h5>
+            <span class="sec-count" style="background:#fdebd0;color:#a04000;">{{ appliedPatientBids.length }}</span>
+          </div>
+
+          <div *ngFor="let bid of appliedPatientBids" class="job-card mb-3" style="border-left:4px solid #e67e22;">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+              <div>
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                  <h6 class="fw-bold mb-0">{{ bid.careNeeds || 'Patient Request' }}</h6>
+                  <span class="app-status-chip" [ngClass]="appStatusClass(bid.status)">{{ bid.status }}</span>
+                </div>
+                <div class="d-flex flex-wrap gap-3 mt-1">
+                  <small class="meta-pill" *ngIf="bid.appointmentDate"><i class="bi bi-calendar3 me-1"></i>{{ bid.appointmentDate | date:'mediumDate' }}</small>
+                  <small class="meta-pill" *ngIf="bid.salaryExpectation"><i class="bi bi-cash-coin me-1"></i>Your bid: ₹{{ bid.salaryExpectation | number }}</small>
+                  <small class="meta-pill" *ngIf="bid.appliedAt"><i class="bi bi-clock-history me-1"></i>Applied {{ bid.appliedAt | date:'mediumDate' }}</small>
+                </div>
+                <p class="mt-1 mb-0 small text-muted" *ngIf="bid.note"><i class="bi bi-chat-left-text me-1"></i>{{ bid.note }}</p>
+              </div>
+              <!-- Withdraw button only for PENDING bids -->
+              <button *ngIf="bid.status === 'PENDING'" class="btn-withdraw-sm" (click)="openRequest({id: bid.appointmentId, careNeeds: bid.careNeeds, appointmentDate: bid.appointmentDate})">
+                <i class="bi bi-trash3 me-1"></i>Withdraw
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="appliedPatientBids.length === 0" class="empty-state py-3" style="background:#fdf6ec;border-radius:10px;border:1px dashed #f0a04b;">
+            <p class="mb-0 text-muted small">No patient request applications yet.</p>
+          </div>
+        </div>
+
+        <hr style="border-color:#e8f4f0;margin:24px 0;">
+
+        <!-- Applied org jobs -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <h5 class="sec-title mb-0"><i class="bi bi-briefcase-fill me-2" style="color:#0f6b51;"></i>Applied Org Jobs</h5>
+          <span class="sec-count" style="background:#d1fae5;color:#065f46;">{{ appliedOrgJobs.length }}</span>
+        </div>
+
+        <div *ngFor="let app of appliedOrgJobs" class="job-card mb-3">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+              <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                <h6 class="fw-bold mb-0">{{ app.jobTitle }}</h6>
+                <span class="app-status-chip" [ngClass]="appStatusClass(app.status)">{{ app.status }}</span>
+              </div>
+              <p class="facility-name mb-1"><i class="bi bi-hospital me-1"></i>{{ app.organizationName }}</p>
+              <div class="d-flex flex-wrap gap-3">
+                <small class="meta-pill" *ngIf="app.appliedAt"><i class="bi bi-clock-history me-1"></i>Applied {{ app.appliedAt | date:'mediumDate' }}</small>
+                <small class="meta-pill" *ngIf="app.nurseSpecialization"><i class="bi bi-heart-pulse me-1"></i>{{ app.nurseSpecialization }}</small>
+              </div>
+              <p class="mt-1 mb-0 small text-muted" *ngIf="app.coverNote"><i class="bi bi-chat-left-text me-1"></i>{{ app.coverNote }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="appliedOrgJobs.length === 0" class="empty-state">
+          <i class="bi bi-send" style="font-size:2rem;color:#b0ccc5;"></i>
+          <p class="mt-2 text-muted small">No org job applications yet.</p>
+        </div>
+
+      </ng-container>
+
+    </ng-container>
+
+    <!-- ORG JOB DETAILS MODAL -->
     <div class="modal-overlay" *ngIf="selectedJob" (click)="closeModal()">
       <div class="modal-box" (click)="$event.stopPropagation()">
         <div class="modal-header-custom">
           <div>
-            <h5 class="fw-bold mb-1">{{ selectedJob.title }}</h5>
-            <p class="mb-0 text-muted small">{{ selectedJob.facility }} &bull; {{ selectedJob.location }}</p>
+            <h5 class="fw-bold mb-1">{{ selectedJob.jobTitle }}</h5>
+            <p class="mb-0 text-muted small">{{ selectedJob.organizationName }} &bull; {{ selectedJob.location || '—' }}</p>
           </div>
           <button class="btn-close" (click)="closeModal()"></button>
         </div>
         <div class="modal-body-custom">
           <div class="d-flex flex-wrap gap-2 mb-3">
-            <span class="meta-pill"><i class="bi bi-clock me-1"></i>{{ selectedJob.shift }}</span>
-            <span class="meta-pill"><i class="bi bi-briefcase me-1"></i>{{ selectedJob.type }}</span>
-            <span class="salary-chip">{{ selectedJob.salary }}/mo</span>
-            <span class="urgency-badge" [ngClass]="urgencyClass(selectedJob.urgency)">{{ selectedJob.urgency }}</span>
+            <span class="meta-pill"><i class="bi bi-briefcase me-1"></i>{{ formatJobType(selectedJob.jobType) }}</span>
+            <span class="meta-pill" *ngIf="selectedJob.specialization"><i class="bi bi-heart-pulse me-1"></i>{{ selectedJob.specialization }}</span>
+            <span class="salary-chip">{{ formatSalary(selectedJob) }}/mo</span>
+            <span class="urgency-badge" [ngClass]="urgencyClass(selectedJob.priority)">{{ selectedJob.priority || 'Normal' }}</span>
           </div>
-          <p class="small text-muted mb-3">{{ selectedJob.description }}</p>
-          <h6 class="fw-semibold mb-2" style="color:#0f6b51;">Requirements</h6>
-          <ul class="req-list">
-            <li *ngFor="let r of selectedJob.requirements"><i class="bi bi-check2-circle me-2" style="color:#1aa37a;"></i>{{ r }}</li>
-          </ul>
-          <div *ngIf="applySuccess" class="alert-success-toast mt-3">
-            <i class="bi bi-check-circle-fill me-2"></i>Application submitted successfully!
-          </div>
+          <p class="small text-muted mb-3">{{ selectedJob.description || 'No description provided.' }}</p>
+          <div *ngIf="selectedJob.shiftDetails" class="small text-muted mb-2"><i class="bi bi-clock me-1"></i>{{ selectedJob.shiftDetails }}</div>
+          <div *ngIf="selectedJob.deadline" class="small text-muted mb-2"><i class="bi bi-calendar-x me-1"></i>Deadline: {{ selectedJob.deadline | date:'mediumDate' }}</div>
+          <div *ngIf="applySuccess" class="alert-success-toast mt-3"><i class="bi bi-check-circle-fill me-2"></i>Application submitted!</div>
+          <div *ngIf="applyError" class="alert alert-danger mt-3 py-2 px-3 small"><i class="bi bi-exclamation-circle me-1"></i>{{ applyError }}</div>
         </div>
         <div class="modal-footer-custom">
-          <button class="btn btn-green rounded-pill px-4" [disabled]="selectedJob.applied || applySuccess" (click)="applyToJob(selectedJob)">
-            <i class="bi bi-send-check me-1"></i>{{ selectedJob.applied ? 'Already Applied' : 'Apply Now' }}
+          <button class="btn btn-green rounded-pill px-4" [disabled]="applySuccess || isApplying" (click)="applyToJob(selectedJob)">
+            <span *ngIf="!isApplying"><i class="bi bi-send-check me-1"></i>Apply Now</span>
+            <span *ngIf="isApplying"><span class="spinner-border spinner-border-sm me-1"></span>Applying…</span>
           </button>
           <button class="btn btn-outline-secondary rounded-pill px-4" (click)="closeModal()">Close</button>
         </div>
@@ -131,4 +263,205 @@
     </div>
 
   </div>
+</div>
+
+<!-- ── VIEW REQUEST MODAL ── -->
+<div class="req-backdrop" *ngIf="selectedRequest" (click)="closeRequest()"></div>
+<div class="req-modal" *ngIf="selectedRequest">
+
+  <div class="req-modal-header">
+    <div>
+      <h5 class="mb-0">Patient Request Details</h5>
+      <small class="text-muted">Review the full request and submit your bid</small>
+    </div>
+    <button class="req-close-btn" (click)="closeRequest()"><i class="bi bi-x-lg"></i></button>
+  </div>
+
+  <div class="req-modal-body">
+
+    <!-- ── PATIENT INFO ── -->
+    <div class="req-section">
+      <div class="req-section-title"><i class="bi bi-person-fill me-2"></i>Patient Information</div>
+      <div class="req-grid">
+        <div class="req-item" *ngIf="selectedRequest.patientFirstName || selectedRequest.patientName">
+          <span class="req-label">Patient Name</span>
+          <span class="req-value">{{ patientFullName(selectedRequest) }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.bookingFor">
+          <span class="req-label">Booking For</span>
+          <span class="req-value">{{ selectedRequest.bookingFor === 'SELF' ? 'Themselves' : 'Someone Else' }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.patientPhone">
+          <span class="req-label">Phone</span>
+          <span class="req-value">{{ selectedRequest.patientPhone }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.patientEmail">
+          <span class="req-label">Email</span>
+          <span class="req-value">{{ selectedRequest.patientEmail }}</span>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="req-address-block mt-2"
+        *ngIf="selectedRequest.patientAddressLine1 || selectedRequest.patientCity">
+        <i class="bi bi-geo-alt-fill req-addr-icon"></i>
+        <span>
+          <ng-container *ngIf="selectedRequest.patientAddressLine1">{{ selectedRequest.patientAddressLine1 }}, </ng-container>
+          <ng-container *ngIf="selectedRequest.patientAddressLine2">{{ selectedRequest.patientAddressLine2 }}, </ng-container>
+          <ng-container *ngIf="selectedRequest.patientLandmark">Near {{ selectedRequest.patientLandmark }}, </ng-container>
+          <ng-container *ngIf="selectedRequest.patientCity">{{ selectedRequest.patientCity }}</ng-container>
+          <ng-container *ngIf="selectedRequest.patientState">, {{ selectedRequest.patientState }}</ng-container>
+          <ng-container *ngIf="selectedRequest.patientPincode"> – {{ selectedRequest.patientPincode }}</ng-container>
+        </span>
+      </div>
+    </div>
+
+    <!-- ── CARE REQUIREMENTS ── -->
+    <div class="req-section">
+      <div class="req-section-title"><i class="bi bi-clipboard2-pulse-fill me-2"></i>Care Requirements</div>
+      <div class="req-grid">
+        <div class="req-item" *ngIf="selectedRequest.careNeeds">
+          <span class="req-label">Type of Care</span>
+          <span class="req-value fw-semibold">{{ selectedRequest.careNeeds }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.specialization">
+          <span class="req-label">Specialization Needed</span>
+          <span class="req-value">{{ selectedRequest.specialization }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.medicalCondition">
+          <span class="req-label">Medical Condition</span>
+          <span class="req-value">{{ selectedRequest.medicalCondition }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.mobilityLevel">
+          <span class="req-label">Patient Mobility</span>
+          <span class="req-value">{{ selectedRequest.mobilityLevel }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.dietRequirements">
+          <span class="req-label">Diet Restrictions</span>
+          <span class="req-value">{{ selectedRequest.dietRequirements }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.duration">
+          <span class="req-label">Visit Duration</span>
+          <span class="req-value">{{ selectedRequest.duration }}</span>
+        </div>
+      </div>
+
+      <!-- Skills chips -->
+      <div class="mt-2" *ngIf="selectedRequest.requiredSkills">
+        <span class="req-label d-block mb-1">Required Skills</span>
+        <div class="req-chip-row">
+          <span class="req-skill-chip" *ngFor="let sk of selectedRequest.requiredSkills.split(',')">
+            {{ sk.trim() }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Description / notes -->
+      <div class="req-notes-box mt-2" *ngIf="selectedRequest.notes">
+        <i class="bi bi-chat-left-text-fill me-1" style="color:#1aa37a;"></i>
+        <span>{{ selectedRequest.notes }}</span>
+      </div>
+    </div>
+
+    <!-- ── SCHEDULE ── -->
+    <div class="req-section">
+      <div class="req-section-title"><i class="bi bi-calendar-week-fill me-2"></i>Schedule</div>
+      <div class="req-grid">
+        <div class="req-item" *ngIf="selectedRequest.appointmentDate">
+          <span class="req-label">Date &amp; Time</span>
+          <span class="req-value fw-semibold">{{ selectedRequest.appointmentDate | date:'EEEE, d MMM y' }} at {{ selectedRequest.appointmentDate | date:'h:mm a' }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.scheduleType">
+          <span class="req-label">Frequency</span>
+          <span class="req-value">{{ selectedRequest.scheduleType }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.scheduleDays">
+          <span class="req-label">Repeat Days</span>
+          <span class="req-value">{{ selectedRequest.scheduleDays }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.priority">
+          <span class="req-label">Priority</span>
+          <span class="req-priority-chip"
+            [style.background]="selectedRequest.priority === 'Emergency' ? '#fde8e8' : selectedRequest.priority === 'Urgent' ? '#fff8e6' : '#eef9f5'"
+            [style.color]="selectedRequest.priority === 'Emergency' ? '#a01010' : selectedRequest.priority === 'Urgent' ? '#9a6e00' : '#1aa37a'">
+            {{ selectedRequest.priority }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PREFERENCES ── -->
+    <div class="req-section"
+      *ngIf="selectedRequest.genderPreference || selectedRequest.languagePreference">
+      <div class="req-section-title"><i class="bi bi-sliders2 me-2"></i>Nurse Preferences</div>
+      <div class="req-grid">
+        <div class="req-item" *ngIf="selectedRequest.genderPreference">
+          <span class="req-label">Gender Preference</span>
+          <span class="req-value">{{ selectedRequest.genderPreference }}</span>
+        </div>
+        <div class="req-item" *ngIf="selectedRequest.languagePreference">
+          <span class="req-label">Language Preference</span>
+          <span class="req-value">{{ selectedRequest.languagePreference }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── APPLICANTS NOTICE ── -->
+    <div class="req-section" *ngIf="selectedRequest.applicantCount > 0">
+      <div class="req-applicant-notice">
+        <i class="bi bi-people-fill me-2"></i>
+        {{ selectedRequest.applicantCount }} nurse{{ selectedRequest.applicantCount !== 1 ? 's have' : ' has' }} already applied to this request.
+      </div>
+    </div>
+
+    <!-- ── ALREADY APPLIED ── -->
+    <div *ngIf="hasAppliedToRequest(selectedRequest.id)" class="req-already-applied">
+      <i class="bi bi-check-circle-fill me-2"></i>You have already submitted your application.
+    </div>
+
+    <!-- ── BID FORM ── -->
+    <div class="req-section" *ngIf="!hasAppliedToRequest(selectedRequest.id)">
+      <div class="req-section-title"><i class="bi bi-cash-coin me-2"></i>Your Bid</div>
+      <div class="mb-3">
+        <label class="req-field-label">Salary Expectation (₹ per shift) <span class="text-danger">*</span></label>
+        <div class="req-salary-input">
+          <span class="salary-prefix">₹</span>
+          <input type="number" [(ngModel)]="applySalary" placeholder="e.g. 1500" class="salary-field" min="0" step="50">
+        </div>
+      </div>
+      <div class="mb-2">
+        <label class="req-field-label">Message <span class="text-muted small">(optional)</span></label>
+        <textarea [(ngModel)]="applyNote" class="req-textarea" rows="3"
+          placeholder="Tell the patient about your experience and why you're the right fit…"></textarea>
+      </div>
+      <div *ngIf="applyRequestError" class="req-error mt-2"><i class="bi bi-exclamation-circle me-1"></i>{{ applyRequestError }}</div>
+      <div *ngIf="applyRequestSuccess" class="req-success mt-2"><i class="bi bi-check-circle-fill me-1"></i>Application submitted!</div>
+    </div>
+
+  </div>
+
+  <!-- Footer: not yet applied -->
+  <div class="req-modal-footer" *ngIf="!hasAppliedToRequest(selectedRequest.id) && !applyRequestSuccess">
+    <button class="req-btn-decline" (click)="declineRequest()"><i class="bi bi-x-circle me-1"></i>Not Interested</button>
+    <div class="d-flex gap-2">
+      <button class="req-btn-cancel" (click)="closeRequest()">Cancel</button>
+      <button class="req-btn-submit" [disabled]="isApplyingRequest || !applySalary" (click)="submitRequestApplication()">
+        <span *ngIf="!isApplyingRequest"><i class="bi bi-send-fill me-1"></i>Submit Application</span>
+        <span *ngIf="isApplyingRequest"><span class="spinner-border spinner-border-sm me-1"></span>Submitting…</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer: already applied -->
+  <div class="req-modal-footer req-modal-footer--applied" *ngIf="hasAppliedToRequest(selectedRequest.id) || applyRequestSuccess">
+    <div>
+      <div *ngIf="withdrawError" class="req-error mb-2"><i class="bi bi-exclamation-circle me-1"></i>{{ withdrawError }}</div>
+      <button class="req-btn-withdraw" [disabled]="isWithdrawing" (click)="withdrawApplication()">
+        <span *ngIf="!isWithdrawing"><i class="bi bi-trash3 me-1"></i>Withdraw Application</span>
+        <span *ngIf="isWithdrawing"><span class="spinner-border spinner-border-sm me-1"></span>Withdrawing…</span>
+      </button>
+    </div>
+    <button class="req-btn-cancel" (click)="closeRequest()">Close</button>
+  </div>
+
 </div>
