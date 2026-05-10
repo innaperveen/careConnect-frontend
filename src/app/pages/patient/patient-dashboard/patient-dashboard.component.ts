@@ -31,7 +31,9 @@ export class PatientDashboardComponent implements OnInit {
     this.greeting = h < 12 ? 'Good Morning' : h < 18 ? 'Good Afternoon' : 'Good Evening';
 
     const user = this.auth.getUser();
-    this.patientName = user?.fullName || user?.email || 'Patient';
+    // Show only first name for the greeting
+    const fullName = user?.fullName || '';
+    this.patientName = fullName.split(' ')[0] || user?.email || 'Patient';
     this.patientId   = this.auth.getUserId();
 
     if (!this.patientId) { this.isLoading = false; return; }

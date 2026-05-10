@@ -90,3 +90,66 @@
 .rs-btn-confirm:disabled { opacity: 0.65; cursor: not-allowed; }
 .rs-btn-cancel { background: white; color: #6a8c80; border: 1.5px solid #d8ede6; border-radius: 20px; padding: 10px 20px; font-size: 0.87rem; font-weight: 600; cursor: pointer; transition: all 0.18s; }
 .rs-btn-cancel:hover { background: #f4faf5; }
+
+/* APPLICANT BADGE on appointment card */
+.applicant-badge { display:inline-flex; align-items:center; background:#e8f4fd; color:#1565c0; font-size:0.78rem; font-weight:600; padding:4px 10px; border-radius:20px; }
+.btn-view-applicants { background:#1565c0; color:white; border:none; border-radius:20px; padding:5px 14px; font-size:0.8rem; font-weight:600; cursor:pointer; }
+.btn-view-applicants:hover { background:#1251a3; }
+
+/* APPLICANTS PANEL (slide in from right) */
+.applicants-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; }
+.applicants-panel { position:fixed; top:0; right:0; width:440px; max-width:100vw; height:100vh; background:#fff; z-index:2010; display:flex; flex-direction:column; box-shadow:-8px 0 32px rgba(0,0,0,0.15); animation:slideInRight .22s ease; overflow:hidden; }
+@keyframes slideInRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
+.applicants-header { display:flex; align-items:center; justify-content:space-between; padding:1.1rem 1.3rem; border-bottom:1px solid #e5e7eb; background:#f9fdfb; }
+.applicants-body { flex:1; overflow-y:auto; padding:1.2rem; }
+.applicants-body::-webkit-scrollbar { width:5px; }
+.applicants-body::-webkit-scrollbar-thumb { background:#d1d5db; border-radius:10px; }
+
+/* Applicant cards */
+.applicant-card { background:#f9fdfb; border:1px solid #e5ede9; border-radius:14px; padding:1rem; }
+.nurse-avatar-sm { width:40px; height:40px; border-radius:50%; background:#e3f6ef; color:#0f5241; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+.appl-name { font-size:0.95rem; font-weight:700; color:#0f2d22; margin:0 0 4px; }
+.appl-meta { display:flex; flex-wrap:wrap; gap:10px; font-size:0.78rem; color:#6a8c80; margin-bottom:6px; }
+.appl-salary { font-size:0.88rem; font-weight:700; color:#0f5241; background:#d4edda; display:inline-block; padding:3px 10px; border-radius:20px; margin-bottom:4px; }
+.appl-note { font-size:0.82rem; color:#6b7280; font-style:italic; margin:4px 0 0; }
+.btn-select-nurse { background:#0f5241; color:white; border:none; border-radius:20px; padding:7px 16px; font-size:0.83rem; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.btn-select-nurse:hover { background:#0a3d2e; }
+.btn-select-nurse:disabled { opacity:.6; cursor:not-allowed; }
+
+/* View Profile button on applicant cards */
+.appl-actions { display:flex; gap:0.5rem; flex-wrap:wrap; }
+.btn-view-profile { background:#e8f4fd; color:#1565c0; border:none; border-radius:20px; padding:6px 13px; font-size:0.8rem; font-weight:600; cursor:pointer; }
+.btn-view-profile:hover { background:#d0e8fa; }
+
+/* NURSE DETAIL OVERLAY — slides on top of applicants panel */
+.nurse-detail-overlay { position:absolute; inset:0; background:#fff; z-index:10; display:flex; flex-direction:column; animation:slideInFromRight .2s ease; }
+@keyframes slideInFromRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
+.nurse-detail-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.2rem; border-bottom:1px solid #e5e7eb; background:#f9fdfb; }
+.nd-back-btn { background:#f0f0f0; border:none; border-radius:20px; padding:6px 14px; font-size:0.83rem; font-weight:600; color:#374151; cursor:pointer; }
+.nd-back-btn:hover { background:#e0e0e0; }
+
+.nurse-detail-body { flex:1; overflow-y:auto; padding:1.2rem; }
+.nurse-detail-body::-webkit-scrollbar { width:4px; }
+.nurse-detail-body::-webkit-scrollbar-thumb { background:#d1d5db; border-radius:10px; }
+
+.nd-identity { display:flex; align-items:center; gap:1rem; }
+.nd-avatar { width:54px; height:54px; border-radius:50%; background:#e3f6ef; color:#0f5241; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0; }
+.nd-name { font-size:1.05rem; font-weight:700; color:#0f2d22; margin:0 0 2px; }
+.nd-spec { font-size:0.83rem; color:#6a8c80; margin:0; }
+.nd-rating { font-size:0.82rem; color:#92400e; font-weight:600; margin-top:3px; }
+
+.nd-salary-banner { background:linear-gradient(135deg,#d4edda,#eafaf1); border-radius:12px; padding:0.75rem 1rem; font-size:0.9rem; color:#155724; display:flex; align-items:center; }
+
+.nd-section { margin-bottom:1.4rem; }
+.nd-section-title { font-size:0.74rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#0f5241; margin-bottom:0.65rem; padding-bottom:0.35rem; border-bottom:1px solid #e5ede9; }
+.nd-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.65rem 1rem; }
+.nd-item { display:flex; flex-direction:column; gap:2px; }
+.nd-label { font-size:0.7rem; color:#9ab8b2; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
+.nd-value { font-size:0.88rem; color:#1a3a2e; font-weight:500; }
+.nd-text { font-size:0.86rem; color:#374151; line-height:1.6; background:#f9fdfb; border-radius:10px; padding:0.6rem 0.85rem; margin:0; }
+
+.nurse-detail-footer { padding:0.85rem 1.2rem; border-top:1px solid #e5e7eb; display:flex; gap:0.6rem; justify-content:flex-end; background:#f9fdfb; }
+.nd-btn-back { background:#f0f0f0; color:#555; border:none; border-radius:20px; padding:8px 18px; font-size:0.86rem; font-weight:600; cursor:pointer; }
+.nd-btn-select { background:#0f5241; color:#fff; border:none; border-radius:20px; padding:8px 18px; font-size:0.86rem; font-weight:600; cursor:pointer; }
+.nd-btn-select:hover { background:#0a3d2e; }
+.nd-btn-select:disabled { opacity:.6; cursor:not-allowed; }

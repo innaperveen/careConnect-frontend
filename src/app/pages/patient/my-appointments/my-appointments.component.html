@@ -107,17 +107,26 @@
             <i class="bi bi-person-fill"></i>
           </div>
           <div>
-            <p class="nurse-name">{{ appt.nurseName }}</p>
-            <p class="nurse-spec">{{ appt.duration }}</p>
+            <p class="nurse-name">{{ appt.nurseName || 'No nurse assigned yet' }}</p>
+            <p class="nurse-spec">{{ appt.careType }}</p>
             <div class="appt-meta">
               <span><i class="bi bi-calendar3"></i> {{ appt.date }}</span>
               <span><i class="bi bi-clock"></i> {{ appt.time }}</span>
-              <span><i class="bi bi-heart-pulse"></i> {{ appt.careType }}</span>
+            </div>
+            <!-- Applicant badge for PENDING appointments -->
+            <div *ngIf="appt.status === 'PENDING' && appt.applicantCount > 0" class="applicant-badge mt-2">
+              <i class="bi bi-people-fill me-1"></i>
+              {{ appt.applicantCount }} nurse{{ appt.applicantCount !== 1 ? 's' : '' }} applied — tap to select one
             </div>
           </div>
         </div>
         <div class="d-flex flex-column align-items-end gap-2">
           <span class="status-badge" [ngClass]="getStatusClass(appt.status)">{{ appt.status | titlecase }}</span>
+          <!-- View Applicants button — only for PENDING with bids -->
+          <button *ngIf="appt.status === 'PENDING' && appt.applicantCount > 0"
+                  class="btn-view-applicants" (click)="viewApplicants(appt)">
+            <i class="bi bi-people me-1"></i>View Applicants
+          </button>
         </div>
       </div>
       <div class="d-flex gap-2 mt-3" *ngIf="appt.status === 'PENDING' || appt.status === 'CONFIRMED'">
@@ -136,6 +145,174 @@
     </div>
 
   </div>
+</div>
+
+<!-- APPLICANTS PANEL BACKDROP -->
+<div class="applicants-backdrop" *ngIf="applicantsTarget" (click)="closeApplicants()"></div>
+
+<!-- APPLICANTS PANEL -->
+<div class="applicants-panel" *ngIf="applicantsTarget">
+  <div class="applicants-header">
+    <div>
+      <h6 class="mb-0">Nurse Applicants</h6>
+      <small class="text-muted">{{ applicantsTarget.careType }} · {{ applicantsTarget.date }} {{ applicantsTarget.time }}</small>
+    </div>
+    <button class="rs-close" (click)="closeApplicants()"><i class="bi bi-x-lg"></i></button>
+  </div>
+
+  <div class="applicants-body">
+
+    <div *ngIf="loadingApplicants" class="text-center py-4">
+      <div class="spinner-border text-primary spinner-border-sm"></div>
+      <p class="small text-muted mt-2">Loading applicants…</p>
+    </div>
+
+    <div *ngIf="applicantsError" class="alert alert-danger py-2 px-3 small">{{ applicantsError }}</div>
+
+    <ng-container *ngIf="!loadingApplicants">
+      <div *ngFor="let app of applicants" class="applicant-card mb-3">
+        <div class="d-flex align-items-start gap-3">
+          <div class="nurse-avatar-sm"><i class="bi bi-person-fill"></i></div>
+          <div class="flex-grow-1">
+            <p class="appl-name">{{ app.nurseName }}</p>
+            <div class="appl-meta">
+              <span *ngIf="app.nurseSpecialization"><i class="bi bi-tag me-1"></i>{{ app.nurseSpecialization }}</span>
+              <span *ngIf="app.nurseExperience"><i class="bi bi-briefcase me-1"></i>{{ app.nurseExperience }} yrs</span>
+            </div>
+            <div class="appl-salary" *ngIf="app.salaryExpectation">
+              <i class="bi bi-cash-coin me-1"></i>₹{{ app.salaryExpectation | number }} per shift
+            </div>
+            <p class="appl-note" *ngIf="app.note">{{ app.note }}</p>
+          </div>
+        </div>
+        <!-- Action buttons -->
+        <div class="appl-actions mt-2">
+          <button class="btn-view-profile" (click)="viewNurseDetail(app)">
+            <i class="bi bi-person-lines-fill me-1"></i>View Profile
+          </button>
+          <button class="btn-select-nurse"
+                  [disabled]="acceptingApplicationId === app.id"
+                  (click)="selectNurse(app.id)">
+            <span *ngIf="acceptingApplicationId !== app.id"><i class="bi bi-check2-circle me-1"></i>Select Nurse</span>
+            <span *ngIf="acceptingApplicationId === app.id"><span class="spinner-border spinner-border-sm me-1"></span>Selecting…</span>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="applicants.length === 0" class="text-center py-4 text-muted small">
+        <i class="bi bi-people fs-4 d-block mb-2"></i>No nurses have applied yet. Check back later.
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- ── NURSE DETAIL VIEW (slides on top of applicants panel) ── -->
+  <div class="nurse-detail-overlay" *ngIf="selectedApplicant">
+    <div class="nurse-detail-header">
+      <button class="nd-back-btn" (click)="closeNurseDetail()">
+        <i class="bi bi-arrow-left me-1"></i>Back
+      </button>
+      <h6 class="mb-0">Nurse Profile</h6>
+      <div style="width:60px"></div>
+    </div>
+
+    <div class="nurse-detail-body">
+
+      <!-- Top identity -->
+      <div class="nd-identity mb-3">
+        <div class="nd-avatar"><i class="bi bi-person-fill"></i></div>
+        <div>
+          <p class="nd-name">{{ selectedApplicant.nurseName }}</p>
+          <p class="nd-spec" *ngIf="selectedApplicant.nurseSpecialization">{{ selectedApplicant.nurseSpecialization }}</p>
+          <div class="nd-rating" *ngIf="selectedApplicant.nurseRating">
+            <i class="bi bi-star-fill me-1" style="color:#f59e0b"></i>{{ selectedApplicant.nurseRating | number:'1.1-1' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Salary chip -->
+      <div class="nd-salary-banner mb-4" *ngIf="selectedApplicant.salaryExpectation">
+        <i class="bi bi-cash-coin me-2"></i>
+        Charges <strong>₹{{ selectedApplicant.salaryExpectation | number }}</strong> per shift
+      </div>
+
+      <!-- Professional details -->
+      <div class="nd-section">
+        <div class="nd-section-title"><i class="bi bi-person-badge-fill me-2"></i>Professional Details</div>
+        <div class="nd-grid">
+          <div class="nd-item" *ngIf="selectedApplicant.nurseExperience">
+            <span class="nd-label">Experience</span>
+            <span class="nd-value">{{ selectedApplicant.nurseExperience }} years</span>
+          </div>
+          <div class="nd-item" *ngIf="selectedApplicant.nurseLicenseNumber">
+            <span class="nd-label">License No.</span>
+            <span class="nd-value">{{ selectedApplicant.nurseLicenseNumber }}</span>
+          </div>
+          <div class="nd-item" *ngIf="selectedApplicant.nurseEducation">
+            <span class="nd-label">Education</span>
+            <span class="nd-value">{{ selectedApplicant.nurseEducation }}</span>
+          </div>
+          <div class="nd-item" *ngIf="selectedApplicant.nurseAvailability">
+            <span class="nd-label">Availability</span>
+            <span class="nd-value">{{ selectedApplicant.nurseAvailability }}</span>
+          </div>
+        </div>
+        <div class="nd-item mt-2" *ngIf="selectedApplicant.nurseExpertise">
+          <span class="nd-label">Skills / Expertise</span>
+          <span class="nd-value">{{ selectedApplicant.nurseExpertise }}</span>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="nd-section" *ngIf="selectedApplicant.nursePhone || selectedApplicant.nurseEmail">
+        <div class="nd-section-title"><i class="bi bi-telephone-fill me-2"></i>Contact</div>
+        <div class="nd-grid">
+          <div class="nd-item" *ngIf="selectedApplicant.nursePhone">
+            <span class="nd-label">Phone</span>
+            <span class="nd-value">{{ selectedApplicant.nursePhone }}</span>
+          </div>
+          <div class="nd-item" *ngIf="selectedApplicant.nurseEmail">
+            <span class="nd-label">Email</span>
+            <span class="nd-value">{{ selectedApplicant.nurseEmail }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Previous Employment -->
+      <div class="nd-section" *ngIf="selectedApplicant.nursePreviousEmployment">
+        <div class="nd-section-title"><i class="bi bi-building me-2"></i>Previous Employment</div>
+        <p class="nd-text">{{ selectedApplicant.nursePreviousEmployment }}</p>
+      </div>
+
+      <!-- References -->
+      <div class="nd-section" *ngIf="selectedApplicant.nurseReferences">
+        <div class="nd-section-title"><i class="bi bi-people-fill me-2"></i>References</div>
+        <p class="nd-text">{{ selectedApplicant.nurseReferences }}</p>
+      </div>
+
+      <!-- Cover note -->
+      <div class="nd-section" *ngIf="selectedApplicant.note">
+        <div class="nd-section-title"><i class="bi bi-chat-left-text-fill me-2"></i>Message from Nurse</div>
+        <p class="nd-text">{{ selectedApplicant.note }}</p>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="nurse-detail-footer">
+      <button class="nd-btn-back" (click)="closeNurseDetail()">Back to List</button>
+      <button class="nd-btn-select"
+              [disabled]="acceptingApplicationId === selectedApplicant.id"
+              (click)="selectNurse(selectedApplicant.id)">
+        <span *ngIf="acceptingApplicationId !== selectedApplicant.id">
+          <i class="bi bi-check2-circle me-1"></i>Select this Nurse
+        </span>
+        <span *ngIf="acceptingApplicationId === selectedApplicant.id">
+          <span class="spinner-border spinner-border-sm me-1"></span>Selecting…
+        </span>
+      </button>
+    </div>
+  </div>
+
 </div>
 
 <!-- RESCHEDULE MODAL -->

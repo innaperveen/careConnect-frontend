@@ -9,41 +9,66 @@ import { AppointmentService } from '../../../services/appointment.service';
 })
 export class MyNursesComponent implements OnInit {
 
-  appointments: any[] = [];
   isLoading = true;
-
-  // Unique nurses derived from appointments that have a nurse assigned
-  get assignedNurses(): any[] {
-    const seen = new Set<number>();
-    return this.appointments
-      .filter(a => a.nurseId != null)
-      .filter(a => { if (seen.has(a.nurseId)) return false; seen.add(a.nurseId); return true; });
-  }
-
-  // Appointments for a specific nurse
-  appointmentsForNurse(nurseId: number): any[] {
-    return this.appointments.filter(a => a.nurseId === nurseId);
-  }
+  allAppointments: any[] = [];
+  selectedNurse: any = null; // nurse object for detail panel
 
   constructor(private auth: AuthService, private apptService: AppointmentService) {}
 
   ngOnInit(): void {
     const userId = this.auth.getUserId();
-    if (!userId) return;
+    if (!userId) { this.isLoading = false; return; }
 
     this.apptService.getByPatient(userId).subscribe({
-      next: (data) => { this.appointments = data || []; this.isLoading = false; },
-      error: ()     => { this.isLoading = false; }
+      next: (data) => {
+        this.allAppointments = data || [];
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
     });
   }
 
-  getStatusClass(status: string): string {
+  // Unique nurses — one entry per nurseId, carrying all their profile fields
+  get assignedNurses(): any[] {
+    const seen = new Map<number, any>();
+    this.allAppointments
+      .filter(a => a.nurseId != null)
+      .forEach(a => {
+        if (!seen.has(a.nurseId)) {
+          seen.set(a.nurseId, {
+            nurseId:           a.nurseId,
+            nurseName:         a.nurseName,
+            nursePhone:        a.nursePhone,
+            nurseEmail:        a.nurseEmail,
+            nurseSpecialization: a.nurseSpecialization,
+            nurseExperience:   a.nurseExperience,
+            nurseEducation:    a.nurseEducation,
+            nurseExpertise:    a.nurseExpertise,
+            nurseLicenseNumber:a.nurseLicenseNumber,
+            nurseAvailability: a.nurseAvailability,
+            nurseRating:       a.nurseRating
+          });
+        }
+      });
+    return Array.from(seen.values());
+  }
+
+  appointmentsFor(nurseId: number): any[] {
+    return this.allAppointments
+      .filter(a => a.nurseId === nurseId)
+      .sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
+  }
+
+  openDetail(nurse: any): void  { this.selectedNurse = nurse; }
+  closeDetail(): void           { this.selectedNurse = null; }
+
+  statusClass(status: string): string {
     const s = (status ?? '').toUpperCase();
-    return s === 'CONFIRMED'   ? 'badge-confirmed'
-         : s === 'COMPLETED'   ? 'badge-completed'
-         : s === 'CANCELLED'   ? 'badge-cancelled'
-         : s === 'IN_PROGRESS' ? 'badge-inprogress'
-         : 'badge-pending';
+    if (s === 'CONFIRMED')   return 'badge-confirmed';
+    if (s === 'COMPLETED')   return 'badge-completed';
+    if (s === 'CANCELLED')   return 'badge-cancelled';
+    if (s === 'IN_PROGRESS') return 'badge-inprogress';
+    return 'badge-pending';
   }
 
   logout(): void { this.auth.logout(); }

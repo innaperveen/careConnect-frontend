@@ -52,60 +52,163 @@
 
     <div class="mb-4">
       <h4 class="page-title">My Nurses</h4>
-      <p class="page-subtitle">Nurses assigned to your care appointments</p>
+      <p class="page-subtitle">All nurses assigned to your care</p>
     </div>
 
     <!-- Loading -->
-    <div *ngIf="isLoading" class="text-center py-5 text-muted">
+    <div *ngIf="isLoading" class="text-center py-5">
       <div class="spinner-border text-success" role="status"></div>
-      <p class="mt-2">Loading your nurses…</p>
     </div>
 
-    <!-- Empty state -->
+    <!-- Empty -->
     <div *ngIf="!isLoading && assignedNurses.length === 0" class="empty-card text-center py-5">
       <i class="bi bi-person-x-fill fs-1 d-block mb-3" style="color:#c8ddd8;"></i>
       <h6 style="color:#7a9e98;">No nurses assigned yet</h6>
-      <p style="font-size:0.85rem; color:#9ab8b0;">Book an appointment and a nurse will be assigned to your care.</p>
+      <p class="small text-muted">Book an appointment — once a nurse is confirmed, they'll appear here.</p>
     </div>
 
-    <!-- Nurse cards -->
-    <div *ngFor="let nurse of assignedNurses" class="nurse-card mb-4">
+    <!-- Nurse cards grid -->
+    <div class="nurses-grid" *ngIf="!isLoading && assignedNurses.length > 0">
+      <div class="nurse-card" *ngFor="let nurse of assignedNurses" (click)="openDetail(nurse)">
 
-      <!-- Nurse header -->
-      <div class="nurse-header">
-        <div class="nurse-avatar-lg">
-          <i class="bi bi-person-fill"></i>
+        <!-- Avatar + identity -->
+        <div class="nc-top">
+          <div class="nc-avatar"><i class="bi bi-person-fill"></i></div>
+          <div class="nc-identity">
+            <p class="nc-name">{{ nurse.nurseName }}</p>
+            <span class="nc-spec-badge" *ngIf="nurse.nurseSpecialization">{{ nurse.nurseSpecialization }}</span>
+            <span class="nc-spec-badge nc-spec-default" *ngIf="!nurse.nurseSpecialization">General Nursing</span>
+          </div>
+          <!-- Rating -->
+          <div class="nc-rating" *ngIf="nurse.nurseRating">
+            <i class="bi bi-star-fill"></i> {{ nurse.nurseRating | number:'1.1-1' }}
+          </div>
         </div>
-        <div class="nurse-info">
-          <h5 class="nurse-name-lg">{{ nurse.nurseName }}</h5>
-          <span class="nurse-spec-badge">{{ nurse.nurseSpecialization || 'General Nursing' }}</span>
+
+        <!-- Quick stats row -->
+        <div class="nc-stats">
+          <div class="nc-stat" *ngIf="nurse.nurseExperience">
+            <span class="nc-stat-val">{{ nurse.nurseExperience }}</span>
+            <span class="nc-stat-lbl">yrs exp</span>
+          </div>
+          <div class="nc-stat-divider" *ngIf="nurse.nurseExperience"></div>
+          <div class="nc-stat">
+            <span class="nc-stat-val">{{ appointmentsFor(nurse.nurseId).length }}</span>
+            <span class="nc-stat-lbl">session{{ appointmentsFor(nurse.nurseId).length !== 1 ? 's' : '' }}</span>
+          </div>
+          <div class="nc-stat-divider" *ngIf="nurse.nurseLicenseNumber"></div>
+          <div class="nc-stat" *ngIf="nurse.nurseLicenseNumber">
+            <span class="nc-stat-val" style="font-size:0.72rem;">{{ nurse.nurseLicenseNumber }}</span>
+            <span class="nc-stat-lbl">license</span>
+          </div>
         </div>
-        <div class="nurse-appt-count">
-          <span class="appt-count-num">{{ appointmentsForNurse(nurse.nurseId).length }}</span>
-          <span class="appt-count-lbl">appointment{{ appointmentsForNurse(nurse.nurseId).length !== 1 ? 's' : '' }}</span>
+
+        <!-- Quick details -->
+        <div class="nc-details">
+          <span *ngIf="nurse.nursePhone"><i class="bi bi-telephone me-1"></i>{{ nurse.nursePhone }}</span>
+          <span *ngIf="nurse.nurseEmail"><i class="bi bi-envelope me-1"></i>{{ nurse.nurseEmail }}</span>
+          <span *ngIf="nurse.nurseAvailability"><i class="bi bi-clock me-1"></i>{{ nurse.nurseAvailability }}</span>
+        </div>
+
+        <!-- Expertise tags -->
+        <div class="nc-expertise" *ngIf="nurse.nurseExpertise">
+          <span class="nc-tag" *ngFor="let tag of nurse.nurseExpertise.split(',').slice(0,3)">{{ tag.trim() }}</span>
+        </div>
+
+        <!-- Footer link -->
+        <div class="nc-footer">
+          <span>View full profile &amp; history</span>
+          <i class="bi bi-arrow-right"></i>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── NURSE DETAIL PANEL ─────────────────────────────────────── -->
+<div class="detail-backdrop" *ngIf="selectedNurse" (click)="closeDetail()"></div>
+
+<div class="detail-panel" *ngIf="selectedNurse">
+
+  <div class="dp-header">
+    <div class="dp-avatar"><i class="bi bi-person-fill"></i></div>
+    <div class="dp-identity">
+      <h5 class="dp-name">{{ selectedNurse.nurseName }}</h5>
+      <span class="nc-spec-badge">{{ selectedNurse.nurseSpecialization || 'General Nursing' }}</span>
+    </div>
+    <button class="dp-close" (click)="closeDetail()"><i class="bi bi-x-lg"></i></button>
+  </div>
+
+  <div class="dp-body">
+
+    <!-- Rating banner -->
+    <div class="dp-rating-banner" *ngIf="selectedNurse.nurseRating">
+      <i class="bi bi-star-fill me-1" style="color:#f59e0b;"></i>
+      Rated <strong>{{ selectedNurse.nurseRating | number:'1.1-1' }}</strong> / 5
+    </div>
+
+    <!-- Professional Details -->
+    <div class="dp-section">
+      <div class="dp-section-title"><i class="bi bi-person-badge-fill me-2"></i>Professional Details</div>
+      <div class="dp-grid">
+        <div class="dp-item" *ngIf="selectedNurse.nurseExperience">
+          <span class="dp-label">Experience</span>
+          <span class="dp-value">{{ selectedNurse.nurseExperience }} years</span>
+        </div>
+        <div class="dp-item" *ngIf="selectedNurse.nurseLicenseNumber">
+          <span class="dp-label">License No.</span>
+          <span class="dp-value">{{ selectedNurse.nurseLicenseNumber }}</span>
+        </div>
+        <div class="dp-item" *ngIf="selectedNurse.nurseEducation">
+          <span class="dp-label">Education</span>
+          <span class="dp-value">{{ selectedNurse.nurseEducation }}</span>
+        </div>
+        <div class="dp-item" *ngIf="selectedNurse.nurseAvailability">
+          <span class="dp-label">Availability</span>
+          <span class="dp-value">{{ selectedNurse.nurseAvailability }}</span>
         </div>
       </div>
-
-      <!-- Appointment history with this nurse -->
-      <div class="appt-list">
-        <div *ngFor="let appt of appointmentsForNurse(nurse.nurseId)" class="appt-row">
-          <div class="appt-date">
-            <i class="bi bi-calendar3 me-1"></i>
-            {{ appt.appointmentDate | date:'mediumDate' }}
-          </div>
-          <div class="appt-time text-muted" style="font-size:0.8rem;">
-            {{ appt.appointmentDate | date:'shortTime' }}
-          </div>
-          <div class="appt-care">{{ appt.careNeeds || '—' }}</div>
-          <div class="appt-duration text-muted" style="font-size:0.8rem;">
-            <i class="bi bi-clock me-1"></i>{{ appt.duration || '—' }}
-          </div>
-          <span class="appt-status-badge" [ngClass]="getStatusClass(appt.status)">
-            {{ appt.status | titlecase }}
-          </span>
+      <div class="dp-item mt-2" *ngIf="selectedNurse.nurseExpertise">
+        <span class="dp-label">Skills / Expertise</span>
+        <div class="nc-expertise mt-1">
+          <span class="nc-tag" *ngFor="let tag of selectedNurse.nurseExpertise.split(',')">{{ tag.trim() }}</span>
         </div>
       </div>
+    </div>
 
+    <!-- Contact -->
+    <div class="dp-section" *ngIf="selectedNurse.nursePhone || selectedNurse.nurseEmail">
+      <div class="dp-section-title"><i class="bi bi-telephone-fill me-2"></i>Contact</div>
+      <div class="dp-grid">
+        <div class="dp-item" *ngIf="selectedNurse.nursePhone">
+          <span class="dp-label">Phone</span>
+          <span class="dp-value">{{ selectedNurse.nursePhone }}</span>
+        </div>
+        <div class="dp-item" *ngIf="selectedNurse.nurseEmail">
+          <span class="dp-label">Email</span>
+          <span class="dp-value">{{ selectedNurse.nurseEmail }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appointment History -->
+    <div class="dp-section">
+      <div class="dp-section-title"><i class="bi bi-calendar3 me-2"></i>Appointment History</div>
+
+      <div class="dp-appt-row" *ngFor="let appt of appointmentsFor(selectedNurse.nurseId)">
+        <div class="dp-appt-left">
+          <p class="dp-appt-date">{{ appt.appointmentDate | date:'mediumDate' }} at {{ appt.appointmentDate | date:'shortTime' }}</p>
+          <p class="dp-appt-care">{{ appt.careNeeds || '—' }}</p>
+          <p class="dp-appt-notes" *ngIf="appt.notes">{{ appt.notes }}</p>
+        </div>
+        <span class="appt-status-badge" [ngClass]="statusClass(appt.status)">
+          {{ appt.status | titlecase }}
+        </span>
+      </div>
+
+      <p *ngIf="appointmentsFor(selectedNurse.nurseId).length === 0" class="text-muted small">No appointments yet.</p>
     </div>
 
   </div>

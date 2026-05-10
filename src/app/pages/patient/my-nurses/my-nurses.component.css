@@ -16,30 +16,81 @@
 
 .page-title { font-size: 1.4rem; font-weight: 800; color: #1a3b3a; margin: 0; }
 .page-subtitle { font-size: 0.85rem; color: #6a8c80; margin: 4px 0 0; }
-
 .empty-card { background: white; border-radius: 20px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,32,32,0.06); }
 
-/* Nurse card */
-.nurse-card { background: white; border-radius: 20px; box-shadow: 0 6px 18px -6px rgba(0,32,32,0.08); overflow: hidden; }
-.nurse-header { display: flex; align-items: center; gap: 16px; padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #eef9f5, #f8fffd); border-bottom: 1.5px solid #e8f3ef; flex-wrap: wrap; }
-.nurse-avatar-lg { width: 54px; height: 54px; background: linear-gradient(135deg, #1aa37a, #0f6b51); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.4rem; flex-shrink: 0; }
-.nurse-info { flex: 1; }
-.nurse-name-lg { font-size: 1.05rem; font-weight: 700; color: #1a3b3a; margin: 0 0 4px; }
-.nurse-spec-badge { background: #1aa37a; color: white; border-radius: 30px; padding: 3px 12px; font-size: 0.75rem; font-weight: 600; }
-.nurse-appt-count { text-align: center; }
-.appt-count-num { display: block; font-size: 1.6rem; font-weight: 800; color: #1aa37a; line-height: 1; }
-.appt-count-lbl { font-size: 0.72rem; color: #6a8c80; font-weight: 500; }
+/* ── NURSE CARDS GRID ───────────────────────────────────────── */
+.nurses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
 
-/* Appointment rows */
-.appt-list { padding: 0.5rem 0; }
-.appt-row { display: flex; align-items: center; gap: 16px; padding: 10px 1.5rem; border-bottom: 1px solid #f0f5f3; flex-wrap: wrap; }
-.appt-row:last-child { border-bottom: none; }
-.appt-date { font-size: 0.85rem; font-weight: 600; color: #1a3b3a; min-width: 120px; }
-.appt-care { font-size: 0.82rem; color: #4e6e68; flex: 1; }
+.nurse-card { background: white; border-radius: 20px; box-shadow: 0 6px 18px -6px rgba(0,32,32,0.08); overflow: hidden; cursor: pointer; transition: transform 0.18s, box-shadow 0.18s; display: flex; flex-direction: column; }
+.nurse-card:hover { transform: translateY(-3px); box-shadow: 0 14px 28px -8px rgba(0,80,60,0.14); }
 
-.appt-status-badge { padding: 3px 12px; border-radius: 30px; font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+/* Card top — avatar + identity + rating */
+.nc-top { display: flex; align-items: center; gap: 12px; padding: 1.1rem 1.2rem 0.75rem; }
+.nc-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #1aa37a, #0f6b51); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem; flex-shrink: 0; }
+.nc-identity { flex: 1; }
+.nc-name { font-size: 0.97rem; font-weight: 700; color: #1a3b3a; margin: 0 0 4px; }
+.nc-spec-badge { background: #e3f6ef; color: #0f6b51; border-radius: 30px; padding: 3px 10px; font-size: 0.72rem; font-weight: 700; }
+.nc-spec-default { background: #f0f5f3; color: #4e6e68; }
+.nc-rating { font-size: 0.8rem; font-weight: 700; color: #92400e; background: #fef3c7; padding: 4px 9px; border-radius: 20px; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.nc-rating i { color: #f59e0b; font-size: 0.75rem; }
+
+/* Quick stats row */
+.nc-stats { display: flex; align-items: center; gap: 0; padding: 0.6rem 1.2rem; background: #f8fffd; border-top: 1px solid #e8f3ef; border-bottom: 1px solid #e8f3ef; }
+.nc-stat { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.nc-stat-val { font-size: 0.95rem; font-weight: 800; color: #1a3b3a; }
+.nc-stat-lbl { font-size: 0.65rem; color: #6a8c80; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+.nc-stat-divider { width: 1px; height: 28px; background: #dceee8; margin: 0 4px; }
+
+/* Quick detail pills */
+.nc-details { display: flex; flex-direction: column; gap: 4px; padding: 0.7rem 1.2rem 0.5rem; font-size: 0.79rem; color: #4e6e68; }
+.nc-details span { display: flex; align-items: center; gap: 4px; }
+
+/* Expertise tags */
+.nc-expertise { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 1.2rem 0.75rem; }
+.nc-tag { background: #e8f4fd; color: #1565c0; padding: 3px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+
+/* Footer link */
+.nc-footer { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1.2rem; border-top: 1px solid #f0f5f3; font-size: 0.78rem; color: #1aa37a; font-weight: 600; margin-top: auto; }
+
+/* ── DETAIL PANEL (slide-in) ─────────────────────────────────── */
+.detail-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 2000; }
+.detail-panel { position: fixed; top: 0; right: 0; width: 480px; max-width: 100vw; height: 100vh; background: white; z-index: 2010; display: flex; flex-direction: column; box-shadow: -8px 0 32px rgba(0,0,0,0.15); animation: slideIn .22s ease; }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.dp-header { display: flex; align-items: center; gap: 14px; padding: 1.2rem 1.4rem; background: linear-gradient(135deg, #eef9f5, #f8fffd); border-bottom: 1.5px solid #e8f3ef; }
+.dp-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #1aa37a, #0f6b51); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; flex-shrink: 0; }
+.dp-identity { flex: 1; }
+.dp-name { font-size: 1.05rem; font-weight: 800; color: #1a3b3a; margin: 0 0 5px; }
+.dp-close { background: #f0f0f0; border: none; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem; color: #555; flex-shrink: 0; }
+.dp-close:hover { background: #ddd; }
+
+.dp-body { flex: 1; overflow-y: auto; padding: 1.4rem; }
+.dp-body::-webkit-scrollbar { width: 5px; }
+.dp-body::-webkit-scrollbar-thumb { background: #cce0d8; border-radius: 10px; }
+
+.dp-rating-banner { display: flex; align-items: center; background: #fef3c7; border-radius: 12px; padding: 0.65rem 1rem; font-size: 0.88rem; color: #92400e; font-weight: 600; margin-bottom: 1.25rem; }
+
+.dp-section { margin-bottom: 1.5rem; }
+.dp-section-title { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #0f5241; margin-bottom: 0.7rem; padding-bottom: 0.35rem; border-bottom: 1px solid #e5ede9; }
+.dp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem 1.2rem; }
+.dp-item { display: flex; flex-direction: column; gap: 2px; }
+.dp-label { font-size: 0.7rem; color: #9ab8b2; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.dp-value { font-size: 0.9rem; color: #1a3a2e; font-weight: 500; }
+
+/* Appointment history rows */
+.dp-appt-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px solid #f0f5f3; }
+.dp-appt-row:last-child { border-bottom: none; }
+.dp-appt-left { flex: 1; }
+.dp-appt-date { font-size: 0.85rem; font-weight: 700; color: #1a3b3a; margin: 0 0 2px; }
+.dp-appt-care { font-size: 0.8rem; color: #4e6e68; margin: 0 0 2px; }
+.dp-appt-notes { font-size: 0.75rem; color: #9ab8b2; margin: 0; font-style: italic; }
+
+/* Status badges */
+.appt-status-badge { padding: 3px 12px; border-radius: 30px; font-size: 0.7rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
 .badge-confirmed   { background: #d4edda; color: #155724; }
 .badge-completed   { background: #e8f0fe; color: #1a73e8; }
 .badge-cancelled   { background: #fde8e8; color: #c0392b; }
 .badge-inprogress  { background: #fff3cd; color: #856404; }
 .badge-pending     { background: #f0f5f3; color: #4e6e68; }
+
+@media (max-width: 520px) { .detail-panel { width: 100vw; } .dp-grid { grid-template-columns: 1fr; } }

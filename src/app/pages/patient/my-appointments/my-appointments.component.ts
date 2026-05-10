@@ -2,16 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../../services/auth.service';
 import { AppointmentService } from '../../../services/appointment.service';
 
-interface Appointment {
-  id: number;
-  nurseName: string;
-  date: string;
-  time: string;
-  careType: string;
-  duration: string;
-  status: string;
-}
-
 @Component({
   selector: 'app-my-appointments',
   templateUrl: './my-appointments.component.html',
@@ -26,10 +16,21 @@ export class MyAppointmentsComponent implements OnInit {
   tabLabels: Record<string, string> = {
     All: 'All', PENDING: 'Pending', CONFIRMED: 'Confirmed', COMPLETED: 'Completed', CANCELLED: 'Cancelled'
   };
-  appointments: Appointment[] = [];
+  appointments: any[] = [];    // stores full raw backend objects
+  rawAppointments: any[] = []; // kept for reference
+
+  // Applicants panel
+  applicantsTarget: any   = null;
+  applicants:       any[] = [];
+  loadingApplicants       = false;
+  acceptingApplicationId: number | null = null;
+  applicantsError         = '';
+
+  // Nurse detail view (inside applicants panel)
+  selectedApplicant: any = null;
 
   // Reschedule modal state
-  rescheduleTarget: Appointment | null = null;
+  rescheduleTarget: any = null;
   rescheduleDate   = '';
   rescheduleHour   = '09';
   rescheduleMinute = '00';
@@ -48,27 +49,29 @@ export class MyAppointmentsComponent implements OnInit {
 
     this.apptService.getByPatient(userId).subscribe({
       next: (data) => {
-        this.appointments = (data || []).map((a: any) => this.mapAppointment(a));
+        this.rawAppointments = data || [];
+        this.appointments    = this.rawAppointments.map((a: any) => this.mapAppointment(a));
         this.isLoading = false;
       },
       error: () => { this.isLoading = false; }
     });
   }
 
-  private mapAppointment(a: any): Appointment {
+  private mapAppointment(a: any): any {
     const dt = new Date(a.appointmentDate);
     return {
-      id:        a.id,
-      nurseName: a.nurseName || 'Unassigned',
-      careType:  a.careNeeds || '—',
-      duration:  a.duration  || '—',
+      id:             a.id,
+      nurseName:      a.nurseName || null,
+      careType:       a.careNeeds || '—',
+      duration:       a.duration  || '—',
       date: dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       time: dt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      status: (a.status || 'PENDING').toUpperCase()
+      status:         (a.status || 'PENDING').toUpperCase(),
+      applicantCount: a.applicantCount ?? 0
     };
   }
 
-  get filteredAppointments(): Appointment[] {
+  get filteredAppointments(): any[] {
     if (this.activeTab === 'All') return this.appointments;
     return this.appointments.filter(a => a.status === this.activeTab);
   }
@@ -84,7 +87,7 @@ export class MyAppointmentsComponent implements OnInit {
     return this.appointments.filter(a => a.status === status).length;
   }
 
-  openReschedule(appt: Appointment): void {
+  openReschedule(appt: any): void {
     this.rescheduleTarget = appt;
     this.rescheduleDate   = '';
     this.rescheduleHour   = '09';
@@ -147,6 +150,48 @@ export class MyAppointmentsComponent implements OnInit {
       case 'IN_PROGRESS': return 'badge-inprogress';
       default:            return 'badge-scheduled';
     }
+  }
+
+  // ── Applicants panel ─────────────────────────────────────────────
+  viewApplicants(appt: any): void {
+    this.applicantsTarget = appt;
+    this.applicants       = [];
+    this.applicantsError  = '';
+    this.loadingApplicants = true;
+
+    this.apptService.getAppointmentApplications(appt.id).subscribe({
+      next: (data) => { this.applicants = data || []; this.loadingApplicants = false; },
+      error: ()    => { this.applicantsError = 'Failed to load applicants.'; this.loadingApplicants = false; }
+    });
+  }
+
+  closeApplicants(): void { this.applicantsTarget = null; this.applicants = []; this.selectedApplicant = null; }
+
+  viewNurseDetail(app: any): void  { this.selectedApplicant = app; }
+  closeNurseDetail(): void         { this.selectedApplicant = null; }
+
+  selectNurse(applicationId: number): void {
+    this.acceptingApplicationId = applicationId;
+    this.applicantsError        = '';
+
+    this.apptService.acceptAppointmentApplication(applicationId).subscribe({
+      next: (updated) => {
+        // Update the appointment card in the list
+        const appt = this.appointments.find(a => a.id === this.applicantsTarget?.id);
+        if (appt && updated) {
+          appt.nurseName = updated.nurseName;
+          appt.status    = 'CONFIRMED';
+          appt.applicantCount = 0;
+        }
+        this.acceptingApplicationId = null;
+        this.selectedApplicant = null;
+        this.closeApplicants();
+      },
+      error: (err: Error) => {
+        this.applicantsError        = err.message;
+        this.acceptingApplicationId = null;
+      }
+    });
   }
 
   logout(): void { this.auth.logout(); }

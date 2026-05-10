@@ -58,12 +58,61 @@
 
     <!-- PROFILE IDENTITY CARD -->
     <div class="identity-card mb-4">
-      <div class="identity-avatar">{{ avatarLetter }}</div>
-      <div class="identity-info">
-        <p class="identity-name">{{ displayName }}</p>
-        <p class="identity-email">{{ displayEmail }}</p>
+
+      <!-- Avatar + Name + Badge -->
+      <div class="ic-top">
+        <div class="identity-avatar">{{ avatarLetter }}</div>
+        <div class="ic-name-block">
+          <p class="identity-name">{{ profileCard.fullName || displayName }}</p>
+          <p class="identity-email">{{ displayEmail }}</p>
+        </div>
+        <span class="identity-badge ms-auto"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i>Active Patient</span>
       </div>
-      <span class="identity-badge"><i class="bi bi-circle-fill me-1"></i>Active Patient</span>
+
+      <!-- Details grid -->
+      <div class="ic-details" *ngIf="profileCard.fullName">
+        <div class="ic-detail" *ngIf="profileCard.dob">
+          <i class="bi bi-calendar-heart ic-icon"></i>
+          <div>
+            <span class="ic-key">Date of Birth</span>
+            <span class="ic-val">{{ profileCard.dob }}<span *ngIf="profileCard.age" class="ic-age"> · {{ profileCard.age }}</span></span>
+          </div>
+        </div>
+        <div class="ic-detail" *ngIf="profileCard.gender">
+          <i class="bi bi-person-fill ic-icon"></i>
+          <div>
+            <span class="ic-key">Gender</span>
+            <span class="ic-val">{{ profileCard.gender }}</span>
+          </div>
+        </div>
+        <div class="ic-detail" *ngIf="profileCard.bloodGroup">
+          <i class="bi bi-droplet-fill ic-icon" style="color:#e05252;"></i>
+          <div>
+            <span class="ic-key">Blood Group</span>
+            <span class="ic-val ic-blood">{{ profileCard.bloodGroup }}</span>
+          </div>
+        </div>
+        <div class="ic-detail" *ngIf="profileCard.phone">
+          <i class="bi bi-telephone-fill ic-icon"></i>
+          <div>
+            <span class="ic-key">Phone</span>
+            <span class="ic-val">{{ profileCard.phone }}</span>
+          </div>
+        </div>
+        <div class="ic-detail ic-detail-wide" *ngIf="profileCard.address">
+          <i class="bi bi-geo-alt-fill ic-icon"></i>
+          <div>
+            <span class="ic-key">Address</span>
+            <span class="ic-val">{{ profileCard.address }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skeleton when profile not yet loaded -->
+      <p *ngIf="!profileCard.fullName" class="ic-empty">
+        <i class="bi bi-person-circle me-1"></i> Complete your profile to see details here.
+      </p>
+
     </div>
 
     <!-- TAB NAV -->
@@ -91,66 +140,145 @@
         </div>
 
         <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
-          <div class="d-flex justify-content-between align-items-center mb-3" style="border-bottom:1.5px solid #f0f5f3; padding-bottom:10px;">
-            <span class="form-section-label mb-0" style="border:none; padding:0;">Personal Information</span>
+          <div class="d-flex justify-content-between align-items-center mb-3" style="border-bottom:1.5px solid #f0f5f3;padding-bottom:10px;">
+            <span class="form-section-label mb-0" style="border:none;padding:0;">Personal Information</span>
             <button *ngIf="!isEditing" type="button" class="btn-edit-profile" (click)="startEditing()">
               <i class="bi bi-pencil me-1"></i>Edit Profile
             </button>
           </div>
 
-          <div class="row g-3 mb-4">
-            <div class="col-md-6">
-              <label class="field-label">Full Name</label>
-              <input class="field-input" formControlName="fullName" placeholder="Your full name"
-                     [class.field-readonly]="!isEditing"
-                     [class.input-err]="pf['fullName'].touched && pf['fullName'].invalid">
-              <small class="err" *ngIf="pf['fullName'].touched && pf['fullName'].hasError('required')">Full name is required.</small>
-              <small class="err" *ngIf="pf['fullName'].touched && pf['fullName'].hasError('minlength')">Minimum 3 characters.</small>
+          <!-- ── Name ── -->
+          <div class="row g-3 mb-2">
+            <div class="col-md-4">
+              <label class="field-label">First Name *</label>
+              <input class="field-input" formControlName="firstName" placeholder="First name"
+                [class.field-readonly]="!isEditing" [class.input-err]="pf['firstName'].touched && pf['firstName'].invalid">
+              <small class="err" *ngIf="pf['firstName'].touched && pf['firstName'].hasError('required')">Required.</small>
+              <small class="err" *ngIf="pf['firstName'].touched && pf['firstName'].hasError('minlength')">Min 3 letters.</small>
+              <small class="err" *ngIf="pf['firstName'].touched && pf['firstName'].hasError('pattern')">Letters only, no special characters.</small>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
+              <label class="field-label">Middle Name</label>
+              <input class="field-input" formControlName="middleName" placeholder="Middle name (optional)"
+                [class.field-readonly]="!isEditing" [class.input-err]="pf['middleName'].touched && pf['middleName'].invalid">
+              <small class="err" *ngIf="pf['middleName'].touched && pf['middleName'].hasError('pattern')">Letters only.</small>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label">Last Name *</label>
+              <input class="field-input" formControlName="lastName" placeholder="Last name"
+                [class.field-readonly]="!isEditing" [class.input-err]="pf['lastName'].touched && pf['lastName'].invalid">
+              <small class="err" *ngIf="pf['lastName'].touched && pf['lastName'].hasError('required')">Required.</small>
+            </div>
+          </div>
+
+          <!-- ── Email (readonly) ── -->
+          <div class="row g-3 mb-2">
+            <div class="col-12">
               <label class="field-label">Email Address</label>
               <input class="field-input field-readonly" formControlName="email">
               <small class="hint">Email cannot be changed here.</small>
             </div>
-            <div class="col-md-6">
-              <label class="field-label">Phone Number</label>
-              <input class="field-input" formControlName="phone" placeholder="10-digit mobile number"
-                     [class.field-readonly]="!isEditing"
-                     [class.input-err]="pf['phone'].touched && pf['phone'].invalid">
-              <small class="err" *ngIf="pf['phone'].touched && pf['phone'].hasError('required')">Phone number is required.</small>
-              <small class="err" *ngIf="pf['phone'].touched && pf['phone'].hasError('pattern')">Enter a valid 10-digit number.</small>
-            </div>
+          </div>
+
+          <!-- ── DOB + Age + Gender + Blood Group ── -->
+          <div class="row g-3 mb-2">
             <div class="col-md-3">
               <label class="field-label">Date of Birth</label>
-              <input type="date" class="field-input" formControlName="dateOfBirth"
-                     [class.field-readonly]="!isEditing">
+              <input type="date" class="field-input" formControlName="dob"
+                [class.field-readonly]="!isEditing"
+                (change)="onDobChange($any($event.target).value)">
+            </div>
+            <div class="col-md-2">
+              <label class="field-label">Age</label>
+              <input class="field-input age-readonly" readonly
+                [value]="calculatedAge !== null ? calculatedAge + ' yrs' : '—'">
+            </div>
+            <div class="col-md-4">
+              <label class="field-label">Gender</label>
+              <select class="field-input" formControlName="gender" [class.field-readonly]="!isEditing">
+                <option value="">Select</option>
+                <option>Male</option><option>Female</option>
+                <option>Other</option><option>Prefer Not To Say</option>
+              </select>
             </div>
             <div class="col-md-3">
               <label class="field-label">Blood Group</label>
-              <select class="field-input" formControlName="bloodGroup"
-                      [class.field-readonly]="!isEditing">
+              <select class="field-input" formControlName="bloodGroup" [class.field-readonly]="!isEditing">
                 <option value="">Select</option>
-                <option>A+</option><option>A-</option>
-                <option>B+</option><option>B-</option>
-                <option>AB+</option><option>AB-</option>
-                <option>O+</option><option>O-</option>
+                <option *ngFor="let bg of bloodGroups" [value]="bg">{{ bg }}</option>
               </select>
+            </div>
+          </div>
+
+          <!-- ── Phone ── -->
+          <div class="row g-3 mb-2">
+            <div class="col-md-4">
+              <label class="field-label">Country Code</label>
+              <select class="field-input" formControlName="phoneCountryCode" [class.field-readonly]="!isEditing">
+                <option *ngFor="let cc of countryCodes" [value]="cc.code">{{ cc.label }}</option>
+              </select>
+            </div>
+            <div class="col-md-8">
+              <label class="field-label">Phone Number</label>
+              <input class="field-input" formControlName="phone" placeholder="10-digit number"
+                [class.field-readonly]="!isEditing" [class.input-err]="pf['phone'].touched && pf['phone'].invalid"
+                maxlength="10">
+              <small class="err" *ngIf="pf['phone'].touched && pf['phone'].hasError('pattern')">Enter exactly 10 digits.</small>
+            </div>
+          </div>
+
+          <!-- ── Address ── -->
+          <div class="row g-3 mb-2">
+            <div class="col-12">
+              <label class="field-label">Address Line 1</label>
+              <input class="field-input" formControlName="addressLine1"
+                placeholder="House / Flat No., Street, Area"
+                [class.field-readonly]="!isEditing" maxlength="100">
             </div>
             <div class="col-md-6">
-              <label class="field-label">Gender</label>
-              <select class="field-input" formControlName="gender"
-                      [class.field-readonly]="!isEditing">
-                <option value="">Select</option>
-                <option>Male</option>
-                <option>Female</option>
-                <option>Other</option>
-                <option>Prefer not to say</option>
+              <label class="field-label">Address Line 2</label>
+              <input class="field-input" formControlName="addressLine2"
+                placeholder="Colony / Society (optional)"
+                [class.field-readonly]="!isEditing" maxlength="100">
+            </div>
+            <div class="col-md-6">
+              <label class="field-label">Landmark</label>
+              <input class="field-input" formControlName="landmark"
+                placeholder="Near hospital, metro, school…"
+                [class.field-readonly]="!isEditing" maxlength="60">
+            </div>
+          </div>
+
+          <!-- ── State / City / Pincode ── -->
+          <div class="country-notice mb-2">
+            <i class="bi bi-geo-fill me-1"></i> Country: <strong>India 🇮🇳</strong>
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-5">
+              <label class="field-label">State</label>
+              <select class="field-input" formControlName="state"
+                [class.field-readonly]="!isEditing"
+                (change)="isEditing && onStateChange($any($event.target).value)">
+                <option value="">Select State</option>
+                <option *ngFor="let s of states" [value]="s">{{ s }}</option>
               </select>
             </div>
-            <div class="col-12">
-              <label class="field-label">Address</label>
-              <input class="field-input" formControlName="address" placeholder="Street, City, PIN code"
-                     [class.field-readonly]="!isEditing">
+            <div class="col-md-4">
+              <label class="field-label">City</label>
+              <select class="field-input" formControlName="city"
+                [class.field-readonly]="!isEditing"
+                [disabled]="!isEditing || cities.length === 0">
+                <option value="">{{ cities.length ? 'Select City' : 'Select State first' }}</option>
+                <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="field-label">Pincode</label>
+              <input class="field-input" formControlName="pincode" placeholder="6-digit pincode"
+                [class.field-readonly]="!isEditing"
+                [class.input-err]="pf['pincode'].touched && pf['pincode'].invalid"
+                maxlength="6">
+              <small class="err" *ngIf="pf['pincode'].touched && pf['pincode'].hasError('pattern')">6-digit pincode.</small>
             </div>
           </div>
 
@@ -159,9 +287,7 @@
               <span *ngIf="!isSavingProfile"><i class="bi bi-check-lg me-1"></i>Save Changes</span>
               <span *ngIf="isSavingProfile"><span class="spinner-border spinner-border-sm me-1"></span>Saving…</span>
             </button>
-            <button type="button" class="btn-cancel-edit" (click)="cancelEditing()">
-              Cancel
-            </button>
+            <button type="button" class="btn-cancel-edit" (click)="cancelEditing()">Cancel</button>
           </div>
         </form>
       </div>
