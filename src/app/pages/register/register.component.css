@@ -515,3 +515,31 @@
     .modal-btn-success:hover { background: #158467; }
     .modal-btn-error   { background: #e05252; color: #fff; }
     .modal-btn-error:hover   { background: #c0392b; }
+/* Field label above input */
+.field-label { display:block; font-size:0.78rem; font-weight:600; color:#4e6e68; margin-bottom:4px; }
+
+/* Phone row: country code (fixed width) + number (flex) */
+.phone-row-outer { flex-wrap: nowrap; }
+.phone-cc-wrap   { flex: 0 0 200px !important; min-width: 200px; }
+
+/* Age readonly field */
+.age-field { background:#f8fff8 !important; color:#0f5241 !important; font-weight:700 !important; text-align:center; cursor:default; }
+
+/* Password visibility toggle */
+.pass-wrap { position:relative; display:flex; align-items:center; }
+.pass-wrap input { width:100%; padding-right:2.8rem; }
+.eye-btn { position:absolute; right:0.9rem; background:none; border:none; cursor:pointer; color:#8aaba4; font-size:1.05rem; padding:0; line-height:1; display:flex; align-items:center; z-index:2; transition:color .15s; }
+.eye-btn:hover { color:#1aa37a; }
+
+/* Country notice badge */
+.country-notice { display:inline-flex; align-items:center; background:#eef9f5; border:1px solid #c8e6d8; border-radius:20px; padding:5px 14px; font-size:0.82rem; color:#0f6b51; font-weight:500; margin-bottom:0.75rem; }
+
+/* State/City/Pincode row — give state more room for long names */
+.state-city-row { flex-wrap:nowrap; }
+.state-field   { flex:2.5; min-width:0; }
+.city-field    { flex:2; min-width:0; }
+.pincode-field { flex:1; min-width:90px; }
+.state-city-row select { text-overflow:ellipsis; overflow:hidden; }
+
+/* Disabled fields */
+.input-disabled { background:#f3f4f6 !important; color:#6b7280 !important; cursor:not-allowed; border-color:#e5e7eb !important; }
