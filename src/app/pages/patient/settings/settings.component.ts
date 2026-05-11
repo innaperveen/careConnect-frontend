@@ -181,7 +181,7 @@ export class SettingsComponent implements OnInit {
       phoneCountryCode: [{ value: '+91', disabled: true }],
       phone:            [{ value: '', disabled: true }, [Validators.pattern('^[0-9]{10}$')]],
       // Address
-      addressLine1: [{ value: '', disabled: true }, Validators.maxLength(100)],
+      addressLine1: [{ value: '', disabled: true }, [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
       addressLine2: [{ value: '', disabled: true }, Validators.maxLength(100)],
       landmark:     [{ value: '', disabled: true }, Validators.maxLength(60)],
       country:      [{ value: 'India', disabled: true }],
