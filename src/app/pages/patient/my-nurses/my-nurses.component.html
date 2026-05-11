@@ -115,10 +115,22 @@
           <span class="nc-tag" *ngFor="let tag of nurse.nurseExpertise.split(',').slice(0,3)">{{ tag.trim() }}</span>
         </div>
 
-        <!-- Footer link -->
-        <div class="nc-footer">
-          <span>View full profile &amp; history</span>
-          <i class="bi bi-arrow-right"></i>
+        <!-- Footer -->
+        <div class="nc-footer-row">
+          <div class="nc-footer" (click)="openDetail(nurse); $event.stopPropagation()">
+            <span>View profile</span>
+            <i class="bi bi-arrow-right"></i>
+          </div>
+          <button class="nc-msg-btn" *ngIf="nurse.nurseUserId && hasActiveAppointment(nurse.nurseId)"
+            (click)="openChat(nurse); $event.stopPropagation()">
+            <span class="msg-btn-wrap">
+              <i class="bi bi-chat-dots-fill me-1"></i> Message
+              <span class="unread-dot" *ngIf="unreadFrom.has(nurse.nurseUserId)"></span>
+            </span>
+          </button>
+          <span class="nc-chat-disabled" *ngIf="nurse.nurseUserId && !hasActiveAppointment(nurse.nurseId)">
+            <i class="bi bi-chat-dots me-1"></i> Chat unavailable
+          </span>
         </div>
 
       </div>
@@ -212,4 +224,47 @@
     </div>
 
   </div>
+</div>
+
+<!-- ── CHAT PANEL ─────────────────────────────────────────────── -->
+<div class="chat-backdrop" *ngIf="chatNurse" (click)="closeChat()"></div>
+<div class="chat-panel" *ngIf="chatNurse">
+
+  <div class="chat-header">
+    <div class="chat-header-info">
+      <div class="chat-avatar"><i class="bi bi-person-fill"></i></div>
+      <div>
+        <p class="chat-name">{{ chatNurse.nurseName }}</p>
+        <small class="chat-role">Nurse · {{ chatNurse.nurseSpecialization || 'General' }}</small>
+      </div>
+    </div>
+    <button class="chat-close" (click)="closeChat()"><i class="bi bi-x-lg"></i></button>
+  </div>
+
+  <div class="chat-body">
+    <div *ngIf="messages.length === 0" class="chat-empty">
+      <i class="bi bi-chat-dots" style="font-size:2rem;color:#c8ddd8;display:block;margin-bottom:8px;"></i>
+      No messages yet. Say hello!
+    </div>
+    <div *ngFor="let msg of messages" class="msg-row" [class.msg-mine]="isMine(msg)">
+      <div class="msg-bubble" [class.bubble-mine]="isMine(msg)" [class.bubble-theirs]="!isMine(msg)">
+        <p class="msg-text">{{ msg.content }}</p>
+        <span class="msg-time">{{ msg.sentAt | date:'h:mm a' }}</span>
+      </div>
+    </div>
+    <div #msgEnd></div>
+  </div>
+
+  <div class="chat-error" *ngIf="chatError">
+    <i class="bi bi-exclamation-circle me-1"></i>{{ chatError }}
+  </div>
+
+  <div class="chat-footer">
+    <textarea class="chat-input" [(ngModel)]="newMessage" placeholder="Type a message…"
+      rows="1" maxlength="1000" (keydown)="onEnter($event)"></textarea>
+    <button class="chat-send" (click)="sendMessage()" [disabled]="isSending || !newMessage.trim()">
+      <i class="bi bi-send-fill"></i>
+    </button>
+  </div>
+
 </div>
