@@ -75,7 +75,7 @@
         <!-- Bell -->
         <div class="bell-wrap" (click)="toggleNotifications()">
           <i class="bi bi-bell-fill"></i>
-          <span class="bell-dot" *ngIf="hasUnreadNotifications()"></span>
+          <span class="bell-dot" *ngIf="hasUnread()"></span>
         </div>
         <!-- Availability -->
         <button class="avail-btn"
@@ -90,14 +90,24 @@
 
     <!-- NOTIFICATION PANEL -->
     <div class="notif-panel" *ngIf="notificationsOpen">
-      <div class="notif-head">🔔 Notifications</div>
-      <div class="notif-item" *ngFor="let n of notifications">
-        <p class="notif-msg">{{ n.message }}</p>
-        <span class="notif-time">{{ n.time }}</span>
+      <div class="notif-head">
+        <span>🔔 Notifications</span>
+        <span class="notif-count" *ngIf="notifications.length">{{ notifications.length }}</span>
+      </div>
+      <div class="notif-item" *ngFor="let n of notifications" [class.notif-unread]="!n.read">
+        <i class="bi bi-briefcase-fill notif-icon"></i>
+        <div>
+          <p class="notif-msg">{{ n.message }}</p>
+          <span class="notif-time">{{ n.time }}</span>
+        </div>
       </div>
       <div *ngIf="notifications.length === 0" class="p-3 text-center text-muted small">
+        <i class="bi bi-bell-slash d-block mb-1" style="font-size:1.4rem;color:#c8ddd8;"></i>
         No new notifications
       </div>
+      <a routerLink="/nurse-available-jobs" class="notif-view-all" (click)="notificationsOpen=false">
+        View all jobs <i class="bi bi-arrow-right"></i>
+      </a>
     </div>
 
     <!-- STATS ROW -->
@@ -135,39 +145,48 @@
     <!-- MAIN CONTENT: Jobs + Right Panel -->
     <div class="row g-4">
 
-      <!-- LEFT: Available Jobs -->
+      <!-- LEFT: Top Available Jobs -->
       <div class="col-md-8">
         <div class="d-flex align-items-center justify-content-between mb-3">
-          <h5 class="sec-title"><i class="bi bi-briefcase-fill me-2 sv-green"></i>Available Jobs</h5>
+          <h5 class="sec-title">
+            <i class="bi bi-briefcase-fill me-2 sv-green"></i>Top Available Jobs
+            <span class="ms-2" style="font-size:0.72rem;color:#9ab8b0;font-weight:500;">Newest first</span>
+          </h5>
           <a routerLink="/nurse-available-jobs" class="view-all">
             View all <i class="bi bi-arrow-right"></i>
           </a>
         </div>
 
-        <div class="job-card mb-3" *ngFor="let job of jobs">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <p class="job-title">{{ job.title }}</p>
-              <div class="job-meta">
-                <span><i class="bi bi-geo-alt-fill"></i>{{ job.location }}</span>
-                <span><i class="bi bi-clock-fill"></i>{{ job.shift }} Shift</span>
+        <div class="job-card mb-3" *ngFor="let job of topJobs">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div style="flex:1; min-width:0;">
+              <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                <p class="job-title mb-0">{{ job.title }}</p>
+                <span class="type-badge" [class.type-patient]="job.type === 'patient'">
+                  {{ job.type === 'patient' ? 'Patient Request' : 'Hospital / Org' }}
+                </span>
+                <span class="urgency-badge-sm" *ngIf="job.priority && job.priority !== 'Normal'"
+                  [ngClass]="priorityClass(job.priority)">
+                  {{ job.priority }}
+                </span>
+              </div>
+              <div class="job-meta flex-wrap">
+                <span><i class="bi bi-building me-1"></i>{{ job.subtitle }}</span>
+                <span><i class="bi bi-geo-alt-fill me-1"></i>{{ job.location }}</span>
               </div>
             </div>
-            <span class="salary-tag">{{ job.salary }}/mo</span>
-          </div>
-          <div class="d-flex gap-2 mt-3">
-            <button class="btn-details" (click)="openDetails(job)">
-              <i class="bi bi-eye me-1"></i>Details
-            </button>
-            <button class="btn-apply" (click)="apply(job)">
-              <i class="bi bi-send me-1"></i>Apply Now
-            </button>
+            <div class="d-flex flex-column align-items-end gap-2 flex-shrink-0">
+              <span class="salary-tag">{{ job.salaryText }}</span>
+              <button class="btn-details" (click)="openDashJob(job)">
+                <i class="bi bi-eye me-1"></i>View
+              </button>
+            </div>
           </div>
         </div>
 
-        <div *ngIf="jobs.length === 0" class="empty-card">
+        <div *ngIf="topJobs.length === 0 && !isLoading" class="empty-card">
           <i class="bi bi-briefcase fs-3 d-block mb-2"></i>
-          No jobs available at the moment.
+          No jobs available right now. Check back soon!
         </div>
       </div>
 
@@ -230,39 +249,173 @@
       </div>
     </div>
 
-    <!-- JOB DETAIL MODAL -->
-    <div class="modal-overlay" *ngIf="selectedJob" (click)="closeModal()">
-      <div class="modal-box" (click)="$event.stopPropagation()">
-
-        <div class="modal-head-row">
-          <div>
-            <p class="modal-job-title">{{ selectedJob.title }}</p>
-            <div class="d-flex flex-wrap gap-2">
-              <span class="spec-tag"><i class="bi bi-geo-alt"></i>{{ selectedJob.location }}</span>
-              <span class="spec-tag"><i class="bi bi-clock"></i>{{ selectedJob.shift }}</span>
-              <span class="salary-tag">{{ selectedJob.salary }}</span>
-            </div>
-          </div>
-          <button class="modal-close-btn" (click)="closeModal()">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-
-        <div class="modal-body-pad">
-          <p class="text-muted small mb-0">
-            🏥 Join a dedicated team providing excellent patient care. This role requires acute nursing skills, compassion, and proven experience in the stated specialty.
-          </p>
-        </div>
-
-        <div class="modal-foot-row">
-          <button class="btn-apply" (click)="apply(selectedJob)">
-            <i class="bi bi-send me-1"></i>Apply Now
-          </button>
-          <button class="btn-details" (click)="closeModal()">Close</button>
-        </div>
-
-      </div>
-    </div>
 
   </div>
+</div>
+
+<!-- ── JOB DETAIL SLIDE-IN ── -->
+<div class="djd-backdrop" *ngIf="selectedDashJob" (click)="closeDashJob()"></div>
+<div class="djd-panel" *ngIf="selectedDashJob">
+
+  <div class="djd-header">
+    <div>
+      <h5 class="djd-title">{{ selectedDashJob.title }}</h5>
+      <span class="type-badge" [class.type-patient]="selectedDashJob.type === 'patient'">
+        {{ selectedDashJob.type === 'patient' ? 'Patient Request' : 'Hospital / Org' }}
+      </span>
+    </div>
+    <button class="djd-close" (click)="closeDashJob()"><i class="bi bi-x-lg"></i></button>
+  </div>
+
+  <div class="djd-body">
+
+    <!-- ── ORG JOB ── -->
+    <ng-container *ngIf="selectedDashJob.type === 'org'">
+      <div class="djd-section">
+        <div class="djd-section-title"><i class="bi bi-briefcase-fill me-2"></i>Job Details</div>
+        <div class="djd-grid">
+          <div class="djd-item" *ngIf="selectedDashJob.raw.organizationName">
+            <span class="djd-label">Organisation</span>
+            <span class="djd-val">{{ selectedDashJob.raw.organizationName }}</span>
+          </div>
+          <div class="djd-item">
+            <span class="djd-label">Location</span>
+            <span class="djd-val">{{ selectedDashJob.raw.location || '—' }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.jobType">
+            <span class="djd-label">Job Type</span>
+            <span class="djd-val">{{ formatJobType(selectedDashJob.raw.jobType) }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.department">
+            <span class="djd-label">Department</span>
+            <span class="djd-val">{{ selectedDashJob.raw.department }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.specialization">
+            <span class="djd-label">Specialization</span>
+            <span class="djd-val">{{ selectedDashJob.raw.specialization }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.priority">
+            <span class="djd-label">Priority</span>
+            <span class="djd-val">
+              <span class="urgency-badge-sm" [ngClass]="priorityClass(selectedDashJob.raw.priority)">
+                {{ selectedDashJob.raw.priority }}
+              </span>
+            </span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.salaryMin || selectedDashJob.raw.salaryMax">
+            <span class="djd-label">Salary Range</span>
+            <span class="djd-val" style="color:#0f6b51;font-weight:700;">
+              ₹{{ selectedDashJob.raw.salaryMin | number }} – ₹{{ selectedDashJob.raw.salaryMax | number }}/mo
+            </span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.deadline">
+            <span class="djd-label">Deadline</span>
+            <span class="djd-val">{{ selectedDashJob.raw.deadline | date:'mediumDate' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="djd-section" *ngIf="selectedDashJob.raw.description">
+        <div class="djd-section-title"><i class="bi bi-file-text-fill me-2"></i>Job Description</div>
+        <p class="djd-description">{{ selectedDashJob.raw.description }}</p>
+      </div>
+    </ng-container>
+
+    <!-- ── PATIENT REQUEST ── -->
+    <ng-container *ngIf="selectedDashJob.type === 'patient'">
+      <div class="djd-section">
+        <div class="djd-section-title"><i class="bi bi-clipboard2-pulse-fill me-2"></i>Care Requirements</div>
+        <div class="djd-grid">
+          <div class="djd-item">
+            <span class="djd-label">Type of Care</span>
+            <span class="djd-val fw-semibold">{{ selectedDashJob.raw.careNeeds }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.specialization">
+            <span class="djd-label">Specialization Needed</span>
+            <span class="djd-val">{{ selectedDashJob.raw.specialization }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.medicalCondition">
+            <span class="djd-label">Medical Condition</span>
+            <span class="djd-val">{{ selectedDashJob.raw.medicalCondition }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.mobilityLevel">
+            <span class="djd-label">Patient Mobility</span>
+            <span class="djd-val">{{ selectedDashJob.raw.mobilityLevel }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.dietRequirements">
+            <span class="djd-label">Diet Restrictions</span>
+            <span class="djd-val">{{ selectedDashJob.raw.dietRequirements }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.duration">
+            <span class="djd-label">Visit Duration</span>
+            <span class="djd-val">{{ selectedDashJob.raw.duration }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.priority">
+            <span class="djd-label">Priority</span>
+            <span class="djd-val">
+              <span class="urgency-badge-sm" [ngClass]="priorityClass(selectedDashJob.raw.priority)">
+                {{ selectedDashJob.raw.priority }}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div class="djd-skills-row" *ngIf="selectedDashJob.raw.requiredSkills">
+          <span class="djd-label d-block mb-1">Required Skills</span>
+          <div class="djd-chip-row">
+            <span class="djd-chip" *ngFor="let sk of selectedDashJob.raw.requiredSkills.split(',')">{{ sk.trim() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="djd-section">
+        <div class="djd-section-title"><i class="bi bi-calendar-week-fill me-2"></i>Schedule</div>
+        <div class="djd-grid">
+          <div class="djd-item" *ngIf="selectedDashJob.raw.appointmentDate">
+            <span class="djd-label">Date &amp; Time</span>
+            <span class="djd-val fw-semibold">
+              {{ selectedDashJob.raw.appointmentDate | date:'EEE, d MMM y' }} at {{ selectedDashJob.raw.appointmentDate | date:'h:mm a' }}
+            </span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.scheduleType">
+            <span class="djd-label">Frequency</span>
+            <span class="djd-val">{{ selectedDashJob.raw.scheduleType }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.scheduleDays">
+            <span class="djd-label">Repeat Days</span>
+            <span class="djd-val">{{ selectedDashJob.raw.scheduleDays }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="djd-section"
+        *ngIf="selectedDashJob.raw.genderPreference || selectedDashJob.raw.languagePreference">
+        <div class="djd-section-title"><i class="bi bi-sliders2 me-2"></i>Preferences</div>
+        <div class="djd-grid">
+          <div class="djd-item" *ngIf="selectedDashJob.raw.genderPreference">
+            <span class="djd-label">Gender Preference</span>
+            <span class="djd-val">{{ selectedDashJob.raw.genderPreference }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.languagePreference">
+            <span class="djd-label">Language Preference</span>
+            <span class="djd-val">{{ selectedDashJob.raw.languagePreference }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="djd-section" *ngIf="selectedDashJob.raw.notes">
+        <div class="djd-section-title"><i class="bi bi-chat-left-text-fill me-2"></i>Additional Notes</div>
+        <p class="djd-description">{{ selectedDashJob.raw.notes }}</p>
+      </div>
+    </ng-container>
+
+  </div>
+
+  <div class="djd-footer">
+    <a routerLink="/nurse-available-jobs" class="djd-btn-full" (click)="closeDashJob()">
+      <i class="bi bi-send-fill me-2"></i>Go to Jobs Page to Apply
+    </a>
+    <button class="djd-btn-cancel" (click)="closeDashJob()">Close</button>
+  </div>
+
 </div>

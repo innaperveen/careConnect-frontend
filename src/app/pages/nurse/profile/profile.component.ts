@@ -55,6 +55,31 @@ export class ProfileComponent implements OnInit {
 
   shiftTypes = ['Morning', 'Evening', 'Night', 'Rotating', 'Flexible'];
 
+  educationDegrees = [
+    // Indian nursing
+    'ANM (Auxiliary Nurse Midwifery)',
+    'GNM (General Nursing and Midwifery)',
+    'B.Sc Nursing',
+    'Post Basic B.Sc Nursing',
+    'M.Sc Nursing',
+    'M.Phil Nursing',
+    'Ph.D Nursing',
+    // International nursing
+    'RN (Registered Nurse)',
+    'BSN (Bachelor of Science in Nursing)',
+    'MSN (Master of Science in Nursing)',
+    'DNP (Doctor of Nursing Practice)',
+    'NP (Nurse Practitioner)',
+    'CNS (Clinical Nurse Specialist)',
+    'CRNA (Certified Registered Nurse Anesthetist)',
+    'CNM (Certified Nurse-Midwife)',
+    // Allied health
+    'BPT (Bachelor of Physiotherapy)',
+    'MPT (Master of Physiotherapy)',
+    'MBBS',
+    'Other',
+  ];
+
   experienceOptions = [
     { label: '0–2 Years',  value: '0-2 years'  },
     { label: '2–4 Years',  value: '2-4 years'  },
@@ -113,11 +138,12 @@ export class ProfileComponent implements OnInit {
       experience:     [dis(''), Validators.required],
       availability:   [dis(''), Validators.required],
       education:      [dis(''), Validators.required],
-      certifications: [dis('')],
-      bio:            [dis('')],
+      educationOther: [dis(''), [Validators.minLength(3), Validators.maxLength(100), Validators.pattern('^[A-Za-z\\s().\\-/,]+$')]],
+      certifications: [dis(''), Validators.maxLength(200)],
+      bio:            [dis(''), Validators.maxLength(500)],
 
       // Address
-      addressLine1: [dis(''), [Validators.required, Validators.maxLength(100)]],
+      addressLine1: [dis(''), [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
       addressLine2: [dis(''), Validators.maxLength(100)],
       landmark:     [dis(''), Validators.maxLength(60)],
       state:        [dis(''), Validators.required],
@@ -125,14 +151,15 @@ export class ProfileComponent implements OnInit {
       pincode:      [dis(''), [Validators.required, Validators.pattern('^[1-9][0-9]{5}$')]],
 
       // References
-      reference1Name:  [dis('')],
+      reference1Name:  [dis(''), [Validators.maxLength(30), Validators.pattern('^[A-Za-z\\s.\\-\']+$')]],
       reference1Phone: [dis(''), Validators.pattern('^[0-9]{10}$')],
-      reference2Name:  [dis('')],
+      reference2Name:  [dis(''), [Validators.maxLength(30), Validators.pattern('^[A-Za-z\\s.\\-\']+$')]],
       reference2Phone: [dis(''), Validators.pattern('^[0-9]{10}$')],
     });
   }
 
   get f() { return this.profileForm.controls; }
+  get isOtherEducation(): boolean { return this.profileForm.value.education === 'Other'; }
 
   // ── Load ──────────────────────────────────────────────────────────────────
 
@@ -157,6 +184,10 @@ export class ProfileComponent implements OnInit {
         let digits = data.phone || '';
         if (digits.startsWith(ccCode)) digits = digits.slice(ccCode.length);
 
+        // Enable all controls so patchValue reliably updates the DOM,
+        // then re-disable after patching (unless user is actively editing).
+        this.profileForm.enable({ emitEvent: false });
+
         this.profileForm.patchValue({
           firstName:        data.firstName        || '',
           middleName:       data.middleName        || '',
@@ -168,7 +199,8 @@ export class ProfileComponent implements OnInit {
           specialization:   data.specialization    || '',
           experience:       this.expLabel(data.experienceYears),
           availability:     data.availability      || '',
-          education:        data.education         || '',
+          education:        this.educationDegrees.includes(data.education) ? data.education : (data.education ? 'Other' : ''),
+          educationOther:   this.educationDegrees.includes(data.education) ? '' : (data.education || ''),
           bio:              '',
           addressLine1:     data.addressLine1      || '',
           addressLine2:     data.addressLine2      || '',
@@ -190,6 +222,15 @@ export class ProfileComponent implements OnInit {
         if (data.state) {
           this.geoSvc.getCities(data.state).subscribe(c => this.cities = c);
         }
+
+        // Re-disable all controls when not in edit mode;
+        // licenseNumber and email are always disabled.
+        if (!this.editMode) {
+          this.profileForm.disable({ emitEvent: false });
+        } else {
+          this.profileForm.get('licenseNumber')?.disable({ emitEvent: false });
+          this.profileForm.get('email')?.disable({ emitEvent: false });
+        }
       },
       error: () => { this.isLoading = false; }
     });
@@ -205,7 +246,7 @@ export class ProfileComponent implements OnInit {
     const allEditable = [
       'firstName', 'middleName', 'lastName',
       'phoneCountryCode', 'phone',
-      'specialization', 'experience', 'availability', 'education', 'certifications', 'bio',
+      'specialization', 'experience', 'availability', 'education', 'educationOther', 'certifications', 'bio',
       'addressLine1', 'addressLine2', 'landmark', 'state', 'city', 'pincode',
       'reference1Name', 'reference1Phone', 'reference2Name', 'reference2Phone',
     ];
@@ -256,6 +297,16 @@ export class ProfileComponent implements OnInit {
   saveProfile(): void {
     if (this.profileForm.invalid) { this.profileForm.markAllAsTouched(); return; }
 
+    const raw = this.profileForm.getRawValue();
+    if (raw.education === 'Other') {
+      const other = (raw.educationOther || '').trim();
+      if (!other || other.length < 3) {
+        this.profileForm.get('educationOther')?.markAsTouched();
+        this.saveError = other ? 'Education description must be at least 3 characters.' : 'Please specify your education.';
+        return;
+      }
+    }
+
     const userId = this.auth.getUserId();
     if (!userId) return;
 
@@ -279,7 +330,9 @@ export class ProfileComponent implements OnInit {
       specialization:   v.specialization,
       experienceYears:  this.expYears(v.experience),
       availability:     v.availability,
-      education:        v.education?.trim(),
+      education:        v.education === 'Other'
+                          ? (v.educationOther?.trim() || 'Other')
+                          : (v.education?.trim() || null),
       expertise:        this.selectedExpertise.join(','),
       addressLine1:     v.addressLine1?.trim(),
       addressLine2:     v.addressLine2?.trim() || null,
