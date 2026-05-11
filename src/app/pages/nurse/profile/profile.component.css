@@ -144,3 +144,6 @@
       background: #eef9f5; border: 1px solid #a8dfc9; color: #0f6b51;
       border-radius: 16px; padding: 12px 18px; font-size: 0.9rem; font-weight: 500;
     }
+    .input-readonly { background: #f4faf5 !important; color: #7a9a94 !important; cursor: not-allowed !important; }
+    .country-notice { display: inline-flex; align-items: center; background: #eef9f5; border: 1px solid #c8e6d8; border-radius: 20px; padding: 4px 14px; font-size: 0.8rem; color: #0f6b51; font-weight: 500; }
+    .err { display: block; color: #e05252; font-size: 11.5px; font-weight: 500; margin-top: 4px; }

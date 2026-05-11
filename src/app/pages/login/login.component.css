@@ -528,3 +528,9 @@
         .modal-btn-success:hover { background: #148f69; transform: translateY(-1px); }
         .modal-btn-error   { background: #e05252; color: white; }
         .modal-btn-error:hover   { background: #c0392b; transform: translateY(-1px); }
+
+        /* Password eye toggle */
+        .pass-wrap { position: relative; }
+        .pass-wrap input { padding-right: 42px; width: 100%; }
+        .eye-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #8aaba4; font-size: 1rem; cursor: pointer; padding: 0; line-height: 1; }
+        .eye-btn:hover { color: #1aa37a; }

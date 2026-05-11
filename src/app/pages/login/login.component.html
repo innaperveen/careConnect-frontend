@@ -41,8 +41,8 @@
         <small *ngIf="identifier.touched && identifier.hasError('required')">
           This field is required.
         </small>
-        <small *ngIf="identifier.touched && identifier.hasError('email') && selectedRole !== 'organization'">
-          Enter a valid email address.
+        <small *ngIf="identifier.touched && (identifier.hasError('email') || identifier.hasError('pattern')) && selectedRole !== 'organization'">
+          Enter a valid .com email address (e.g. name@example.com).
         </small>
         <small *ngIf="identifier.touched && identifier.hasError('minlength') && selectedRole === 'organization'">
           Registration number must be at least 5 characters.
@@ -55,13 +55,19 @@
       <!-- Password -->
       <div class="form-group password-group">
         <label>Password</label>
-        <input
-          type="password"
-          placeholder="Enter your password (min 12 characters)"
-          formControlName="password"
-          [class.input-error]="password.invalid && password.touched"
-          autocomplete="current-password"
-        >
+        <div class="pass-wrap">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            placeholder="Enter your password (min 12 characters)"
+            formControlName="password"
+            [class.input-error]="password.invalid && password.touched"
+            autocomplete="current-password"
+            (paste)="$event.preventDefault()"
+          >
+          <button type="button" class="eye-btn" (click)="showPassword = !showPassword" tabindex="-1">
+            <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+          </button>
+        </div>
         <small *ngIf="password.touched && password.hasError('required')">Password is required.</small>
         <small *ngIf="password.touched && password.hasError('minlength')">Minimum 12 characters required.</small>
         <span class="forgot" routerLink="/forgot-password">Forgot password?</span>

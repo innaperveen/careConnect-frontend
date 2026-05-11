@@ -11,8 +11,9 @@ import { AuthService } from '../../services/auth.service';
 export class LoginComponent implements OnInit {
 
   loginForm!: FormGroup;
-  selectedRole = 'patient';
-  isLoading    = false;
+  selectedRole  = 'patient';
+  isLoading     = false;
+  showPassword  = false;
 
   // Modal state
   showModal    = false;
@@ -32,7 +33,8 @@ export class LoginComponent implements OnInit {
   buildForm(): void {
     const idValidators = this.selectedRole === 'organization'
       ? [Validators.required, Validators.minLength(5), Validators.pattern('^[^@\\s]+$')]
-      : [Validators.required, Validators.email];
+      : [Validators.required, Validators.email,
+         Validators.pattern('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.com$')];
 
     this.loginForm = this.fb.group({
       identifier: ['', idValidators],

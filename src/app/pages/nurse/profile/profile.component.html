@@ -1,4 +1,4 @@
-﻿<div class="d-flex">
+<div class="d-flex">
 
   <!-- SIDEBAR -->
   <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
@@ -41,93 +41,127 @@
             <span *ngIf="!isSaving"><i class="bi bi-check-lg me-1"></i> Save</span>
             <span *ngIf="isSaving"><span class="spinner-border spinner-border-sm me-1"></span> Saving…</span>
           </button>
-          <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" [disabled]="isSaving" (click)="cancelEdit()">
-            Cancel
-          </button>
+          <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" [disabled]="isSaving" (click)="cancelEdit()">Cancel</button>
         </ng-container>
       </div>
     </div>
 
-    <!-- Loading state -->
     <div *ngIf="isLoading" class="text-center py-5 text-muted">
       <div class="spinner-border text-success" role="status"></div>
       <p class="mt-2">Loading profile…</p>
     </div>
 
-    <!-- Success toast -->
     <div *ngIf="saveSuccess" class="alert-success-toast mb-3">
       <i class="bi bi-check-circle-fill me-2"></i> Profile updated successfully!
     </div>
-
-    <!-- Error toast -->
     <div *ngIf="saveError" class="alert alert-danger alert-sm mb-3 py-2 px-3" style="font-size:0.88rem;">
       <i class="bi bi-exclamation-circle me-1"></i> {{ saveError }}
     </div>
 
     <form *ngIf="!isLoading" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
 
-      <!-- Basic Info -->
+      <!-- ── BASIC INFO ─────────────────────────────────── -->
       <div class="section-card mb-4">
         <h6 class="section-title"><i class="bi bi-person-circle me-2"></i>Basic Information</h6>
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="field-label">Full Name</label>
-            <input type="text" formControlName="fullName" class="field-input" [class.input-error]="f['fullName'].invalid && f['fullName'].touched" placeholder="Full Name">
-            <small class="err" *ngIf="f['fullName'].touched && f['fullName'].hasError('required')">Name is required.</small>
-            <small class="err" *ngIf="f['fullName'].touched && f['fullName'].hasError('minlength')">At least 3 characters.</small>
+
+        <!-- Name -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="field-label">First Name *</label>
+            <input type="text" formControlName="firstName" class="field-input" maxlength="30"
+              placeholder="First name"
+              [class.input-error]="f['firstName'].touched && f['firstName'].invalid">
+            <small class="err" *ngIf="f['firstName'].touched && f['firstName'].hasError('required')">First name is required.</small>
+            <small class="err" *ngIf="f['firstName'].touched && f['firstName'].hasError('minlength')">Minimum 3 letters.</small>
+            <small class="err" *ngIf="f['firstName'].touched && f['firstName'].hasError('pattern')">Letters only, no numbers or special characters.</small>
           </div>
+          <div class="col-md-4">
+            <label class="field-label">Middle Name</label>
+            <input type="text" formControlName="middleName" class="field-input" maxlength="30"
+              placeholder="Middle name (optional)"
+              [class.input-error]="f['middleName'].touched && f['middleName'].invalid">
+            <small class="err" *ngIf="f['middleName'].touched && f['middleName'].hasError('pattern')">Letters only.</small>
+          </div>
+          <div class="col-md-4">
+            <label class="field-label">Last Name *</label>
+            <input type="text" formControlName="lastName" class="field-input" maxlength="30"
+              placeholder="Last name"
+              [class.input-error]="f['lastName'].touched && f['lastName'].invalid">
+            <small class="err" *ngIf="f['lastName'].touched && f['lastName'].hasError('required')">Last name is required.</small>
+            <small class="err" *ngIf="f['lastName'].touched && f['lastName'].hasError('invalidLastName')">Min 3 letters, or a single dot (.) for single-name individuals.</small>
+          </div>
+        </div>
+
+        <!-- License + Email (readonly) -->
+        <div class="row g-3 mb-3">
           <div class="col-md-6">
             <label class="field-label">Nursing License Number</label>
-            <input type="text" formControlName="licenseNumber" class="field-input" [class.input-error]="f['licenseNumber'].invalid && f['licenseNumber'].touched" placeholder="e.g. NUR-2024-DL-1234">
-            <small class="err" *ngIf="f['licenseNumber'].touched && f['licenseNumber'].hasError('required')">License number is required.</small>
-            <small class="err" *ngIf="f['licenseNumber'].touched && f['licenseNumber'].hasError('minlength')">Enter a valid license number.</small>
+            <input type="text" formControlName="licenseNumber" class="field-input input-readonly"
+              placeholder="e.g. AB1234567890">
+            <small class="text-muted" style="font-size:0.75rem;">License number cannot be changed.</small>
           </div>
           <div class="col-md-6">
             <label class="field-label">Email Address</label>
-            <input type="email" formControlName="email" class="field-input" [class.input-error]="f['email'].invalid && f['email'].touched" placeholder="email@example.com">
-            <small class="err" *ngIf="f['email'].touched && f['email'].hasError('required')">Email is required.</small>
-            <small class="err" *ngIf="f['email'].touched && f['email'].hasError('email')">Enter a valid email.</small>
+            <input type="email" formControlName="email" class="field-input input-readonly"
+              placeholder="email@example.com">
+            <small class="text-muted" style="font-size:0.75rem;">Email cannot be changed here.</small>
           </div>
-          <div class="col-md-6">
-            <label class="field-label">Phone Number</label>
-            <input type="tel" formControlName="phone" class="field-input" [class.input-error]="f['phone'].invalid && f['phone'].touched" placeholder="10-digit number">
+        </div>
+
+        <!-- Phone -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="field-label">Country Code</label>
+            <select formControlName="phoneCountryCode" class="field-input">
+              <option *ngFor="let cc of countryCodes" [value]="cc.code">{{ cc.label }}</option>
+            </select>
+          </div>
+          <div class="col-md-8">
+            <label class="field-label">Phone Number *</label>
+            <input type="tel" formControlName="phone" class="field-input" maxlength="10"
+              placeholder="10-digit mobile number"
+              [class.input-error]="f['phone'].touched && f['phone'].invalid">
             <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('required')">Phone is required.</small>
-            <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('pattern')">Enter a valid 10-digit number.</small>
+            <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('pattern')">Enter exactly 10 digits.</small>
           </div>
-          <div class="col-12">
-            <label class="field-label">Residential Address</label>
-            <input type="text" formControlName="address" class="field-input" [class.input-error]="f['address'].invalid && f['address'].touched" placeholder="Full address">
-            <small class="err" *ngIf="f['address'].touched && f['address'].hasError('required')">Address is required.</small>
-            <small class="err" *ngIf="f['address'].touched && f['address'].hasError('minlength')">Enter at least 10 characters.</small>
-          </div>
+        </div>
+
+        <!-- Bio -->
+        <div class="row g-3">
           <div class="col-12">
             <label class="field-label">Professional Bio</label>
-            <textarea formControlName="bio" class="field-input" rows="3" placeholder="Brief summary of your experience and strengths..."></textarea>
+            <textarea formControlName="bio" class="field-input" rows="3"
+              placeholder="Brief summary of your experience and strengths…"></textarea>
           </div>
         </div>
       </div>
 
-      <!-- Professional Info -->
+      <!-- ── PROFESSIONAL DETAILS ───────────────────────── -->
       <div class="section-card mb-4">
         <h6 class="section-title"><i class="bi bi-hospital me-2"></i>Professional Details</h6>
         <div class="row g-3">
           <div class="col-md-4">
-            <label class="field-label">Specialization</label>
-            <select formControlName="specialization" class="field-input" [class.input-error]="f['specialization'].invalid && f['specialization'].touched">
+            <label class="field-label">Specialization *</label>
+            <select formControlName="specialization" class="field-input"
+              [class.input-error]="f['specialization'].touched && f['specialization'].invalid">
               <option value="" disabled>Select</option>
               <option *ngFor="let s of specializations" [value]="s">{{ s }}</option>
             </select>
             <small class="err" *ngIf="f['specialization'].touched && f['specialization'].hasError('required')">Please select a specialization.</small>
           </div>
           <div class="col-md-4">
-            <label class="field-label">Years of Experience</label>
-            <input type="text" formControlName="experience" class="field-input" [class.input-error]="f['experience'].invalid && f['experience'].touched" placeholder="e.g. 5">
-            <small class="err" *ngIf="f['experience'].touched && f['experience'].hasError('required')">Experience is required.</small>
-            <small class="err" *ngIf="f['experience'].touched && f['experience'].hasError('pattern')">Enter a number (e.g. 5).</small>
+            <label class="field-label">Years of Experience *</label>
+            <select formControlName="experience" class="field-input"
+              [class.input-error]="f['experience'].touched && f['experience'].invalid">
+              <option value="" disabled>Select range</option>
+              <option *ngFor="let e of experienceOptions" [value]="e.value">{{ e.label }}</option>
+            </select>
+            <small class="err" *ngIf="f['experience'].touched && f['experience'].hasError('required')">Please select experience range.</small>
           </div>
           <div class="col-md-4">
-            <label class="field-label">Availability</label>
-            <select formControlName="availability" class="field-input" [class.input-error]="f['availability'].invalid && f['availability'].touched">
+            <label class="field-label">Availability *</label>
+            <select formControlName="availability" class="field-input"
+              [class.input-error]="f['availability'].touched && f['availability'].invalid">
               <option value="" disabled>Select</option>
               <option value="Full-Time">Full-Time</option>
               <option value="Part-Time">Part-Time</option>
@@ -137,13 +171,16 @@
             <small class="err" *ngIf="f['availability'].touched && f['availability'].hasError('required')">Please select availability.</small>
           </div>
           <div class="col-md-6">
-            <label class="field-label">Educational Credentials</label>
-            <input type="text" formControlName="education" class="field-input" [class.input-error]="f['education'].invalid && f['education'].touched" placeholder="e.g. B.Sc Nursing – AIIMS, 2016">
+            <label class="field-label">Educational Credentials *</label>
+            <input type="text" formControlName="education" class="field-input"
+              placeholder="e.g. B.Sc Nursing – AIIMS, 2016" maxlength="150"
+              [class.input-error]="f['education'].touched && f['education'].invalid">
             <small class="err" *ngIf="f['education'].touched && f['education'].hasError('required')">Education is required.</small>
           </div>
           <div class="col-md-6">
-            <label class="field-label">Certifications (comma-separated)</label>
-            <input type="text" formControlName="certifications" class="field-input" placeholder="e.g. BLS, ACLS, ICU Cert">
+            <label class="field-label">Certifications <span class="text-muted small">(comma-separated)</span></label>
+            <input type="text" formControlName="certifications" class="field-input"
+              placeholder="e.g. BLS, ACLS, ICU Cert" maxlength="200">
           </div>
         </div>
 
@@ -151,47 +188,106 @@
         <div class="mt-4">
           <label class="field-label">Areas of Expertise</label>
           <div class="chip-group mt-2">
-            <span *ngFor="let area of expertiseAreas"
-              class="chip" [class.chip-active]="selectedExpertise.includes(area)"
-              (click)="toggleExpertise(area)">
-              {{ area }}
-            </span>
+            <span *ngFor="let area of expertiseAreas" class="chip"
+              [class.chip-active]="selectedExpertise.includes(area)"
+              (click)="toggleExpertise(area)">{{ area }}</span>
           </div>
         </div>
 
-        <!-- Preferred Shift Types -->
+        <!-- Preferred Shifts -->
         <div class="mt-4">
           <label class="field-label">Preferred Shift Types</label>
           <div class="chip-group mt-2">
-            <span *ngFor="let shift of shiftTypes"
-              class="chip" [class.chip-active]="selectedShifts.includes(shift)"
-              (click)="toggleShift(shift)">
-              {{ shift }}
-            </span>
+            <span *ngFor="let shift of shiftTypes" class="chip"
+              [class.chip-active]="selectedShifts.includes(shift)"
+              (click)="toggleShift(shift)">{{ shift }}</span>
           </div>
         </div>
       </div>
 
-      <!-- References -->
+      <!-- ── RESIDENTIAL ADDRESS ────────────────────────── -->
+      <div class="section-card mb-4">
+        <h6 class="section-title"><i class="bi bi-geo-alt me-2"></i>Residential Address</h6>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="field-label">Address Line 1 *</label>
+            <input type="text" formControlName="addressLine1" class="field-input" maxlength="100"
+              placeholder="House / Flat No., Street, Area"
+              [class.input-error]="f['addressLine1'].touched && f['addressLine1'].invalid">
+            <small class="err" *ngIf="f['addressLine1'].touched && f['addressLine1'].hasError('required')">Address Line 1 is required.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="field-label">Address Line 2</label>
+            <input type="text" formControlName="addressLine2" class="field-input" maxlength="100"
+              placeholder="Colony / Society (optional)">
+          </div>
+          <div class="col-md-6">
+            <label class="field-label">Landmark</label>
+            <input type="text" formControlName="landmark" class="field-input" maxlength="60"
+              placeholder="Near hospital, metro, school…">
+          </div>
+          <div class="col-12">
+            <span class="country-notice">
+              <i class="bi bi-geo-fill me-1"></i> Country: <strong>India 🇮🇳</strong>
+            </span>
+          </div>
+          <div class="col-md-5">
+            <label class="field-label">State *</label>
+            <select formControlName="state" class="field-input"
+              [class.input-error]="f['state'].touched && f['state'].invalid"
+              (change)="editMode && onStateChange($any($event.target).value)">
+              <option value="">Select State</option>
+              <option *ngFor="let s of states" [value]="s">{{ s }}</option>
+            </select>
+            <small class="err" *ngIf="f['state'].touched && f['state'].hasError('required')">Please select a state.</small>
+          </div>
+          <div class="col-md-4">
+            <label class="field-label">City *</label>
+            <select formControlName="city" class="field-input"
+              [class.input-error]="f['city'].touched && f['city'].invalid"
+              [disabled]="editMode && cities.length === 0">
+              <option value="">{{ cities.length ? 'Select City' : 'Select State first' }}</option>
+              <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+            </select>
+            <small class="err" *ngIf="f['city'].touched && f['city'].hasError('required')">Please select a city.</small>
+          </div>
+          <div class="col-md-3">
+            <label class="field-label">Pincode *</label>
+            <input type="text" formControlName="pincode" class="field-input" maxlength="6"
+              placeholder="6-digit pincode"
+              [class.input-error]="f['pincode'].touched && f['pincode'].invalid">
+            <small class="err" *ngIf="f['pincode'].touched && f['pincode'].hasError('required')">Pincode is required.</small>
+            <small class="err" *ngIf="f['pincode'].touched && f['pincode'].hasError('pattern')">Enter a valid 6-digit pincode.</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REFERENCES ─────────────────────────────────── -->
       <div class="section-card mb-4">
         <h6 class="section-title"><i class="bi bi-people me-2"></i>Professional References</h6>
         <div class="row g-3">
           <div class="col-md-6">
             <label class="field-label">Reference 1 – Name</label>
-            <input type="text" formControlName="reference1Name" class="field-input" placeholder="Dr. / Supervisor name">
+            <input type="text" formControlName="reference1Name" class="field-input" maxlength="60"
+              placeholder="Dr. / Supervisor name">
           </div>
           <div class="col-md-6">
             <label class="field-label">Reference 1 – Phone</label>
-            <input type="tel" formControlName="reference1Phone" class="field-input" [class.input-error]="f['reference1Phone'].invalid && f['reference1Phone'].touched" placeholder="10-digit number">
+            <input type="tel" formControlName="reference1Phone" class="field-input" maxlength="10"
+              placeholder="10-digit number"
+              [class.input-error]="f['reference1Phone'].touched && f['reference1Phone'].invalid">
             <small class="err" *ngIf="f['reference1Phone'].touched && f['reference1Phone'].hasError('pattern')">Enter a valid 10-digit number.</small>
           </div>
           <div class="col-md-6">
             <label class="field-label">Reference 2 – Name</label>
-            <input type="text" formControlName="reference2Name" class="field-input" placeholder="Dr. / Supervisor name">
+            <input type="text" formControlName="reference2Name" class="field-input" maxlength="60"
+              placeholder="Dr. / Supervisor name">
           </div>
           <div class="col-md-6">
             <label class="field-label">Reference 2 – Phone</label>
-            <input type="tel" formControlName="reference2Phone" class="field-input" [class.input-error]="f['reference2Phone'].invalid && f['reference2Phone'].touched" placeholder="10-digit number">
+            <input type="tel" formControlName="reference2Phone" class="field-input" maxlength="10"
+              placeholder="10-digit number"
+              [class.input-error]="f['reference2Phone'].touched && f['reference2Phone'].invalid">
             <small class="err" *ngIf="f['reference2Phone'].touched && f['reference2Phone'].hasError('pattern')">Enter a valid 10-digit number.</small>
           </div>
         </div>

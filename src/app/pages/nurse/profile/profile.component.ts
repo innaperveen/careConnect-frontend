@@ -1,7 +1,31 @@
 import { AuthService } from '../../../services/auth.service';
 import { NurseService } from '../../../services/nurse.service';
+import { GeoService } from '../../../services/geo.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+
+// ── Validators ────────────────────────────────────────────────────────────────
+
+const FIRST_NAME_V = [
+  Validators.required,
+  Validators.minLength(3),
+  Validators.maxLength(30),
+  Validators.pattern('^[A-Za-z]+$'),
+];
+
+function lastNameV(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = (ctrl.value || '') as string;
+    if (!v) return null;
+    if (v === '.') return null;
+    if (/^[A-Za-z]{3,30}$/.test(v)) return null;
+    return { invalidLastName: true };
+  };
+}
+
+const LICENSE_PATTERN = '^[A-Z]{2}[0-9]{10}$';
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 @Component({
   selector: 'app-profile',
@@ -31,38 +55,95 @@ export class ProfileComponent implements OnInit {
 
   shiftTypes = ['Morning', 'Evening', 'Night', 'Rotating', 'Flexible'];
 
+  experienceOptions = [
+    { label: '0–2 Years',  value: '0-2 years'  },
+    { label: '2–4 Years',  value: '2-4 years'  },
+    { label: '4–6 Years',  value: '4-6 years'  },
+    { label: '6–8 Years',  value: '6-8 years'  },
+    { label: '8+ Years',   value: '8+ years'   },
+  ];
+
+  countryCodes = [
+    { label: '🇮🇳 +91 India',    code: '+91'  },
+    { label: '🇺🇸 +1  USA',       code: '+1'   },
+    { label: '🇬🇧 +44 UK',        code: '+44'  },
+    { label: '🇦🇺 +61 Australia', code: '+61'  },
+    { label: '🇦🇪 +971 UAE',      code: '+971' },
+    { label: '🇸🇬 +65 Singapore', code: '+65'  },
+  ];
+
+  states: string[] = [];
+  cities: string[] = [];
+
   selectedExpertise: string[] = [];
   selectedShifts:    string[] = [];
 
   constructor(
-    private auth:       AuthService,
-    private nurseSvc:   NurseService,
-    private fb:         FormBuilder
+    private auth:     AuthService,
+    private nurseSvc: NurseService,
+    private geoSvc:   GeoService,
+    private fb:       FormBuilder
   ) {}
 
   ngOnInit(): void {
-    this.profileForm = this.fb.group({
-      fullName:        ['', [Validators.required, Validators.minLength(3)]],
-      licenseNumber:   ['', [Validators.required]],
-      email:           ['', [Validators.required, Validators.email]],
-      phone:           ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      specialization:  ['', Validators.required],
-      experience:      ['', [Validators.required, Validators.pattern('^[0-9]+$')]],
-      availability:    ['', Validators.required],
-      address:         ['', [Validators.required, Validators.minLength(10)]],
-      education:       ['', Validators.required],
-      certifications:  [''],
-      reference1Name:  [''],
-      reference1Phone: ['', [Validators.pattern('^[0-9]{10}$')]],
-      reference2Name:  [''],
-      reference2Phone: ['', [Validators.pattern('^[0-9]{10}$')]],
-      bio:             ['']
-    });
-    this.profileForm.disable();
+    this.buildForm();
+    this.geoSvc.getStates().subscribe(s => this.states = s);
     this.loadProfile();
   }
 
+  private buildForm(): void {
+    const dis = (val: any) => ({ value: val, disabled: true });
+
+    this.profileForm = this.fb.group({
+      // Name
+      firstName:  [dis(''), FIRST_NAME_V],
+      middleName: [dis(''), [Validators.maxLength(30), Validators.pattern('^[A-Za-z]*$')]],
+      lastName:   [dis(''), [Validators.required, Validators.maxLength(30), lastNameV()]],
+
+      // Always-readonly
+      licenseNumber: [dis('')],
+      email:         [dis('')],
+
+      // Phone
+      phoneCountryCode: [dis('+91')],
+      phone: [dis(''), [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+
+      // Professional
+      specialization: [dis(''), Validators.required],
+      experience:     [dis(''), Validators.required],
+      availability:   [dis(''), Validators.required],
+      education:      [dis(''), Validators.required],
+      certifications: [dis('')],
+      bio:            [dis('')],
+
+      // Address
+      addressLine1: [dis(''), [Validators.required, Validators.maxLength(100)]],
+      addressLine2: [dis(''), Validators.maxLength(100)],
+      landmark:     [dis(''), Validators.maxLength(60)],
+      state:        [dis(''), Validators.required],
+      city:         [dis(''), Validators.required],
+      pincode:      [dis(''), [Validators.required, Validators.pattern('^[1-9][0-9]{5}$')]],
+
+      // References
+      reference1Name:  [dis('')],
+      reference1Phone: [dis(''), Validators.pattern('^[0-9]{10}$')],
+      reference2Name:  [dis('')],
+      reference2Phone: [dis(''), Validators.pattern('^[0-9]{10}$')],
+    });
+  }
+
   get f() { return this.profileForm.controls; }
+
+  // ── Load ──────────────────────────────────────────────────────────────────
+
+  private expLabel(years: number | null): string {
+    if (years === null || years === undefined) return '';
+    if (years < 2)  return '0-2 years';
+    if (years < 4)  return '2-4 years';
+    if (years < 6)  return '4-6 years';
+    if (years < 8)  return '6-8 years';
+    return '8+ years';
+  }
 
   private loadProfile(): void {
     const userId = this.auth.getUserId();
@@ -71,69 +152,109 @@ export class ProfileComponent implements OnInit {
     this.nurseSvc.getProfile(userId).subscribe({
       next: (data) => {
         this.isLoading = false;
+
+        const ccCode = data.phoneCountryCode || '+91';
+        let digits = data.phone || '';
+        if (digits.startsWith(ccCode)) digits = digits.slice(ccCode.length);
+
         this.profileForm.patchValue({
-          fullName:       data.fullName       || '',
-          licenseNumber:  data.licenseNumber  || '',
-          email:          data.email          || '',
-          phone:          data.phone          || '',
-          specialization: data.specialization || '',
-          experience:     data.experienceYears != null ? String(data.experienceYears) : '',
-          availability:   data.availability   || '',
-          address:        data.address        || '',
-          education:      data.education      || '',
-          bio:            ''
+          firstName:        data.firstName        || '',
+          middleName:       data.middleName        || '',
+          lastName:         data.lastName          || '',
+          licenseNumber:    data.licenseNumber     || '',
+          email:            data.email             || '',
+          phoneCountryCode: ccCode,
+          phone:            digits,
+          specialization:   data.specialization    || '',
+          experience:       this.expLabel(data.experienceYears),
+          availability:     data.availability      || '',
+          education:        data.education         || '',
+          bio:              '',
+          addressLine1:     data.addressLine1      || '',
+          addressLine2:     data.addressLine2      || '',
+          landmark:         data.landmark          || '',
+          state:            data.state             || '',
+          city:             data.city              || '',
+          pincode:          data.pincode           || '',
+          reference1Name:   data.references        || '',
+          reference1Phone:  '',
+          reference2Name:   '',
+          reference2Phone:  '',
         });
 
-        // expertise comma-string → array
         if (data.expertise) {
           this.selectedExpertise = data.expertise.split(',')
-            .map((s: string) => s.trim()).filter((s: string) => s);
+            .map((s: string) => s.trim()).filter((s: string) => !!s);
         }
 
-        // references field — stored as simple text; parse ref1 / ref2 if available
-        if (data.references) {
-          this.profileForm.patchValue({ reference1Name: data.references });
+        if (data.state) {
+          this.geoSvc.getCities(data.state).subscribe(c => this.cities = c);
         }
       },
       error: () => { this.isLoading = false; }
     });
   }
 
-  toggleExpertise(area: string) {
+  // ── Edit / Cancel ─────────────────────────────────────────────────────────
+
+  enableEdit(): void {
+    this.editMode    = true;
+    this.saveSuccess = false;
+    this.saveError   = '';
+
+    const allEditable = [
+      'firstName', 'middleName', 'lastName',
+      'phoneCountryCode', 'phone',
+      'specialization', 'experience', 'availability', 'education', 'certifications', 'bio',
+      'addressLine1', 'addressLine2', 'landmark', 'state', 'city', 'pincode',
+      'reference1Name', 'reference1Phone', 'reference2Name', 'reference2Phone',
+    ];
+    allEditable.forEach(f => this.profileForm.get(f)?.enable());
+    // licenseNumber and email stay disabled always
+  }
+
+  cancelEdit(): void {
+    this.editMode  = false;
+    this.saveError = '';
+    this.profileForm.disable();
+    this.loadProfile();
+  }
+
+  // ── State / city cascade ──────────────────────────────────────────────────
+
+  onStateChange(state: string): void {
+    this.cities = [];
+    this.profileForm.get('city')?.setValue('');
+    if (state) this.geoSvc.getCities(state).subscribe(c => this.cities = c);
+  }
+
+  // ── Expertise / Shift chips ───────────────────────────────────────────────
+
+  toggleExpertise(area: string): void {
     if (!this.editMode) return;
     const idx = this.selectedExpertise.indexOf(area);
     if (idx > -1) this.selectedExpertise.splice(idx, 1);
     else          this.selectedExpertise.push(area);
   }
 
-  toggleShift(shift: string) {
+  toggleShift(shift: string): void {
     if (!this.editMode) return;
     const idx = this.selectedShifts.indexOf(shift);
     if (idx > -1) this.selectedShifts.splice(idx, 1);
     else          this.selectedShifts.push(shift);
   }
 
-  enableEdit() {
-    this.editMode    = true;
-    this.saveSuccess = false;
-    this.saveError   = '';
-    this.profileForm.enable();
-    // licenseNumber and email are not editable
-    this.profileForm.get('licenseNumber')?.disable();
-    this.profileForm.get('email')?.disable();
+  // ── Save ──────────────────────────────────────────────────────────────────
+
+  private expYears(label: string): number {
+    const map: Record<string, number> = {
+      '0-2 years': 0, '2-4 years': 2, '4-6 years': 4, '6-8 years': 6, '8+ years': 8
+    };
+    return map[label] ?? 0;
   }
 
-  cancelEdit() {
-    this.editMode = false;
-    this.profileForm.disable();
-    this.saveError = '';
-  }
-
-  saveProfile() {
-    if (this.profileForm.invalid) {
-      this.profileForm.markAllAsTouched();
-      return;
-    }
+  saveProfile(): void {
+    if (this.profileForm.invalid) { this.profileForm.markAllAsTouched(); return; }
 
     const userId = this.auth.getUserId();
     if (!userId) return;
@@ -142,16 +263,32 @@ export class ProfileComponent implements OnInit {
     this.saveError = '';
 
     const v = this.profileForm.getRawValue();
+    const firstName  = (v.firstName  || '').trim();
+    const middleName = (v.middleName || '').trim();
+    const lastName   = (v.lastName   || '').trim();
+    const fullName   = [firstName, middleName, lastName].filter(Boolean).join(' ');
+    const phone      = (v.phoneCountryCode || '+91') + (v.phone || '');
+
     const payload: any = {
-      fullName:        v.fullName?.trim(),
-      phone:           v.phone,
-      specialization:  v.specialization,
-      experienceYears: v.experience ? parseInt(v.experience, 10) : null,
-      availability:    v.availability,
-      address:         v.address?.trim(),
-      education:       v.education?.trim(),
-      expertise:       this.selectedExpertise.join(','),
-      references:      v.reference1Name?.trim() || ''
+      fullName,
+      firstName,
+      middleName: middleName || null,
+      lastName,
+      phone,
+      phoneCountryCode: v.phoneCountryCode,
+      specialization:   v.specialization,
+      experienceYears:  this.expYears(v.experience),
+      availability:     v.availability,
+      education:        v.education?.trim(),
+      expertise:        this.selectedExpertise.join(','),
+      addressLine1:     v.addressLine1?.trim(),
+      addressLine2:     v.addressLine2?.trim() || null,
+      landmark:         v.landmark?.trim()     || null,
+      country:          'India',
+      state:            v.state,
+      city:             v.city,
+      pincode:          v.pincode,
+      references:       v.reference1Name?.trim() || null,
     };
 
     this.nurseSvc.updateProfile(userId, payload).subscribe({

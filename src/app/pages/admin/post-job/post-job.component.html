@@ -95,9 +95,11 @@
               <div class="col-md-6">
                 <label class="field-label">Job Title *</label>
                 <input class="field-input" formControlName="jobTitle" placeholder="e.g., ICU Nurse"
+                       maxlength="100"
                        [class.input-err]="f['jobTitle'].touched && f['jobTitle'].invalid">
                 <small class="err" *ngIf="f['jobTitle'].touched && f['jobTitle'].hasError('required')">Job title is required.</small>
                 <small class="err" *ngIf="f['jobTitle'].touched && f['jobTitle'].hasError('minlength')">Minimum 3 characters.</small>
+                <small class="err" *ngIf="f['jobTitle'].touched && f['jobTitle'].hasError('maxlength')">Maximum 100 characters.</small>
               </div>
               <div class="col-md-6">
                 <label class="field-label">Department *</label>
@@ -114,20 +116,22 @@
                 <small class="err" *ngIf="f['department'].touched && f['department'].hasError('required')">Department is required.</small>
               </div>
               <div class="col-md-6">
-                <label class="field-label">Location *</label>
-                <input class="field-input" formControlName="location" placeholder="e.g., New Delhi"
-                       [class.input-err]="f['location'].touched && f['location'].invalid">
-                <small class="err" *ngIf="f['location'].touched && f['location'].hasError('required')">Location is required.</small>
+                <label class="field-label">Location</label>
+                <input class="field-input" formControlName="location" readonly
+                       style="background:#f4faf5;color:#4e6e68;cursor:not-allowed;">
+                <small class="text-muted" style="font-size:0.75rem;">
+                  <i class="bi bi-geo-alt-fill me-1" style="color:#1aa37a;"></i>Auto-filled from your organization's registered city.
+                </small>
               </div>
               <div class="col-md-6">
                 <label class="field-label">Job Type *</label>
                 <select class="field-input" formControlName="jobType"
                         [class.input-err]="f['jobType'].touched && f['jobType'].invalid">
                   <option value="">Select type</option>
-                  <option>Full-time</option>
-                  <option>Part-time</option>
-                  <option>Contract</option>
-                  <option>On-call</option>
+                  <option value="PERMANENT">Permanent</option>
+                  <option value="TEMPORARY">Temporary</option>
+                  <option value="CONTRACT">Contract</option>
+                  <option value="EMERGENCY">Emergency</option>
                 </select>
                 <small class="err" *ngIf="f['jobType'].touched && f['jobType'].hasError('required')">Job type is required.</small>
               </div>
@@ -143,25 +147,42 @@
               <div class="col-12">
                 <label class="field-label">Job Description *</label>
                 <textarea class="field-input" rows="4" formControlName="description"
-                          placeholder="Describe responsibilities, requirements and expectations..."
+                          placeholder="Describe responsibilities, requirements and expectations…" maxlength="2000"
                           [class.input-err]="f['description'].touched && f['description'].invalid"></textarea>
-                <small class="err" *ngIf="f['description'].touched && f['description'].hasError('required')">Description is required.</small>
-                <small class="err" *ngIf="f['description'].touched && f['description'].hasError('minlength')">Minimum 20 characters.</small>
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <small class="err" *ngIf="f['description'].touched && f['description'].hasError('required')">Description is required.</small>
+                    <small class="err" *ngIf="f['description'].touched && f['description'].hasError('minlength')">Minimum 20 characters.</small>
+                    <small class="err" *ngIf="f['description'].touched && f['description'].hasError('maxlength')">Maximum 2000 characters.</small>
+                  </div>
+                  <small class="text-muted" style="font-size:0.72rem;">{{ (jobForm.value.description || '').length }}/2000</small>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Salary -->
           <div class="form-card mb-4">
-            <div class="form-card-title"><i class="bi bi-currency-rupee me-2"></i>Salary Range (Optional)</div>
+            <div class="form-card-title"><i class="bi bi-currency-rupee me-2"></i>Salary Range <span style="font-size:0.78rem;font-weight:400;color:#8aaba4;">(Optional · ₹5,000 – ₹5,00,000/month)</span></div>
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="field-label">Minimum (₹/month)</label>
-                <input type="number" class="field-input" formControlName="salaryMin" placeholder="e.g., 25000">
+                <input type="number" class="field-input" formControlName="salaryMin"
+                       placeholder="e.g., 25000" min="5000" max="500000"
+                       [class.input-err]="f['salaryMin'].touched && f['salaryMin'].invalid">
+                <small class="err" *ngIf="f['salaryMin'].touched && f['salaryMin'].hasError('min')">Minimum salary is ₹5,000.</small>
+                <small class="err" *ngIf="f['salaryMin'].touched && f['salaryMin'].hasError('max')">Maximum allowed is ₹5,00,000.</small>
               </div>
               <div class="col-md-6">
                 <label class="field-label">Maximum (₹/month)</label>
-                <input type="number" class="field-input" formControlName="salaryMax" placeholder="e.g., 50000">
+                <input type="number" class="field-input" formControlName="salaryMax"
+                       placeholder="e.g., 50000" min="5000" max="500000"
+                       [class.input-err]="f['salaryMax'].touched && f['salaryMax'].invalid">
+                <small class="err" *ngIf="f['salaryMax'].touched && f['salaryMax'].hasError('min')">Minimum salary is ₹5,000.</small>
+                <small class="err" *ngIf="f['salaryMax'].touched && f['salaryMax'].hasError('max')">Maximum allowed is ₹5,00,000.</small>
+              </div>
+              <div class="col-12" *ngIf="jobForm.hasError('salaryRange')">
+                <small class="err"><i class="bi bi-exclamation-circle me-1"></i>Maximum salary must be greater than or equal to the minimum.</small>
               </div>
             </div>
           </div>
