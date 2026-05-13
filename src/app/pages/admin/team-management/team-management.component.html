@@ -84,13 +84,39 @@
         <div class="form-panel-title"><i class="bi bi-person-plus me-2"></i>Add Management Staff</div>
         <form [formGroup]="memberForm" (ngSubmit)="onAdd()">
           <div class="row g-3">
-            <div class="col-md-6">
-              <label class="field-label">Full Name *</label>
-              <input class="field-input" formControlName="name" placeholder="Full name"
-                     [class.input-err]="f['name'].touched && f['name'].invalid">
-              <small class="err" *ngIf="f['name'].touched && f['name'].hasError('required')">Name is required.</small>
-              <small class="err" *ngIf="f['name'].touched && f['name'].hasError('minlength')">Minimum 3 characters.</small>
+
+            <!-- First Name -->
+            <div class="col-md-4">
+              <label class="field-label">First Name *</label>
+              <input class="field-input" formControlName="firstName" placeholder="First name" maxlength="30"
+                     [class.input-err]="f['firstName'].touched && f['firstName'].invalid">
+              <small class="err" *ngIf="f['firstName'].touched && f['firstName'].hasError('required')">First name is required.</small>
+              <small class="err" *ngIf="f['firstName'].touched && f['firstName'].hasError('minlength')">Minimum 3 letters required.</small>
+              <small class="err" *ngIf="f['firstName'].touched && f['firstName'].hasError('maxlength')">First name must not exceed 30 characters.</small>
+              <small class="err" *ngIf="f['firstName'].touched && f['firstName'].hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
             </div>
+
+            <!-- Middle Name -->
+            <div class="col-md-4">
+              <label class="field-label">Middle Name <span style="color:#9ab8b0;font-weight:400;">(optional)</span></label>
+              <input class="field-input" formControlName="middleName" placeholder="Middle name" maxlength="30"
+                     [class.input-err]="f['middleName'].touched && f['middleName'].invalid">
+              <small class="err" *ngIf="f['middleName'].touched && f['middleName'].hasError('maxlength')">Middle name must not exceed 30 characters.</small>
+              <small class="err" *ngIf="f['middleName'].touched && f['middleName'].hasError('pattern')">Only letters allowed.</small>
+            </div>
+
+            <!-- Last Name -->
+            <div class="col-md-4">
+              <label class="field-label">Last Name *</label>
+              <input class="field-input" formControlName="lastName" placeholder="Last name" maxlength="30"
+                     [class.input-err]="f['lastName'].touched && f['lastName'].invalid">
+              <small class="err" *ngIf="f['lastName'].touched && f['lastName'].hasError('required')">Last name is required.</small>
+              <small class="err" *ngIf="f['lastName'].touched && f['lastName'].hasError('minlength')">Minimum 3 letters required.</small>
+              <small class="err" *ngIf="f['lastName'].touched && f['lastName'].hasError('maxlength')">Last name must not exceed 30 characters.</small>
+              <small class="err" *ngIf="f['lastName'].touched && f['lastName'].hasError('pattern')">Only letters and dot allowed. No numbers.</small>
+            </div>
+
+            <!-- Role -->
             <div class="col-md-6">
               <label class="field-label">Role / Designation *</label>
               <select class="field-input" formControlName="role" [class.input-err]="f['role'].touched && f['role'].invalid">
@@ -105,26 +131,40 @@
               </select>
               <small class="err" *ngIf="f['role'].touched && f['role'].hasError('required')">Role is required.</small>
             </div>
-            <div class="col-md-4">
+
+            <!-- Email -->
+            <div class="col-md-6">
               <label class="field-label">Email *</label>
-              <input class="field-input" formControlName="email" placeholder="email@org.com"
+              <input class="field-input" formControlName="email" placeholder="e.g. name@hospital.com"
                      [class.input-err]="f['email'].touched && f['email'].invalid">
               <small class="err" *ngIf="f['email'].touched && f['email'].hasError('required')">Email is required.</small>
-              <small class="err" *ngIf="f['email'].touched && f['email'].hasError('email')">Enter a valid email.</small>
+              <small class="err" *ngIf="f['email'].touched && (f['email'].hasError('email') || f['email'].hasError('pattern'))">Enter a valid .com email address (e.g. name@hospital.com).</small>
             </div>
-            <div class="col-md-4">
+
+            <!-- Phone with country code -->
+            <div class="col-md-6">
               <label class="field-label">Phone *</label>
-              <input class="field-input" formControlName="phone" placeholder="10-digit number"
-                     [class.input-err]="f['phone'].touched && f['phone'].invalid">
-              <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('required')">Phone is required.</small>
-              <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('pattern')">Enter valid 10-digit number.</small>
+              <div class="d-flex gap-2">
+                <select class="field-input" formControlName="phoneCountryCode" style="flex:0 0 175px;">
+                  <option *ngFor="let cc of COUNTRY_CODES" [value]="cc.code">{{ cc.label }}</option>
+                </select>
+                <div style="flex:1;">
+                  <input class="field-input" formControlName="phone" placeholder="10-digit number" maxlength="10"
+                         [class.input-err]="f['phone'].touched && f['phone'].invalid">
+                  <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('required')">Phone number is required.</small>
+                  <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('pattern')">Enter exactly 10 digits. No spaces or dashes.</small>
+                </div>
+              </div>
             </div>
-            <div class="col-md-4">
+
+            <!-- Join Date -->
+            <div class="col-md-6">
               <label class="field-label">Join Date *</label>
               <input type="date" class="field-input" formControlName="joinDate"
                      [class.input-err]="f['joinDate'].touched && f['joinDate'].invalid">
-              <small class="err" *ngIf="f['joinDate'].touched && f['joinDate'].hasError('required')">Date is required.</small>
+              <small class="err" *ngIf="f['joinDate'].touched && f['joinDate'].hasError('required')">Join date is required.</small>
             </div>
+
           </div>
           <div class="d-flex gap-2 mt-3 align-items-center">
             <button type="submit" class="btn-save" [disabled]="isSaving">

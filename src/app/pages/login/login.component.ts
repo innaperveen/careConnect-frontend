@@ -32,7 +32,7 @@ export class LoginComponent implements OnInit {
 
   buildForm(): void {
     const idValidators = this.selectedRole === 'organization'
-      ? [Validators.required, Validators.minLength(5), Validators.pattern('^[^@\\s]+$')]
+      ? [Validators.required, Validators.pattern('^[A-Za-z0-9]{5,30}$')]
       : [Validators.required, Validators.email,
          Validators.pattern('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.com$')];
 
@@ -46,10 +46,12 @@ export class LoginComponent implements OnInit {
   get password()   { return this.loginForm.get('password')!; }
 
   get identifierLabel(): string {
-    return this.selectedRole === 'organization' ? 'Registration / License Number' : 'Email Address';
+    return this.selectedRole === 'organization' ? 'Registration Number or License Number' : 'Email Address';
   }
   get identifierPlaceholder(): string {
-    return this.selectedRole === 'organization' ? 'Enter your registration number' : 'Enter your email address';
+    return this.selectedRole === 'organization'
+      ? 'Registration (6 letters) or License (8 digits)'
+      : 'Enter your email address';
   }
   get identifierType(): string {
     return this.selectedRole === 'organization' ? 'text' : 'email';

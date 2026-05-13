@@ -467,9 +467,21 @@
               </select>
             </div>
             <div class="col-md-4">
-              <label class="field-label">Additional Notes</label>
+              <label class="field-label">Additional Notes <span style="color:#9ab8b0;font-weight:400;">(optional)</span></label>
               <input class="field-input" formControlName="notes"
-                placeholder="e.g. pet at home, elevator building…">
+                placeholder="e.g. pet at home, elevator building…" maxlength="50"
+                [class.input-error]="bookingForm.get('notes')?.touched && bookingForm.get('notes')?.invalid">
+              <small class="field-err" *ngIf="bookingForm.get('notes')?.touched && bookingForm.get('notes')?.hasError('minlength')">Minimum 10 characters required.</small>
+              <small class="field-err" *ngIf="bookingForm.get('notes')?.touched && bookingForm.get('notes')?.hasError('maxlength')">Notes must not exceed 50 characters.</small>
+            </div>
+            <div class="col-md-6">
+              <label class="field-label">Application Deadline *
+                <small style="color:#9ab8b0;font-weight:400;"> — nurses cannot apply after this date &amp; time</small>
+              </label>
+              <input type="datetime-local" class="field-input" formControlName="applicationDeadline"
+                [min]="today + 'T00:01'"
+                [class.input-error]="bookingForm.get('applicationDeadline')?.touched && bookingForm.get('applicationDeadline')?.invalid">
+              <small class="field-err" *ngIf="bookingForm.get('applicationDeadline')?.touched && bookingForm.get('applicationDeadline')?.hasError('required')">Application deadline is required.</small>
             </div>
           </div>
         </div>

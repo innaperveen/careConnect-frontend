@@ -27,7 +27,6 @@ function dobRangeValidator(minAge: number, maxAge: number): ValidatorFn {
 }
 
 const PASS_VALIDATORS  = [Validators.required, Validators.minLength(12), Validators.maxLength(18)];
-const NAME_LEGACY      = Validators.pattern('^[a-zA-Z .\'\-]+$');
 const EMAIL_VALIDATORS = [
   Validators.required,
   Validators.email,
@@ -73,6 +72,8 @@ export class RegisterComponent implements OnInit {
   cities: string[] = [];
   nurseStates: string[] = [];
   nurseCities: string[] = [];
+  orgStates: string[] = [];
+  orgCities: string[] = [];
 
   // Auto-calculated age from DOB
   calculatedAge: number | null = null;
@@ -114,6 +115,11 @@ export class RegisterComponent implements OnInit {
     { label: '8+ Years',   value: '8+ years'   },
   ];
   orgTypes = ['Hospital', 'Nursing Home', 'Clinic', 'Care Center', 'Rehabilitation Center', 'Other'];
+  designations = [
+    'Hospital Administrator', 'Medical Director', 'Chief Executive Officer (CEO)',
+    'Chief Operating Officer (COO)', 'Head of Nursing', 'Facility Manager',
+    'HR Manager', 'Operations Manager', 'Other'
+  ];
 
   showModal    = false;
   modalType: 'success' | 'error' = 'success';
@@ -138,8 +144,8 @@ export class RegisterComponent implements OnInit {
     this.buildNurseForm();
     this.buildOrgForm();
 
-    // Load states for patient + nurse address dropdowns
-    this.geoSvc.getStates().subscribe(s => { this.states = s; this.nurseStates = s; });
+    // Load states for patient + nurse + org address dropdowns
+    this.geoSvc.getStates().subscribe(s => { this.states = s; this.nurseStates = s; this.orgStates = s; });
   }
 
   // ── Form builders ──────────────────────────────────────────────────────────
@@ -220,21 +226,41 @@ export class RegisterComponent implements OnInit {
   }
 
   private buildOrgForm(): void {
+    const ORG_EMAIL_V = [
+      Validators.required,
+      Validators.email,
+      Validators.pattern('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.(com|org|in)$'),
+    ];
     this.orgForm = this.fb.group({
-      orgName:        ['', [Validators.required, Validators.minLength(3)]],
-      orgType:        ['', Validators.required],
-      regNumber:      ['', [Validators.required, Validators.minLength(5)]],
-      contactPerson:  ['', [Validators.required, Validators.minLength(3), NAME_LEGACY]],
-      designation:    ['', [Validators.required, Validators.minLength(3)]],
-      email:          ['', [Validators.required, Validators.email]],
-      phone:          ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      address:        ['', [Validators.required, Validators.minLength(10)]],
-      city:           ['', Validators.required],
-      state:          ['', Validators.required],
-      pincode:        ['', [Validators.required, Validators.pattern('^[0-9]{6}$')]],
-      website:        [''],
-      password:       ['', PASS_VALIDATORS],
-      confirmPassword:['', Validators.required],
+      // Organization identity
+      orgType:           ['', Validators.required],
+      orgName:           [{ value: '', disabled: true }, [
+        Validators.required, Validators.minLength(3), Validators.maxLength(30),
+        Validators.pattern("^[A-Za-z][A-Za-z .,\\-&()'\\/]*$")
+      ]],
+      regNumber:         ['', [Validators.required, Validators.pattern('^[A-Za-z]{6}$')]],
+      licenseNumber:     ['', [Validators.required, Validators.pattern('^[0-9]{8}$')]],
+      // Contact person
+      contactFirstName:  ['', FIRST_NAME_VALIDATORS],
+      contactMiddleName: ['', [Validators.maxLength(30), Validators.pattern('^[A-Za-z]*$')]],
+      contactLastName:   ['', [Validators.required, Validators.maxLength(30), lastNameValidator()]],
+      designation:       ['', Validators.required],
+      // Contact details
+      email:             ['', ORG_EMAIL_V],
+      phoneCountryCode:  ['+91'],
+      phone:             ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      // Address
+      addressLine1:      ['', [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
+      addressLine2:      ['', Validators.maxLength(100)],
+      landmark:          ['', Validators.maxLength(60)],
+      country:           [{ value: 'India', disabled: true }],
+      state:             ['', Validators.required],
+      city:              ['', Validators.required],
+      pincode:           ['', [Validators.required, Validators.pattern('^[1-9][0-9]{5}$')]],
+      website:           [''],
+      // Security
+      password:          ['', PASS_VALIDATORS],
+      confirmPassword:   ['', Validators.required],
     }, { validators: passwordMatchValidator });
   }
 
@@ -253,6 +279,19 @@ export class RegisterComponent implements OnInit {
     this.nurseForm.get('city')?.setValue('');
     if (stateName) {
       this.geoSvc.getCities(stateName).subscribe(c => this.nurseCities = c);
+    }
+  }
+
+  onOrgTypeChange(val: string): void {
+    const ctrl = this.orgForm.get('orgName');
+    if (val) { ctrl?.enable(); } else { ctrl?.disable(); ctrl?.setValue(''); }
+  }
+
+  onOrgStateChange(stateName: string): void {
+    this.orgCities = [];
+    this.orgForm.get('city')?.setValue('');
+    if (stateName) {
+      this.geoSvc.getCities(stateName).subscribe(c => this.orgCities = c);
     }
   }
 
@@ -297,14 +336,19 @@ export class RegisterComponent implements OnInit {
 
   // ── Form getters (org) ─────────────────────────────────────────────────────
 
-  get oName()    { return this.orgForm.get('orgName')!; }
   get oType()    { return this.orgForm.get('orgType')!; }
+  get oName()    { return this.orgForm.get('orgName')!; }
   get oReg()     { return this.orgForm.get('regNumber')!; }
-  get oContact() { return this.orgForm.get('contactPerson')!; }
+  get oLicense() { return this.orgForm.get('licenseNumber')!; }
+  get oCFirst()  { return this.orgForm.get('contactFirstName')!; }
+  get oCMiddle() { return this.orgForm.get('contactMiddleName')!; }
+  get oCLast()   { return this.orgForm.get('contactLastName')!; }
   get oDesig()   { return this.orgForm.get('designation')!; }
   get oEmail()   { return this.orgForm.get('email')!; }
   get oPhone()   { return this.orgForm.get('phone')!; }
-  get oAddress() { return this.orgForm.get('address')!; }
+  get oAddr1()   { return this.orgForm.get('addressLine1')!; }
+  get oAddr2()   { return this.orgForm.get('addressLine2')!; }
+  get oLandmark(){ return this.orgForm.get('landmark')!; }
   get oCity()    { return this.orgForm.get('city')!; }
   get oState()   { return this.orgForm.get('state')!; }
   get oPincode() { return this.orgForm.get('pincode')!; }
@@ -400,23 +444,35 @@ export class RegisterComponent implements OnInit {
       };
     }
 
-    const v = this.orgForm.value;
+    const v        = this.orgForm.getRawValue();
+    const cFirst   = (v.contactFirstName  || '').trim();
+    const cMiddle  = (v.contactMiddleName || '').trim();
+    const cLast    = (v.contactLastName   || '').trim();
+    const contactPerson = [cFirst, cMiddle, cLast].filter(Boolean).join(' ');
     return {
-      role:          'ORGANIZATION',
-      fullName:      v.contactPerson.trim(),
-      email:         v.email.trim().toLowerCase(),
-      password:      v.password,
-      phone:         v.phone,
-      orgName:       v.orgName.trim(),
-      orgType:       v.orgType,
-      regNumber:     v.regNumber.trim(),
-      contactPerson: v.contactPerson.trim(),
-      designation:   v.designation.trim(),
-      address:       v.address.trim(),
-      city:          v.city.trim(),
-      state:         v.state.trim(),
-      pincode:       v.pincode,
-      website:       v.website?.trim() || '',
+      role:              'ORGANIZATION',
+      fullName:          contactPerson,
+      email:             v.email.trim().toLowerCase(),
+      password:          v.password,
+      orgName:           (v.orgName || '').trim(),
+      orgType:           v.orgType,
+      regNumber:         v.regNumber.trim(),
+      orgLicenseNumber:  v.licenseNumber.trim(),
+      contactFirstName:  cFirst,
+      contactMiddleName: cMiddle,
+      contactLastName:   cLast,
+      contactPerson,
+      designation:       v.designation,
+      phoneCountryCode:  v.phoneCountryCode,
+      phone:             v.phone,
+      addressLine1:      v.addressLine1.trim(),
+      addressLine2:      v.addressLine2?.trim() || '',
+      landmark:          v.landmark?.trim()     || '',
+      country:           v.country || 'India',
+      city:              v.city,
+      state:             v.state,
+      pincode:           v.pincode,
+      website:           v.website?.trim() || '',
     };
   }
 

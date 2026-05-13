@@ -23,17 +23,34 @@ export class TeamManagementComponent implements OnInit {
   memberForm: FormGroup;
   private orgUserId!: number;
 
+  readonly COUNTRY_CODES = [
+    { label: '🇮🇳 +91 India',     code: '+91'  },
+    { label: '🇺🇸 +1  USA/Canada', code: '+1'   },
+    { label: '🇬🇧 +44 UK',         code: '+44'  },
+    { label: '🇦🇺 +61 Australia',  code: '+61'  },
+    { label: '🇦🇪 +971 UAE',       code: '+971' },
+    { label: '🇸🇬 +65 Singapore',  code: '+65'  },
+    { label: '🇩🇪 +49 Germany',    code: '+49'  },
+    { label: '🇫🇷 +33 France',     code: '+33'  },
+  ];
+
   constructor(
     private fb: FormBuilder,
     private adminService: AdminService,
     private auth: AuthService
   ) {
     this.memberForm = this.fb.group({
-      name:     ['', [Validators.required, Validators.minLength(3)]],
-      role:     ['', Validators.required],
-      email:    ['', [Validators.required, Validators.email]],
-      phone:    ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      joinDate: ['', Validators.required]
+      firstName:       ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30),
+                             Validators.pattern('^[A-Za-z]+$')]],
+      middleName:      ['', [Validators.maxLength(30), Validators.pattern('^[A-Za-z]*$')]],
+      lastName:        ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30),
+                             Validators.pattern('^[A-Za-z.]+$')]],
+      role:            ['', Validators.required],
+      email:           ['', [Validators.required, Validators.email,
+                             Validators.pattern('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.com$')]],
+      phoneCountryCode:['+91'],
+      phone:           ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      joinDate:        ['', Validators.required]
     });
   }
 
@@ -65,13 +82,24 @@ export class TeamManagementComponent implements OnInit {
     this.isSaving = true;
     this.errorMsg = '';
 
-    this.adminService.addTeamMember(this.orgUserId, this.memberForm.value).subscribe({
+    const v = this.memberForm.value;
+    const fullName = [v.firstName.trim(), v.middleName?.trim() || '', v.lastName.trim()]
+                     .filter(Boolean).join(' ');
+    const payload = {
+      name:     fullName,
+      role:     v.role,
+      email:    v.email.trim().toLowerCase(),
+      phone:    (v.phoneCountryCode || '+91') + v.phone,
+      joinDate: v.joinDate,
+    };
+
+    this.adminService.addTeamMember(this.orgUserId, payload).subscribe({
       next: (member) => {
         this.teamMembers.push(member);
         this.isSaving  = false;
         this.addOpen   = false;
         this.successMsg = 'Team member added successfully!';
-        this.memberForm.reset();
+        this.memberForm.reset({ phoneCountryCode: '+91' });
         setTimeout(() => this.successMsg = '', 3000);
       },
       error: (err: Error) => {

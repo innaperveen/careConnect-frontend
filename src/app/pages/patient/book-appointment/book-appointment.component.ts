@@ -168,10 +168,11 @@ export class BookAppointmentComponent implements OnInit {
       scheduleDays:  [[]],
 
       // Priority & Preferences
-      priority:           ['Normal'],
-      genderPreference:   ['No Preference'],
-      languagePreference: ['No Preference'],
-      notes:              [''],
+      priority:            ['Normal'],
+      genderPreference:    ['No Preference'],
+      languagePreference:  ['No Preference'],
+      applicationDeadline: ['', Validators.required],
+      notes:               ['', [Validators.minLength(10), Validators.maxLength(50)]],
     });
   }
 
@@ -338,8 +339,9 @@ export class BookAppointmentComponent implements OnInit {
       medicalCondition:  v.medicalCondition === 'Other'
                            ? (v.medicalConditionOther?.trim() || 'Other')
                            : (v.medicalCondition || null),
-      mobilityLevel:     v.mobilityLevel     || null,
-      dietRequirements:  v.dietRequirements  !== 'No Restrictions' ? v.dietRequirements  : null,
+      mobilityLevel:       v.mobilityLevel     || null,
+      dietRequirements:    v.dietRequirements  !== 'No Restrictions' ? v.dietRequirements  : null,
+      applicationDeadline: v.applicationDeadline ? v.applicationDeadline + ':00' : null,
     };
 
     this.isLoading  = true;
