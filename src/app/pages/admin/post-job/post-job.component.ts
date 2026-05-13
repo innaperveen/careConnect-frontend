@@ -21,7 +21,7 @@ export class PostJobComponent implements OnInit {
 
   activeTab: 'post' | 'jobs' = 'post';
 
-  jobForm:    FormGroup;
+  jobForm: FormGroup;
   isPosting   = false;
   successMsg  = '';
   errorMsg    = '';
@@ -29,14 +29,54 @@ export class PostJobComponent implements OnInit {
   myJobs:       any[] = [];
   isLoadingJobs = false;
 
-  orgCity = '';
-
-  specializations = ['ICU / Critical Care', 'Home Care', 'Pediatrics', 'Geriatrics',
-                     'Wound Care', 'Palliative Care', 'General Nursing', 'Physiotherapy'];
+  orgLocation   = '';
+  jobTitles:    string[] = [];
+  showOtherTitle = false;
 
   private userId!: number;
 
-  today = new Date().toISOString().split('T')[0];
+  readonly today       = new Date().toISOString().split('T')[0];
+  readonly minDeadline = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+  readonly DEPARTMENTS = [
+    'Critical Care / ICU', 'Emergency', 'Surgery / OT', 'Medical Ward',
+    'Pediatrics', 'Geriatrics', 'Maternity / Gynecology', 'Oncology',
+    'Cardiology', 'Neurology', 'Orthopedics', 'Psychiatry',
+    'Rehabilitation', 'Home Care', 'General Ward', 'Other'
+  ];
+
+  readonly DEPT_JOBS: Record<string, string[]> = {
+    'Critical Care / ICU': ['ICU Nurse', 'Critical Care Specialist', 'Ventilator Nurse', 'ICU In-Charge', 'Other'],
+    'Emergency':           ['Emergency Nurse', 'Trauma Nurse', 'Triage Nurse', 'ER In-Charge', 'Other'],
+    'Surgery / OT':        ['OT Nurse', 'Scrub Nurse', 'Recovery Nurse', 'Anaesthesia Nurse', 'Other'],
+    'Medical Ward':        ['Staff Nurse', 'Senior Nurse', 'Ward In-Charge', 'General Duty Nurse', 'Other'],
+    'Pediatrics':          ['Pediatric Nurse', 'NICU Nurse', 'Child Care Nurse', 'Pediatric In-Charge', 'Other'],
+    'Geriatrics':          ['Geriatric Care Nurse', 'Elder Care Specialist', 'Palliative Care Nurse', 'Other'],
+    'Maternity / Gynecology': ['Midwife', 'Labour Room Nurse', 'Post-natal Nurse', 'Gynecology Nurse', 'Other'],
+    'Oncology':            ['Oncology Nurse', 'Chemotherapy Nurse', 'Palliative Care Nurse', 'Other'],
+    'Cardiology':          ['Cardiac Nurse', 'Cath Lab Nurse', 'CCU Nurse', 'Cardiac In-Charge', 'Other'],
+    'Neurology':           ['Neurology Nurse', 'Neuro ICU Nurse', 'Stroke Care Nurse', 'Other'],
+    'Orthopedics':         ['Ortho Nurse', 'Physiotherapy Assistant', 'Plaster Room Nurse', 'Other'],
+    'Psychiatry':          ['Psychiatric Nurse', 'Mental Health Nurse', 'De-addiction Nurse', 'Other'],
+    'Rehabilitation':      ['Rehab Nurse', 'Physiotherapy Nurse', 'OT Technician', 'Other'],
+    'Home Care':           ['Home Care Nurse', 'Visiting Nurse', 'Palliative Home Care Nurse', 'Other'],
+    'General Ward':        ['General Duty Nurse', 'Staff Nurse', 'Ward In-Charge', 'Other'],
+    'Other':               ['Other'],
+  };
+
+  readonly SPECIALIZATIONS = [
+    'ICU / Critical Care', 'Emergency / Trauma', 'General Nursing', 'Home Care',
+    'Pediatrics', 'Geriatrics', 'Maternity & Gynecology', 'Oncology',
+    'Cardiology', 'Neurology', 'Orthopedics', 'Psychiatry',
+    'Wound Care', 'Palliative Care', 'Physiotherapy', 'Other'
+  ];
+
+  readonly SHIFT_OPTIONS = [
+    'Morning (6 AM – 2 PM)', 'Afternoon (2 PM – 10 PM)', 'Night (10 PM – 6 AM)',
+    'Rotational', '12-Hour Day Shift', '12-Hour Night Shift', 'Flexible'
+  ];
+
+  readonly OPENINGS_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20];
 
   constructor(
     private fb:           FormBuilder,
@@ -44,30 +84,36 @@ export class PostJobComponent implements OnInit {
     private auth:         AuthService
   ) {
     this.jobForm = this.fb.group({
-      jobTitle:       ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-      department:     ['', Validators.required],
-      location:       [{ value: '', disabled: true }, Validators.required],
-      jobType:        ['', Validators.required],
-      specialization: ['', Validators.required],
-      salaryMin:      ['', [Validators.min(5000), Validators.max(500000)]],
-      salaryMax:      ['', [Validators.min(5000), Validators.max(500000)]],
-      description:    ['', [Validators.required, Validators.minLength(20), Validators.maxLength(2000)]],
-      priority:       ['Normal', Validators.required],
-      deadline:       ['', Validators.required],
+      department:    ['', Validators.required],
+      jobTitle:      ['', Validators.required],
+      jobTitleOther: ['', [Validators.minLength(3), Validators.maxLength(20),
+                           Validators.pattern('^[A-Za-z /\\-]+$')]],
+      openings:      ['', Validators.required],
+      location:      [{ value: '', disabled: true }, Validators.required],
+      jobType:       ['', Validators.required],
+      specialization:['', Validators.required],
+      description:   [{ value: '', disabled: true },
+                      [Validators.required, Validators.minLength(10), Validators.maxLength(100)]],
+      shiftDetails:  ['', Validators.required],
+      salaryMin:     ['', [Validators.min(5000), Validators.max(500000)]],
+      salaryMax:     ['', [Validators.min(5000), Validators.max(500000)]],
+      priority:      ['Normal', Validators.required],
+      deadline:      ['', Validators.required],
     }, { validators: salaryRangeValidator() });
   }
 
   ngOnInit(): void {
     this.userId = this.auth.getUserId()!;
-    this.loadOrgCity();
+    this.loadOrgLocation();
     this.loadJobs();
   }
 
-  private loadOrgCity(): void {
+  private loadOrgLocation(): void {
     this.adminService.getOrgProfile(this.userId).subscribe({
       next: (org) => {
-        this.orgCity = org?.city || org?.address || '';
-        this.jobForm.get('location')?.setValue(this.orgCity);
+        const parts = [org?.addressLine1 || org?.address, org?.city, org?.state].filter(Boolean);
+        this.orgLocation = parts.join(', ') || '';
+        this.jobForm.get('location')?.setValue(this.orgLocation);
       },
       error: () => {}
     });
@@ -83,13 +129,33 @@ export class PostJobComponent implements OnInit {
 
   get f() { return this.jobForm.controls; }
 
+  get descLen(): number { return (this.jobForm.get('description')?.value || '').length; }
+
+  onDepartmentChange(dept: string): void {
+    this.jobTitles      = this.DEPT_JOBS[dept] || ['Other'];
+    this.showOtherTitle = false;
+    this.jobForm.get('jobTitle')?.setValue('');
+    this.jobForm.get('jobTitleOther')?.setValue('');
+  }
+
+  onTitleChange(title: string): void {
+    this.showOtherTitle = title === 'Other';
+    if (!this.showOtherTitle) this.jobForm.get('jobTitleOther')?.setValue('');
+  }
+
+  onSpecChange(spec: string): void {
+    const ctrl = this.jobForm.get('description');
+    if (spec) { ctrl?.enable(); } else { ctrl?.disable(); ctrl?.setValue(''); }
+  }
+
   onSubmit(): void {
     if (this.jobForm.invalid) { this.jobForm.markAllAsTouched(); return; }
 
-    const salaryMin = parseFloat(this.jobForm.value.salaryMin || '0');
-    const salaryMax = parseFloat(this.jobForm.value.salaryMax || '0');
-    if (salaryMin && salaryMax && salaryMax < salaryMin) {
-      this.errorMsg = 'Maximum salary must be greater than or equal to minimum salary.';
+    const selectedTitle = this.jobForm.value.jobTitle;
+    const otherTitle    = (this.jobForm.value.jobTitleOther || '').trim();
+    if (selectedTitle === 'Other' && !otherTitle) {
+      this.jobForm.get('jobTitleOther')?.setErrors({ required: true });
+      this.jobForm.get('jobTitleOther')?.markAsTouched();
       return;
     }
 
@@ -99,24 +165,29 @@ export class PostJobComponent implements OnInit {
 
     const v = this.jobForm.getRawValue();
     const payload = {
-      jobTitle:       v.jobTitle.trim(),
-      department:     v.department.trim(),
+      jobTitle:       selectedTitle === 'Other' ? otherTitle : selectedTitle,
+      department:     v.department,
+      openings:       Number(v.openings),
       location:       v.location,
       jobType:        v.jobType,
       specialization: v.specialization,
+      description:    (v.description || '').trim(),
+      shiftDetails:   v.shiftDetails,
       salaryMin:      v.salaryMin ? parseFloat(v.salaryMin) : null,
       salaryMax:      v.salaryMax ? parseFloat(v.salaryMax) : null,
-      description:    v.description.trim(),
       priority:       v.priority,
-      deadline:       v.deadline,
+      deadline:       v.deadline ? v.deadline + ':00' : null,
     };
 
     this.adminService.createJob(this.userId, payload).subscribe({
       next: (created) => {
-        this.isPosting  = false;
-        this.successMsg = 'Job posted successfully!';
+        this.isPosting      = false;
+        this.successMsg     = 'Job posted successfully!';
+        this.jobTitles      = [];
+        this.showOtherTitle = false;
         this.jobForm.reset({ priority: 'Normal' });
-        this.jobForm.get('location')?.setValue(this.orgCity);
+        this.jobForm.get('location')?.setValue(this.orgLocation);
+        this.jobForm.get('description')?.disable();
         this.myJobs.unshift(created);
         setTimeout(() => this.successMsg = '', 4000);
       },

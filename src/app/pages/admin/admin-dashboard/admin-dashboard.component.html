@@ -114,11 +114,11 @@
           <div class="detail-card-title"><i class="bi bi-file-earmark-text-fill"></i> Registration & Licensing</div>
           <div class="detail-grid">
             <div class="detail-item">
-              <span class="detail-label">Registration No.</span>
+              <span class="detail-label">Registration Number</span>
               <span class="detail-value reg-num">{{ org.regNumber }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">License No.</span>
+              <span class="detail-label">License Number</span>
               <span class="detail-value reg-num">{{ org.licenseNumber }}</span>
             </div>
             <div class="detail-item">
@@ -159,13 +159,27 @@
               <span class="detail-value">{{ org.phone }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Alt. Phone</span>
-              <span class="detail-value">{{ org.altPhone }}</span>
-            </div>
-            <div class="detail-item">
               <span class="detail-label">Website</span>
               <span class="detail-value" style="color:#0f5241">{{ org.website }}</span>
             </div>
+            <ng-container *ngIf="org.contact2FirstName">
+              <div class="detail-item" style="grid-column:1/-1;border-top:1px dashed #e2ece8;padding-top:8px;margin-top:4px;">
+                <span class="detail-label" style="color:#1aa37a;">Additional Contact</span>
+                <span class="detail-value fw-semibold">
+                  {{ org.contact2FirstName }}
+                  {{ org.contact2MiddleName ? org.contact2MiddleName + ' ' : '' }}{{ org.contact2LastName }}
+                  <span *ngIf="org.contact2Designation" style="font-weight:400;color:#6a8c80;"> — {{ org.contact2Designation }}</span>
+                </span>
+              </div>
+              <div class="detail-item" *ngIf="org.contact2Email">
+                <span class="detail-label">Email (2)</span>
+                <span class="detail-value">{{ org.contact2Email }}</span>
+              </div>
+              <div class="detail-item" *ngIf="org.contact2Phone">
+                <span class="detail-label">Phone (2)</span>
+                <span class="detail-value">{{ org.contact2Phone }}</span>
+              </div>
+            </ng-container>
           </div>
         </div>
       </div>
@@ -176,8 +190,16 @@
           <div class="detail-card-title"><i class="bi bi-geo-alt-fill"></i> Location</div>
           <div class="detail-grid">
             <div class="detail-item">
-              <span class="detail-label">Address</span>
-              <span class="detail-value">{{ org.address }}</span>
+              <span class="detail-label">Address Line 1</span>
+              <span class="detail-value">{{ org.addressLine1 }}</span>
+            </div>
+            <div class="detail-item" *ngIf="org.addressLine2">
+              <span class="detail-label">Address Line 2</span>
+              <span class="detail-value">{{ org.addressLine2 }}</span>
+            </div>
+            <div class="detail-item" *ngIf="org.landmark">
+              <span class="detail-label">Landmark</span>
+              <span class="detail-value">{{ org.landmark }}</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">City</span>
@@ -190,6 +212,10 @@
             <div class="detail-item">
               <span class="detail-label">Pincode</span>
               <span class="detail-value">{{ org.pincode }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Country</span>
+              <span class="detail-value">{{ org.country }}</span>
             </div>
           </div>
         </div>
@@ -295,25 +321,29 @@
     <div class="edit-panel-body" *ngIf="editForm">
       <form [formGroup]="editForm" (ngSubmit)="onSave()">
 
-        <!-- Basic Info -->
-        <div class="edit-section-label">Basic Information</div>
+        <!-- Basic Info (locked) -->
+        <div class="edit-section-label">
+          Basic Information
+          <span class="lock-note"><i class="bi bi-lock-fill me-1"></i>Non-editable</span>
+        </div>
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="edit-label">Organization Name *</label>
-            <input class="edit-input" formControlName="orgName" placeholder="Hospital / Clinic name"
-                   [class.input-err]="editForm.get('orgName')?.touched && editForm.get('orgName')?.invalid">
-            <small class="err" *ngIf="editForm.get('orgName')?.touched && editForm.get('orgName')?.hasError('required')">Required.</small>
+            <label class="edit-label">Organization Name</label>
+            <input class="edit-input" formControlName="orgName" readonly>
           </div>
           <div class="col-md-6">
-            <label class="edit-label">Organization Type *</label>
-            <select class="edit-input" formControlName="orgType">
-              <option value="">Select type</option>
-              <option>Hospital</option>
-              <option>Nursing Home</option>
-              <option>Clinic</option>
-              <option>Care Center</option>
-              <option>Rehabilitation Center</option>
-              <option>Other</option>
+            <label class="edit-label">Organization Type</label>
+            <input class="edit-input" formControlName="orgType" readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">License Number</label>
+            <input class="edit-input" formControlName="licenseNumber" readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Accreditation</label>
+            <select class="edit-input" formControlName="accreditation">
+              <option value="">Select accreditation</option>
+              <option *ngFor="let a of ACCREDITATION_OPTIONS" [value]="a">{{ a }}</option>
             </select>
           </div>
           <div class="col-md-6">
@@ -323,8 +353,10 @@
             <small class="err" *ngIf="editForm.get('bedCapacity')?.hasError('min') || editForm.get('bedCapacity')?.hasError('max')">Enter a valid number (1–10000).</small>
           </div>
           <div class="col-md-6">
-            <label class="edit-label">Accreditation</label>
-            <input class="edit-input" formControlName="accreditation" placeholder="e.g. NABH Accredited">
+            <label class="edit-label">Website</label>
+            <input class="edit-input" formControlName="website" placeholder="www.hospital.com or https://hospital.com"
+                   [class.input-err]="editForm.get('website')?.touched && editForm.get('website')?.invalid">
+            <small class="err" *ngIf="editForm.get('website')?.touched && editForm.get('website')?.hasError('pattern')">Website must end with .com, .in, or .gov.in (e.g. www.hospital.com).</small>
           </div>
         </div>
 
@@ -339,49 +371,110 @@
           </div>
         </div>
 
-        <!-- Contact -->
-        <div class="edit-section-label">Contact Information</div>
+        <!-- Primary Contact (locked) -->
+        <div class="edit-section-label">
+          Primary Contact Person
+          <span class="lock-note"><i class="bi bi-lock-fill me-1"></i>Non-editable</span>
+        </div>
         <div class="row g-3 mb-3">
           <div class="col-md-6">
-            <label class="edit-label">Contact Person *</label>
-            <input class="edit-input" formControlName="contactPerson" placeholder="Full name">
+            <label class="edit-label">Contact Person Name</label>
+            <input class="edit-input" formControlName="contactPerson" readonly>
           </div>
           <div class="col-md-6">
-            <label class="edit-label">Designation *</label>
-            <input class="edit-input" formControlName="designation" placeholder="e.g. Hospital Administrator">
+            <label class="edit-label">Designation</label>
+            <input class="edit-input" formControlName="designation" readonly>
           </div>
           <div class="col-md-6">
-            <label class="edit-label">Phone *</label>
-            <input class="edit-input" formControlName="phone" placeholder="10-digit number"
-                   [class.input-err]="editForm.get('phone')?.touched && editForm.get('phone')?.invalid">
-            <small class="err" *ngIf="editForm.get('phone')?.touched && editForm.get('phone')?.hasError('pattern')">Enter valid 10-digit number.</small>
-          </div>
-          <div class="col-md-6">
-            <label class="edit-label">Website</label>
-            <input class="edit-input" formControlName="website" placeholder="www.hospital.com">
+            <label class="edit-label">Phone</label>
+            <input class="edit-input" formControlName="phone" readonly>
           </div>
         </div>
 
-        <!-- Address -->
-        <div class="edit-section-label">Location</div>
+        <!-- Second Contact -->
+        <div class="edit-section-label">Additional Contact Person <small style="color:#9ab8b0;font-weight:400;">(optional)</small></div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="edit-label">First Name</label>
+            <input class="edit-input" formControlName="c2FirstName" placeholder="First name" maxlength="30"
+                   [class.input-err]="editForm.get('c2FirstName')?.touched && editForm.get('c2FirstName')?.invalid">
+            <small class="err" *ngIf="editForm.get('c2FirstName')?.touched && editForm.get('c2FirstName')?.hasError('minlength')">Minimum 3 letters required.</small>
+            <small class="err" *ngIf="editForm.get('c2FirstName')?.touched && editForm.get('c2FirstName')?.hasError('maxlength')">First name must not exceed 30 characters.</small>
+            <small class="err" *ngIf="editForm.get('c2FirstName')?.touched && editForm.get('c2FirstName')?.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
+          </div>
+          <div class="col-md-4">
+            <label class="edit-label">Middle Name</label>
+            <input class="edit-input" formControlName="c2MiddleName" placeholder="Middle name (optional)" maxlength="30"
+                   [class.input-err]="editForm.get('c2MiddleName')?.touched && editForm.get('c2MiddleName')?.invalid">
+            <small class="err" *ngIf="editForm.get('c2MiddleName')?.touched && editForm.get('c2MiddleName')?.hasError('maxlength')">Maximum 30 characters.</small>
+            <small class="err" *ngIf="editForm.get('c2MiddleName')?.touched && editForm.get('c2MiddleName')?.hasError('pattern')">Only letters allowed.</small>
+          </div>
+          <div class="col-md-4">
+            <label class="edit-label">Last Name</label>
+            <input class="edit-input" formControlName="c2LastName" placeholder="Last name" maxlength="30"
+                   [class.input-err]="editForm.get('c2LastName')?.touched && editForm.get('c2LastName')?.invalid">
+            <small class="err" *ngIf="editForm.get('c2LastName')?.touched && editForm.get('c2LastName')?.hasError('minlength')">Minimum 3 letters required.</small>
+            <small class="err" *ngIf="editForm.get('c2LastName')?.touched && editForm.get('c2LastName')?.hasError('maxlength')">Last name must not exceed 30 characters.</small>
+            <small class="err" *ngIf="editForm.get('c2LastName')?.touched && editForm.get('c2LastName')?.hasError('pattern')">Only letters and dot allowed. No numbers.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Designation</label>
+            <select class="edit-input" formControlName="c2Designation">
+              <option value="">Select designation</option>
+              <option *ngFor="let d of DESIGNATION_OPTIONS" [value]="d">{{ d }}</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Official Email</label>
+            <input class="edit-input" formControlName="c2Email" placeholder="e.g. contact@hospital.com"
+                   [class.input-err]="editForm.get('c2Email')?.touched && editForm.get('c2Email')?.invalid">
+            <small class="err" *ngIf="editForm.get('c2Email')?.touched && editForm.get('c2Email')?.hasError('required')">Email is required.</small>
+            <small class="err" *ngIf="editForm.get('c2Email')?.touched && (editForm.get('c2Email')?.hasError('email') || editForm.get('c2Email')?.hasError('pattern'))">Enter a valid official email ending in .com, .org, or .in (e.g. name@hospital.com).</small>
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Phone</label>
+            <div class="d-flex gap-2">
+              <select class="edit-input" formControlName="c2PhoneCode" style="flex:0 0 180px;">
+                <option *ngFor="let cc of COUNTRY_CODES" [value]="cc.code">{{ cc.label }}</option>
+              </select>
+              <div style="flex:1;">
+                <input class="edit-input" formControlName="c2Phone" placeholder="10-digit number" maxlength="10"
+                       [class.input-err]="editForm.get('c2Phone')?.touched && editForm.get('c2Phone')?.invalid">
+                <small class="err" *ngIf="editForm.get('c2Phone')?.touched && editForm.get('c2Phone')?.hasError('pattern')">Enter exactly 10 digits. No spaces or dashes.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Address (locked) -->
+        <div class="edit-section-label">
+          Location
+          <span class="lock-note"><i class="bi bi-lock-fill me-1"></i>Non-editable</span>
+        </div>
         <div class="row g-3 mb-4">
           <div class="col-12">
-            <label class="edit-label">Address *</label>
-            <input class="edit-input" formControlName="address" placeholder="Street, Area">
+            <label class="edit-label">Address Line 1</label>
+            <input class="edit-input" formControlName="addressLine1" readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Address Line 2</label>
+            <input class="edit-input" formControlName="addressLine2" readonly>
+          </div>
+          <div class="col-md-6">
+            <label class="edit-label">Landmark</label>
+            <input class="edit-input" formControlName="landmark" readonly>
           </div>
           <div class="col-md-4">
-            <label class="edit-label">City *</label>
-            <input class="edit-input" formControlName="city" placeholder="City">
+            <label class="edit-label">City</label>
+            <input class="edit-input" formControlName="city" readonly>
           </div>
           <div class="col-md-4">
-            <label class="edit-label">State *</label>
-            <input class="edit-input" formControlName="state" placeholder="State">
+            <label class="edit-label">State</label>
+            <input class="edit-input" formControlName="state" readonly>
           </div>
           <div class="col-md-4">
-            <label class="edit-label">Pincode *</label>
-            <input class="edit-input" formControlName="pincode" placeholder="6-digit pincode"
-                   [class.input-err]="editForm.get('pincode')?.touched && editForm.get('pincode')?.invalid">
-            <small class="err" *ngIf="editForm.get('pincode')?.touched && editForm.get('pincode')?.hasError('pattern')">Enter valid 6-digit pincode.</small>
+            <label class="edit-label">Pincode</label>
+            <input class="edit-input" formControlName="pincode" readonly>
           </div>
         </div>
 

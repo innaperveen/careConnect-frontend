@@ -88,41 +88,60 @@
         <!-- LEFT COLUMN -->
         <div class="col-md-8">
 
-          <!-- Basic Info -->
+          <!-- Job Details -->
           <div class="form-card mb-4">
             <div class="form-card-title"><i class="bi bi-briefcase me-2"></i>Job Details</div>
             <div class="row g-3">
-              <div class="col-md-6">
-                <label class="field-label">Job Title *</label>
-                <input class="field-input" formControlName="jobTitle" placeholder="e.g., ICU Nurse"
-                       maxlength="100"
-                       [class.input-err]="f['jobTitle'].touched && f['jobTitle'].invalid">
-                <small class="err" *ngIf="f['jobTitle'].touched && f['jobTitle'].hasError('required')">Job title is required.</small>
-                <small class="err" *ngIf="f['jobTitle'].touched && f['jobTitle'].hasError('minlength')">Minimum 3 characters.</small>
-                <small class="err" *ngIf="f['jobTitle'].touched && f['jobTitle'].hasError('maxlength')">Maximum 100 characters.</small>
-              </div>
+
+              <!-- 1. Department -->
               <div class="col-md-6">
                 <label class="field-label">Department *</label>
                 <select class="field-input" formControlName="department"
-                        [class.input-err]="f['department'].touched && f['department'].invalid">
+                        [class.input-err]="f['department'].touched && f['department'].invalid"
+                        (change)="onDepartmentChange($any($event.target).value)">
                   <option value="">Select department</option>
-                  <option>Critical Care</option>
-                  <option>Home Care</option>
-                  <option>Pediatrics</option>
-                  <option>Geriatrics</option>
-                  <option>General Ward</option>
-                  <option>Rehabilitation</option>
+                  <option *ngFor="let d of DEPARTMENTS" [value]="d">{{ d }}</option>
                 </select>
-                <small class="err" *ngIf="f['department'].touched && f['department'].hasError('required')">Department is required.</small>
+                <small class="err" *ngIf="f['department'].touched && f['department'].hasError('required')">Please select a department.</small>
               </div>
+
+              <!-- 2. Job Title (enabled after department) -->
               <div class="col-md-6">
-                <label class="field-label">Location</label>
-                <input class="field-input" formControlName="location" readonly
-                       style="background:#f4faf5;color:#4e6e68;cursor:not-allowed;">
-                <small class="text-muted" style="font-size:0.75rem;">
-                  <i class="bi bi-geo-alt-fill me-1" style="color:#1aa37a;"></i>Auto-filled from your organization's registered city.
-                </small>
+                <label class="field-label">Job Title *</label>
+                <select class="field-input" formControlName="jobTitle"
+                        [class.input-err]="f['jobTitle'].touched && f['jobTitle'].invalid"
+                        [attr.disabled]="jobTitles.length === 0 ? true : null"
+                        (change)="onTitleChange($any($event.target).value)">
+                  <option value="">{{ jobTitles.length ? 'Select job title' : 'Select department first' }}</option>
+                  <option *ngFor="let t of jobTitles" [value]="t">{{ t }}</option>
+                </select>
+                <small class="err" *ngIf="f['jobTitle'].touched && f['jobTitle'].hasError('required')">Please select a job title.</small>
               </div>
+
+              <!-- 2b. Other Title input -->
+              <div class="col-12" *ngIf="showOtherTitle">
+                <label class="field-label">Specify Job Title * <small style="color:#9ab8b0;">(max 20 characters)</small></label>
+                <input class="field-input" formControlName="jobTitleOther"
+                       placeholder="Enter custom job title" maxlength="20"
+                       [class.input-err]="f['jobTitleOther'].touched && f['jobTitleOther'].invalid">
+                <small class="err" *ngIf="f['jobTitleOther'].touched && f['jobTitleOther'].hasError('required')">Please specify the job title.</small>
+                <small class="err" *ngIf="f['jobTitleOther'].touched && f['jobTitleOther'].hasError('minlength')">Minimum 3 characters.</small>
+                <small class="err" *ngIf="f['jobTitleOther'].touched && f['jobTitleOther'].hasError('maxlength')">Job title must not exceed 20 characters.</small>
+                <small class="err" *ngIf="f['jobTitleOther'].touched && f['jobTitleOther'].hasError('pattern')">Only letters, spaces and hyphens allowed.</small>
+              </div>
+
+              <!-- 3. Number of Openings -->
+              <div class="col-md-6">
+                <label class="field-label">Number of Openings *</label>
+                <select class="field-input" formControlName="openings"
+                        [class.input-err]="f['openings'].touched && f['openings'].invalid">
+                  <option value="">Select openings</option>
+                  <option *ngFor="let n of OPENINGS_OPTIONS" [value]="n">{{ n }}</option>
+                </select>
+                <small class="err" *ngIf="f['openings'].touched && f['openings'].hasError('required')">Please select number of openings.</small>
+              </div>
+
+              <!-- 4. Job Type -->
               <div class="col-md-6">
                 <label class="field-label">Job Type *</label>
                 <select class="field-input" formControlName="jobType"
@@ -135,29 +154,50 @@
                 </select>
                 <small class="err" *ngIf="f['jobType'].touched && f['jobType'].hasError('required')">Job type is required.</small>
               </div>
+
+              <!-- 5. Location (auto-filled) -->
+              <div class="col-12">
+                <label class="field-label">Location</label>
+                <input class="field-input" formControlName="location" readonly
+                       style="background:#f4faf5;color:#4e6e68;cursor:not-allowed;">
+                <small class="text-muted" style="font-size:0.75rem;">
+                  <i class="bi bi-geo-alt-fill me-1" style="color:#1aa37a;"></i>Auto-filled from your organization's registered address.
+                </small>
+              </div>
+
+              <!-- 6. Required Specialization → enables description -->
               <div class="col-12">
                 <label class="field-label">Required Specialization *</label>
                 <select class="field-input" formControlName="specialization"
-                        [class.input-err]="f['specialization'].touched && f['specialization'].invalid">
+                        [class.input-err]="f['specialization'].touched && f['specialization'].invalid"
+                        (change)="onSpecChange($any($event.target).value)">
                   <option value="">Select specialization</option>
-                  <option *ngFor="let s of specializations">{{ s }}</option>
+                  <option *ngFor="let s of SPECIALIZATIONS" [value]="s">{{ s }}</option>
                 </select>
                 <small class="err" *ngIf="f['specialization'].touched && f['specialization'].hasError('required')">Specialization is required.</small>
               </div>
+
+              <!-- 7. Job Description (enabled only after specialization) -->
               <div class="col-12">
-                <label class="field-label">Job Description *</label>
-                <textarea class="field-input" rows="4" formControlName="description"
-                          placeholder="Describe responsibilities, requirements and expectations…" maxlength="2000"
+                <label class="field-label">
+                  Job Description *
+                  <small style="color:#9ab8b0;font-weight:400;">
+                    {{ f['specialization'].value ? '(min 10, max 100 characters)' : '— select specialization first' }}
+                  </small>
+                </label>
+                <textarea class="field-input" rows="3" formControlName="description"
+                          placeholder="Describe key responsibilities and requirements…" maxlength="100"
                           [class.input-err]="f['description'].touched && f['description'].invalid"></textarea>
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-start">
                   <div>
                     <small class="err" *ngIf="f['description'].touched && f['description'].hasError('required')">Description is required.</small>
-                    <small class="err" *ngIf="f['description'].touched && f['description'].hasError('minlength')">Minimum 20 characters.</small>
-                    <small class="err" *ngIf="f['description'].touched && f['description'].hasError('maxlength')">Maximum 2000 characters.</small>
+                    <small class="err" *ngIf="f['description'].touched && f['description'].hasError('minlength')">Minimum 10 characters required.</small>
+                    <small class="err" *ngIf="f['description'].touched && f['description'].hasError('maxlength')">Description must not exceed 100 characters.</small>
                   </div>
-                  <small class="text-muted" style="font-size:0.72rem;">{{ (jobForm.value.description || '').length }}/2000</small>
+                  <small class="text-muted" style="font-size:0.72rem;white-space:nowrap;">{{ descLen }}/100</small>
                 </div>
               </div>
+
             </div>
           </div>
 
@@ -192,6 +232,18 @@
         <!-- RIGHT COLUMN -->
         <div class="col-md-4">
 
+          <!-- Shift Details -->
+          <div class="form-card mb-4">
+            <div class="form-card-title"><i class="bi bi-clock me-2"></i>Shift Details</div>
+            <label class="field-label">Shift *</label>
+            <select class="field-input" formControlName="shiftDetails"
+                    [class.input-err]="f['shiftDetails'].touched && f['shiftDetails'].invalid">
+              <option value="">Select shift</option>
+              <option *ngFor="let s of SHIFT_OPTIONS" [value]="s">{{ s }}</option>
+            </select>
+            <small class="err" *ngIf="f['shiftDetails'].touched && f['shiftDetails'].hasError('required')">Please select a shift.</small>
+          </div>
+
           <!-- Priority & Deadline -->
           <div class="form-card mb-4">
             <div class="form-card-title"><i class="bi bi-flag me-2"></i>Priority & Deadline</div>
@@ -211,7 +263,8 @@
             </div>
             <div>
               <label class="field-label">Application Deadline *</label>
-              <input type="date" class="field-input" formControlName="deadline"
+              <input type="datetime-local" class="field-input" formControlName="deadline"
+                     [min]="minDeadline + 'T00:00'"
                      [class.input-err]="f['deadline'].touched && f['deadline'].invalid">
               <small class="err" *ngIf="f['deadline'].touched && f['deadline'].hasError('required')">Deadline is required.</small>
             </div>
@@ -223,7 +276,8 @@
               <span *ngIf="!isPosting"><i class="bi bi-send-fill me-2"></i>Post Job</span>
               <span *ngIf="isPosting"><span class="btn-spinner me-2"></span>Posting…</span>
             </button>
-            <button type="button" class="btn-cancel-sm w-100 mt-2" (click)="jobForm.reset({priority:'Normal'})">
+            <button type="button" class="btn-cancel-sm w-100 mt-2"
+                    (click)="jobForm.reset({priority:'Normal'}); jobTitles=[]; showOtherTitle=false; jobForm.get('description')?.disable()">
               Clear Form
             </button>
           </div>
@@ -260,6 +314,8 @@
               <span><i class="bi bi-building me-1"></i>{{ job.department }}</span>
               <span><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</span>
               <span><i class="bi bi-tag me-1"></i>{{ job.specialization }}</span>
+              <span *ngIf="job.openings != null"><i class="bi bi-people me-1"></i>{{ job.openings }} opening{{ job.openings !== 1 ? 's' : '' }} left</span>
+              <span><i class="bi bi-clock me-1"></i>{{ job.shiftDetails }}</span>
               <span><i class="bi bi-calendar3 me-1"></i>Deadline: {{ job.deadline | date:'mediumDate' }}</span>
             </div>
           </div>

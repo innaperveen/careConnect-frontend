@@ -19,6 +19,27 @@ export class AdminDashboardComponent implements OnInit {
   saveError = '';
   editForm!: FormGroup;
 
+  readonly ACCREDITATION_OPTIONS = [
+    'NABH Accredited', 'NABL Accredited', 'JCI Accredited',
+    'ISO 9001:2015', 'ISO 13485:2016', 'AHPI Certified',
+    'QAI Accredited', 'CRISIL Rated', 'Other'
+  ];
+
+  readonly DESIGNATION_OPTIONS = [
+    'Hospital Administrator', 'Medical Director', 'Chief Executive Officer (CEO)',
+    'Chief Operating Officer (COO)', 'Head of Nursing', 'Facility Manager',
+    'HR Manager', 'Operations Manager', 'Deputy Administrator', 'Other'
+  ];
+
+  readonly COUNTRY_CODES = [
+    { label: '🇮🇳 +91 India',     code: '+91' },
+    { label: '🇺🇸 +1  USA/Canada', code: '+1'  },
+    { label: '🇬🇧 +44 UK',         code: '+44' },
+    { label: '🇦🇺 +61 Australia',  code: '+61' },
+    { label: '🇦🇪 +971 UAE',       code: '+971'},
+    { label: '🇸🇬 +65 Singapore',  code: '+65' },
+  ];
+
   readonly SPECIALIZATION_OPTIONS = [
     'Cardiology', 'Neurology', 'Oncology', 'Orthopaedics', 'Paediatrics',
     'Gynaecology', 'Dermatology', 'Psychiatry', 'Ophthalmology', 'ENT',
@@ -55,17 +76,25 @@ export class AdminDashboardComponent implements OnInit {
           name:          data.orgName        || '—',
           type:          data.orgType        || '—',
           regNumber:     data.regNumber      || '—',
-          licenseNumber: data.regNumber      || '—',
+          licenseNumber: data.licenseNumber  || '—',
           contactPerson: data.contactPerson  || '—',
           designation:   data.designation   || '—',
           email:         this.auth.getUser()?.email || '—',
           phone:         data.phone         || '—',
-          altPhone:      '—',
-          address:       data.address       || '—',
-          city:          data.city          || '—',
-          state:         data.state         || '—',
-          pincode:       data.pincode       || '—',
-          website:       data.website       || '—',
+          addressLine1:  data.addressLine1   || data.address || '—',
+          addressLine2:  data.addressLine2   || '',
+          landmark:      data.landmark       || '',
+          country:       data.country        || 'India',
+          city:          data.city           || '—',
+          state:         data.state          || '—',
+          pincode:       data.pincode        || '—',
+          website:       data.website        || '—',
+          contact2FirstName:   data.contact2FirstName   || '',
+          contact2MiddleName:  data.contact2MiddleName  || '',
+          contact2LastName:    data.contact2LastName    || '',
+          contact2Email:       data.contact2Email       || '',
+          contact2Phone:       data.contact2Phone       || '',
+          contact2Designation: data.contact2Designation || '',
           status:          'Active',
           accreditation:   data.accreditation || '—',
           established:     data.createdAt ? new Date(data.createdAt).getFullYear().toString() : '—',
@@ -134,20 +163,41 @@ export class AdminDashboardComponent implements OnInit {
   // ── Edit profile ────────────────────────────────────────────────
 
   openEditForm(): void {
+    const v = (field: string) => this.org[field] === '—' ? '' : (this.org[field] || '');
     this.editForm = this.fb.group({
-      orgName:       [this.org.name,          [Validators.required, Validators.minLength(3)]],
-      orgType:       [this.org.type,          Validators.required],
-      contactPerson: [this.org.contactPerson, [Validators.required, Validators.minLength(3)]],
-      designation:   [this.org.designation,  [Validators.required, Validators.minLength(3)]],
-      phone:         [this.org.phone,         [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      address:       [this.org.address,       [Validators.required, Validators.minLength(5)]],
-      city:          [this.org.city,          Validators.required],
-      state:         [this.org.state,         Validators.required],
-      pincode:       [this.org.pincode,       [Validators.required, Validators.pattern('^[0-9]{6}$')]],
-      website:       [this.org.website === '—' ? '' : this.org.website],
-      bedCapacity:   [this.org.bedCapacity === '—' ? '' : this.org.bedCapacity,
-                      [Validators.min(1), Validators.max(10000)]],
-      accreditation: [this.org.accreditation === '—' ? '' : this.org.accreditation]
+      // ── Non-editable (locked) ──
+      orgName:       [{ value: this.org.name,    disabled: true }],
+      orgType:       [{ value: this.org.type,    disabled: true }],
+      licenseNumber: [{ value: v('licenseNumber'), disabled: true }],
+      addressLine1:  [{ value: v('addressLine1'),  disabled: true }],
+      addressLine2:  [{ value: this.org.addressLine2, disabled: true }],
+      landmark:      [{ value: this.org.landmark,     disabled: true }],
+      city:          [{ value: this.org.city,    disabled: true }],
+      state:         [{ value: this.org.state,   disabled: true }],
+      pincode:       [{ value: this.org.pincode, disabled: true }],
+
+      // ── Editable ──
+      contactPerson: [{ value: this.org.contactPerson, disabled: true }],
+      designation:   [{ value: this.org.designation,   disabled: true }],
+      phone:         [{ value: this.org.phone,          disabled: true }],
+      website:       [v('website'), [Validators.pattern('^(https?://)?(www\\.)?[a-zA-Z0-9][a-zA-Z0-9\\-\\.]*\\.(com|in)(/.*)?$')]],
+      bedCapacity:   [v('bedCapacity'),  [Validators.min(1), Validators.max(10000)]],
+      accreditation: [v('accreditation')],
+
+      // ── Second Contact (all optional) ──
+      c2FirstName:   [this.org.contact2FirstName,
+                      [Validators.minLength(3), Validators.maxLength(30), Validators.pattern('^[A-Za-z]+$')]],
+      c2MiddleName:  [this.org.contact2MiddleName,
+                      [Validators.maxLength(30), Validators.pattern('^[A-Za-z]*$')]],
+      c2LastName:    [this.org.contact2LastName,
+                      [Validators.minLength(3), Validators.maxLength(30), Validators.pattern('^[A-Za-z.]+$')]],
+      c2Designation: [this.org.contact2Designation],
+      c2Email:       [this.org.contact2Email,
+                      [Validators.email,
+                       Validators.pattern('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.(com|org|in)$')]],
+      c2PhoneCode:   [this.org.contact2Phone?.startsWith('+') ? this.org.contact2Phone.substring(0, this.org.contact2Phone.indexOf(' ') > 0 ? this.org.contact2Phone.indexOf(' ') : 3) : '+91'],
+      c2Phone:       [this.org.contact2Phone?.replace(/^\+\d+\s?/, '') || '',
+                      [Validators.pattern('^[0-9]{10}$')]],
     });
 
     // Pre-select existing specializations
@@ -172,31 +222,50 @@ export class AdminDashboardComponent implements OnInit {
     this.isSaving  = true;
     this.saveError = '';
 
-    const v = this.editForm.value;
+    const raw = this.editForm.getRawValue();
     const payload = {
-      ...v,
-      bedCapacity:     v.bedCapacity ? Number(v.bedCapacity) : null,
-      specializations: Array.from(this.selectedSpecs).join(',')
+      orgName:             raw.orgName,
+      orgType:             raw.orgType,
+      licenseNumber:       raw.licenseNumber,
+      contactPerson:       raw.contactPerson,
+      designation:         raw.designation,
+      phone:               raw.phone,
+      addressLine1:        raw.addressLine1,
+      addressLine2:        raw.addressLine2,
+      landmark:            raw.landmark,
+      country:             'India',
+      city:                raw.city,
+      state:               raw.state,
+      pincode:             raw.pincode,
+      website:             raw.website       || '',
+      bedCapacity:         raw.bedCapacity   ? Number(raw.bedCapacity) : null,
+      accreditation:       raw.accreditation || '',
+      specializations:     Array.from(this.selectedSpecs).join(','),
+      contact2FirstName:   raw.c2FirstName   || '',
+      contact2MiddleName:  raw.c2MiddleName  || '',
+      contact2LastName:    raw.c2LastName    || '',
+      contact2Designation: raw.c2Designation || '',
+      contact2Email:       raw.c2Email       || '',
+      contact2Phone:       raw.c2Phone ? (raw.c2PhoneCode || '+91') + raw.c2Phone : '',
     };
 
     this.adminService.updateOrgProfile(userId, payload).subscribe({
       next: () => {
-        // Refresh org object with updated values
         this.org = {
           ...this.org,
-          name:            v.orgName,
-          type:            v.orgType,
-          contactPerson:   v.contactPerson,
-          designation:     v.designation,
-          phone:           v.phone,
-          address:         v.address,
-          city:            v.city,
-          state:           v.state,
-          pincode:         v.pincode,
-          website:         v.website || '—',
-          bedCapacity:     v.bedCapacity || '—',
-          accreditation:   v.accreditation || '—',
-          specializations: Array.from(this.selectedSpecs)
+          contactPerson:       raw.contactPerson,
+          designation:         raw.designation,
+          phone:               raw.phone,
+          website:             raw.website      || '—',
+          bedCapacity:         raw.bedCapacity  || '—',
+          accreditation:       raw.accreditation || '—',
+          specializations:     Array.from(this.selectedSpecs),
+          contact2FirstName:   raw.c2FirstName   || '',
+          contact2MiddleName:  raw.c2MiddleName  || '',
+          contact2LastName:    raw.c2LastName    || '',
+          contact2Designation: raw.c2Designation || '',
+          contact2Email:       raw.c2Email || '',
+          contact2Phone:       raw.c2Phone ? (raw.c2PhoneCode || '+91') + raw.c2Phone : '',
         };
         this.isSaving = false;
         this.editOpen = false;

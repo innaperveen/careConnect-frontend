@@ -32,11 +32,15 @@ export class ComplianceComponent implements OnInit {
     private auth: AuthService
   ) {
     this.complianceForm = this.fb.group({
-      nurseName:   ['', Validators.required],
-      requirement: ['', Validators.required],
-      dueDate:     ['', Validators.required],
-      status:      ['PENDING', Validators.required],
-      notes:       ['']
+      nurseFirstName:  ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30),
+                             Validators.pattern('^[A-Za-z]+$')]],
+      nurseMiddleName: ['', [Validators.maxLength(30), Validators.pattern('^[A-Za-z]*$')]],
+      nurseLastName:   ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30),
+                             Validators.pattern('^[A-Za-z.]+$')]],
+      requirement:     ['', Validators.required],
+      dueDate:         ['', Validators.required],
+      status:          ['PENDING', Validators.required],
+      notes:           ['', Validators.maxLength(50)]
     });
   }
 
@@ -69,8 +73,13 @@ export class ComplianceComponent implements OnInit {
     this.isSaving = true;
     this.errorMsg = '';
     const v = this.complianceForm.value;
+    const nurseName = [v.nurseFirstName.trim(),
+                       v.nurseMiddleName?.trim() || '',
+                       v.nurseLastName.trim()]
+                      .filter(Boolean).join(' ');
+    const payload = { ...v, nurseName };
 
-    this.adminService.createCompliance(this.orgUserId, v).subscribe({
+    this.adminService.createCompliance(this.orgUserId, payload).subscribe({
       next: (created) => {
         this.records.push(created);
         this.formSaved = true;

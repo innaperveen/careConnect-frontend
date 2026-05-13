@@ -132,10 +132,12 @@
 
 .edit-panel-body { padding: 1.5rem; flex: 1; }
 
-.edit-section-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #1aa37a; margin: 1rem 0 0.75rem; padding-bottom: 0.4rem; border-bottom: 1.5px solid #e2ece8; }
+.edit-section-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #1aa37a; margin: 1rem 0 0.75rem; padding-bottom: 0.4rem; border-bottom: 1.5px solid #e2ece8; display: flex; align-items: center; justify-content: space-between; }
+.lock-note { font-size: 0.68rem; font-weight: 600; color: #9ab8b0; text-transform: none; letter-spacing: 0; background: #f0f5f3; padding: 2px 8px; border-radius: 10px; }
 .edit-label { font-size: 0.78rem; font-weight: 600; color: #4e6e68; display: block; margin-bottom: 4px; }
 .edit-input { width: 100%; padding: 0.6rem 0.9rem; border-radius: 12px; border: 1.5px solid #e2ece8; background: #fafffe; font-size: 0.88rem; font-family: inherit; outline: none; transition: all 0.2s; }
 .edit-input:focus { border-color: #1aa37a; box-shadow: 0 0 0 3px rgba(26,163,122,0.1); }
+.edit-input:disabled, .edit-input[readonly] { background: #f4f8f6; color: #8aaa9e; border-color: #e8f0ec; cursor: not-allowed; }
 .input-err { border-color: #e05252 !important; }
 .err { color: #e05252; font-size: 11.5px; font-weight: 500; display: block; margin-top: 3px; }
 

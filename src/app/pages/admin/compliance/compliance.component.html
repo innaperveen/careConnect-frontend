@@ -104,11 +104,33 @@
       <div class="form-panel-title"><i class="bi bi-plus-circle me-2"></i>Add Compliance Record</div>
       <form [formGroup]="complianceForm" (ngSubmit)="onSave()">
         <div class="row g-3">
-          <div class="col-md-6">
-            <label class="field-label">Nurse Name *</label>
-            <input class="field-input" formControlName="nurseName" placeholder="Nurse full name"
-                   [class.input-err]="complianceForm.get('nurseName')?.touched && complianceForm.get('nurseName')?.invalid">
-            <small class="err" *ngIf="complianceForm.get('nurseName')?.touched && complianceForm.get('nurseName')?.hasError('required')">Required.</small>
+          <!-- First Name -->
+          <div class="col-md-4">
+            <label class="field-label">First Name *</label>
+            <input class="field-input" formControlName="nurseFirstName" placeholder="First name" maxlength="30"
+                   [class.input-err]="complianceForm.get('nurseFirstName')?.touched && complianceForm.get('nurseFirstName')?.invalid">
+            <small class="err" *ngIf="complianceForm.get('nurseFirstName')?.touched && complianceForm.get('nurseFirstName')?.hasError('required')">First name is required.</small>
+            <small class="err" *ngIf="complianceForm.get('nurseFirstName')?.touched && complianceForm.get('nurseFirstName')?.hasError('minlength')">Minimum 3 letters required.</small>
+            <small class="err" *ngIf="complianceForm.get('nurseFirstName')?.touched && complianceForm.get('nurseFirstName')?.hasError('maxlength')">First name must not exceed 30 characters.</small>
+            <small class="err" *ngIf="complianceForm.get('nurseFirstName')?.touched && complianceForm.get('nurseFirstName')?.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
+          </div>
+          <!-- Middle Name -->
+          <div class="col-md-4">
+            <label class="field-label">Middle Name <span style="color:#9ab8b0;font-weight:400;">(optional)</span></label>
+            <input class="field-input" formControlName="nurseMiddleName" placeholder="Middle name" maxlength="30"
+                   [class.input-err]="complianceForm.get('nurseMiddleName')?.touched && complianceForm.get('nurseMiddleName')?.invalid">
+            <small class="err" *ngIf="complianceForm.get('nurseMiddleName')?.touched && complianceForm.get('nurseMiddleName')?.hasError('maxlength')">Middle name must not exceed 30 characters.</small>
+            <small class="err" *ngIf="complianceForm.get('nurseMiddleName')?.touched && complianceForm.get('nurseMiddleName')?.hasError('pattern')">Only letters allowed.</small>
+          </div>
+          <!-- Last Name -->
+          <div class="col-md-4">
+            <label class="field-label">Last Name *</label>
+            <input class="field-input" formControlName="nurseLastName" placeholder="Last name" maxlength="30"
+                   [class.input-err]="complianceForm.get('nurseLastName')?.touched && complianceForm.get('nurseLastName')?.invalid">
+            <small class="err" *ngIf="complianceForm.get('nurseLastName')?.touched && complianceForm.get('nurseLastName')?.hasError('required')">Last name is required.</small>
+            <small class="err" *ngIf="complianceForm.get('nurseLastName')?.touched && complianceForm.get('nurseLastName')?.hasError('minlength')">Minimum 3 letters required.</small>
+            <small class="err" *ngIf="complianceForm.get('nurseLastName')?.touched && complianceForm.get('nurseLastName')?.hasError('maxlength')">Last name must not exceed 30 characters.</small>
+            <small class="err" *ngIf="complianceForm.get('nurseLastName')?.touched && complianceForm.get('nurseLastName')?.hasError('pattern')">Only letters and dot allowed. No numbers.</small>
           </div>
           <div class="col-md-6">
             <label class="field-label">Requirement *</label>
@@ -140,8 +162,10 @@
             </select>
           </div>
           <div class="col-md-4">
-            <label class="field-label">Notes</label>
-            <input class="field-input" formControlName="notes" placeholder="Optional notes">
+            <label class="field-label">Notes <span style="color:#9ab8b0;font-weight:400;">(optional)</span></label>
+            <input class="field-input" formControlName="notes" placeholder="Optional notes" maxlength="50"
+                   [class.input-err]="complianceForm.get('notes')?.touched && complianceForm.get('notes')?.invalid">
+            <small class="err" *ngIf="complianceForm.get('notes')?.touched && complianceForm.get('notes')?.hasError('maxlength')">Notes must not exceed 50 characters.</small>
           </div>
         </div>
         <div class="d-flex gap-2 mt-3">
