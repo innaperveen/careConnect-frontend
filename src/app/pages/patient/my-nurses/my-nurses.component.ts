@@ -200,23 +200,35 @@ export class MyNursesComponent implements OnInit, OnDestroy, AfterViewChecked {
 
     if (!this.shiftDate) { this.shiftDateError = 'Please select a shift date.'; return; }
     if (this.shiftDate > this.today) {
-      this.shiftDateError = 'Shift date cannot be in the future.';
-      return;
+      this.shiftDateError = 'Shift date cannot be in the future.'; return;
     }
 
     let negotiatedRateVal: number | undefined;
-    if (this.wantsToNegotiate) {
+    let successMsg = '';
+
+    if (this.agreedRate <= 0) {
+      // Direct booking — no pre-agreed rate; patient MUST enter one
       const n = parseFloat(this.negotiatedRate);
       if (!this.negotiatedRate || isNaN(n) || n < 1) {
-        this.negotiateError = 'Please enter a valid proposed rate (min ₹1).';
-        return;
+        this.negotiateError = 'Please enter a valid rate (min ₹1).'; return;
       }
-      if (n === this.agreedRate) {
-        // Same as original → no negotiation needed
-        negotiatedRateVal = undefined;
-      } else {
-        negotiatedRateVal = n;
+      negotiatedRateVal = n;
+      successMsg = `Shift marked at ₹${n}. Waiting for nurse confirmation.`;
+
+    } else if (this.wantsToNegotiate) {
+      // Bid-based — patient wants a different rate
+      const n = parseFloat(this.negotiatedRate);
+      if (!this.negotiatedRate || isNaN(n) || n < 1) {
+        this.negotiateError = 'Please enter a valid proposed rate (min ₹1).'; return;
       }
+      negotiatedRateVal = n === this.agreedRate ? undefined : n;
+      successMsg = negotiatedRateVal
+        ? `Negotiation sent (₹${n}). Nurse will accept or keep ₹${this.agreedRate}.`
+        : `Shift marked at ₹${this.agreedRate}. Waiting for nurse confirmation.`;
+
+    } else {
+      // Bid-based — no negotiation; use agreed rate
+      successMsg = `Shift marked at ₹${this.agreedRate}. Waiting for nurse confirmation.`;
     }
 
     this.isMarkingShift = true;
@@ -227,11 +239,8 @@ export class MyNursesComponent implements OnInit, OnDestroy, AfterViewChecked {
       notes:          this.shiftNotes
     }).subscribe({
       next: (newShift) => {
-        this.isMarkingShift = false;
-        const msg = negotiatedRateVal
-          ? `Shift marked with negotiated rate ₹${negotiatedRateVal}. Nurse will accept or keep original ₹${this.agreedRate}.`
-          : 'Shift marked at ₹' + this.agreedRate + '. Waiting for nurse confirmation.';
-        this.shiftSuccess = msg;
+        this.isMarkingShift  = false;
+        this.shiftSuccess    = successMsg;
         if (!this.shiftsMap[this.shiftModal.id]) this.shiftsMap[this.shiftModal.id] = [];
         this.shiftsMap[this.shiftModal.id].unshift(newShift);
         setTimeout(() => this.closeShiftModal(), 2500);

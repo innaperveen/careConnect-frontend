@@ -223,87 +223,252 @@
 
       <!-- ═══════════════════ BANK DETAILS ══════════════════════════════ -->
       <div *ngIf="activeTab==='bank'">
-        <div class="pay-card">
-          <div class="bank-header mb-4">
-            <i class="bi bi-shield-lock-fill me-2 text-success"></i>
-            <strong>Payment Details</strong>
-            <p class="text-muted mb-0" style="font-size:0.85rem;margin-top:4px;">
-              Patients and organizations will use these details to transfer your payment.
-            </p>
+
+        <!-- Page header — full width -->
+        <div class="bk-page-hdr mb-4">
+          <div class="bk-page-hdr-left">
+            <div class="bk-page-icon"><i class="bi bi-shield-lock-fill"></i></div>
+            <div>
+              <h5 class="bk-page-title">Payment Details</h5>
+              <p class="bk-page-sub">Add your UPI or bank account — patients and organizations will use this to pay you.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-column layout: form (left) + info panel (right) -->
+        <div class="row g-4">
+
+          <!-- ── LEFT: Form ──────────────────────────────────────── -->
+          <div class="col-lg-7 col-xl-8">
+            <div class="pay-card h-100">
+              <form [formGroup]="bankForm" (ngSubmit)="saveBankDetails()">
+
+                <!-- Mode toggle -->
+                <div class="mode-label mb-2">Preferred Payment Mode <span class="req-star">*</span></div>
+                <div class="mode-toggle mb-4">
+                  <label class="mode-pill" [class.mode-active]="preferredMode==='UPI'">
+                    <input type="radio" formControlName="preferredPaymentMode" value="UPI" style="display:none;">
+                    <i class="bi bi-phone-fill bk-mode-icon"></i>
+                    <span>
+                      <strong>UPI</strong>
+                      <small class="d-block bk-mode-sub">Fast, instant transfer</small>
+                    </span>
+                  </label>
+                  <label class="mode-pill" [class.mode-active]="preferredMode==='BANK_TRANSFER'">
+                    <input type="radio" formControlName="preferredPaymentMode" value="BANK_TRANSFER" style="display:none;">
+                    <i class="bi bi-bank2 bk-mode-icon"></i>
+                    <span>
+                      <strong>Bank Transfer</strong>
+                      <small class="d-block bk-mode-sub">NEFT / IMPS / RTGS</small>
+                    </span>
+                  </label>
+                </div>
+
+                <!-- ── UPI ──────────────────────────────── -->
+                <div *ngIf="preferredMode==='UPI'">
+                  <label class="field-label">UPI ID <span class="req-star">*</span></label>
+                  <div class="input-with-icon mb-1">
+                    <i class="bi bi-at input-icon"></i>
+                    <input class="field-input field-input-icon" formControlName="upiId"
+                           placeholder="yourname@upi  or  9876543210@ybl"
+                           [class.input-error]="f['upiId'].invalid && f['upiId'].touched">
+                  </div>
+                  <small class="err" *ngIf="f['upiId'].touched && f['upiId'].hasError('required')">UPI ID is required.</small>
+                  <div class="info-note mt-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Accepted formats: <code>name@upi</code>, <code>number@ybl</code>, <code>number@paytm</code>,
+                    <code>number@okaxis</code> etc.
+                  </div>
+                </div>
+
+                <!-- ── Bank Transfer ────────────────────── -->
+                <div *ngIf="preferredMode==='BANK_TRANSFER'">
+
+                  <!-- Step 1 — Bank Name -->
+                  <div class="bk-step-row mb-4">
+                    <div class="bk-step-badge">1</div>
+                    <div class="bk-step-content">
+                      <label class="field-label">Select Your Bank <span class="req-star">*</span></label>
+                      <select class="field-input" formControlName="bankName"
+                              [class.input-error]="f['bankName'].invalid && f['bankName'].touched">
+                        <option value="">— Choose your bank —</option>
+                        <option *ngFor="let bank of BANK_LIST" [value]="bank">{{ bank }}</option>
+                      </select>
+                      <small class="err" *ngIf="f['bankName'].touched && f['bankName'].hasError('required')">
+                        Please select your bank.
+                      </small>
+                    </div>
+                  </div>
+
+                  <!-- Steps 2 & 3 — Account + IFSC -->
+                  <div class="bank-steps-locked" [class.bank-steps-unlocked]="bankFieldsEnabled">
+                    <div class="locked-overlay" *ngIf="!bankFieldsEnabled">
+                      <i class="bi bi-lock-fill me-2"></i>Select a bank above to enter account details
+                    </div>
+
+                    <div class="row g-3">
+                      <!-- Account Number -->
+                      <div class="col-md-6">
+                        <div class="bk-step-row">
+                          <div class="bk-step-badge" [class.step-active]="bankFieldsEnabled">2</div>
+                          <div class="bk-step-content">
+                            <label class="field-label">
+                              Account Number <span class="req-star">*</span>
+                              <span class="field-hint">9 – 18 digits</span>
+                            </label>
+                            <div class="input-with-counter">
+                              <input class="field-input" formControlName="bankAccountNumber"
+                                     placeholder="e.g. 12345678901"
+                                     inputmode="numeric"
+                                     maxlength="18"
+                                     (keydown)="blockNonDigit($event)"
+                                     [class.input-error]="f['bankAccountNumber'].invalid && f['bankAccountNumber'].touched">
+                              <span class="char-counter"
+                                    [class.counter-ok]="accLen >= 9"
+                                    [class.counter-err]="accLen > 0 && accLen < 9">
+                                {{ accLen }}/18
+                              </span>
+                            </div>
+                            <small class="err" *ngIf="f['bankAccountNumber'].touched && f['bankAccountNumber'].hasError('required')">Account number is required.</small>
+                            <small class="err" *ngIf="f['bankAccountNumber'].touched && f['bankAccountNumber'].hasError('pattern')">Must be 9–18 digits, no letters or special characters.</small>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- IFSC Code -->
+                      <div class="col-md-6">
+                        <div class="bk-step-row">
+                          <div class="bk-step-badge" [class.step-active]="bankFieldsEnabled">3</div>
+                          <div class="bk-step-content">
+                            <label class="field-label">
+                              IFSC Code <span class="req-star">*</span>
+                              <span class="field-hint">11 chars</span>
+                            </label>
+                            <div class="input-with-counter">
+                              <input class="field-input ifsc-input" formControlName="bankIfscCode"
+                                     placeholder="e.g. SBIN0001234"
+                                     maxlength="11"
+                                     (input)="uppercaseIfsc()"
+                                     [class.input-error]="f['bankIfscCode'].invalid && f['bankIfscCode'].touched">
+                              <span class="char-counter" [class.counter-ok]="ifscLen === 11">
+                                {{ ifscLen }}/11
+                              </span>
+                            </div>
+                            <small class="err" *ngIf="f['bankIfscCode'].touched && f['bankIfscCode'].hasError('required')">IFSC code is required.</small>
+                            <small class="err" *ngIf="f['bankIfscCode'].touched && f['bankIfscCode'].hasError('pattern')">Invalid IFSC. Format: 4 letters + 0 + 6 alphanumeric.</small>
+
+                            <!-- IFSC visual breakdown -->
+                            <div class="ifsc-explainer mt-2" *ngIf="ifscLen > 0">
+                              <span class="ifsc-part bank-part">{{ (f['bankIfscCode'].value || '    ').slice(0,4) }}</span>
+                              <span class="ifsc-sep">·</span>
+                              <span class="ifsc-part zero-part">{{ (f['bankIfscCode'].value || '     ')[4] || '_' }}</span>
+                              <span class="ifsc-sep">·</span>
+                              <span class="ifsc-part branch-part">{{ (f['bankIfscCode'].value || '').slice(5) || '______' }}</span>
+                              <small class="text-muted ms-2" style="font-size:0.7rem;">Bank · 0 · Branch</small>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div><!-- /bank-steps-locked -->
+
+                  <div class="info-note mt-4">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Monthly salary will be transferred to this account via NEFT/IMPS.
+                    Patients can also pay via bank transfer.
+                  </div>
+                </div>
+
+                <!-- Alerts -->
+                <div class="alert-success mt-4" *ngIf="bankSuccess">
+                  <i class="bi bi-check-circle-fill me-2"></i>{{ bankSuccess }}
+                </div>
+                <div class="alert-error mt-4" *ngIf="bankError">
+                  <i class="bi bi-x-circle-fill me-2"></i>{{ bankError }}
+                </div>
+
+                <button type="submit" class="btn-save mt-4" [disabled]="isSavingBank">
+                  <span *ngIf="!isSavingBank"><i class="bi bi-floppy-fill me-2"></i>Save Payment Details</span>
+                  <span *ngIf="isSavingBank"><span class="btn-spinner me-2"></span>Saving…</span>
+                </button>
+
+              </form>
+            </div>
           </div>
 
-          <form [formGroup]="bankForm" (ngSubmit)="saveBankDetails()">
+          <!-- ── RIGHT: Info panel ───────────────────────────────── -->
+          <div class="col-lg-5 col-xl-4">
 
-            <!-- Mode toggle -->
-            <div class="mb-4">
-              <label class="field-label">Preferred Payment Mode <span class="req-star">*</span></label>
-              <div class="mode-toggle">
-                <label class="mode-pill" [class.mode-active]="preferredMode==='UPI'">
-                  <input type="radio" formControlName="preferredPaymentMode" value="UPI">
-                  <i class="bi bi-phone me-1"></i> UPI
-                </label>
-                <label class="mode-pill" [class.mode-active]="preferredMode==='BANK_TRANSFER'">
-                  <input type="radio" formControlName="preferredPaymentMode" value="BANK_TRANSFER">
-                  <i class="bi bi-bank me-1"></i> Bank Transfer
-                </label>
+            <!-- Security card -->
+            <div class="info-panel-card mb-3">
+              <div class="ipc-icon" style="background:#f0fdf8;color:#1aa37a;"><i class="bi bi-shield-check"></i></div>
+              <div>
+                <div class="ipc-title">Your details are safe</div>
+                <div class="ipc-body">Payment details are only shown to patients/organizations who have confirmed appointments with you. They are never shared publicly.</div>
               </div>
             </div>
 
-            <!-- UPI section -->
-            <div *ngIf="preferredMode==='UPI'" class="upi-section mb-3">
-              <label class="field-label">UPI ID <span class="req-star">*</span></label>
-              <input class="field-input" formControlName="upiId" placeholder="yourname@upi"
-                     [class.input-error]="f['upiId'].invalid && f['upiId'].touched">
-              <small class="err" *ngIf="f['upiId'].touched && f['upiId'].hasError('required')">UPI ID is required.</small>
-              <div class="info-note mt-2">
-                <i class="bi bi-info-circle me-1"></i>
-                Patients will see this UPI ID when paying you for home visits.
-              </div>
-            </div>
+            <!-- How it works -->
+            <div class="pay-card">
+              <div class="ipc-section-title mb-3"><i class="bi bi-question-circle me-2"></i>How payments work</div>
 
-            <!-- Bank Transfer section -->
-            <div *ngIf="preferredMode==='BANK_TRANSFER'" class="bank-section">
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <label class="field-label">Bank Account Number <span class="req-star">*</span></label>
-                  <input class="field-input" formControlName="bankAccountNumber" placeholder="Enter account number"
-                         [class.input-error]="f['bankAccountNumber'].invalid && f['bankAccountNumber'].touched">
-                  <small class="err" *ngIf="f['bankAccountNumber'].touched && f['bankAccountNumber'].hasError('required')">Account number is required.</small>
+              <!-- UPI flow -->
+              <div *ngIf="preferredMode==='UPI'">
+                <div class="how-step">
+                  <div class="how-num">1</div>
+                  <div>Patient completes a shift payment request</div>
                 </div>
-                <div class="col-md-6">
-                  <label class="field-label">IFSC Code <span class="req-star">*</span></label>
-                  <input class="field-input" formControlName="bankIfscCode" placeholder="e.g. HDFC0001234"
-                         style="text-transform:uppercase"
-                         [class.input-error]="f['bankIfscCode'].invalid && f['bankIfscCode'].touched">
-                  <small class="err" *ngIf="f['bankIfscCode'].touched && f['bankIfscCode'].hasError('required')">IFSC code is required.</small>
-                  <small class="err" *ngIf="f['bankIfscCode'].touched && f['bankIfscCode'].hasError('pattern')">Enter a valid IFSC code (e.g. HDFC0001234).</small>
+                <div class="how-step">
+                  <div class="how-num">2</div>
+                  <div>They see your UPI ID and transfer the amount directly</div>
                 </div>
-                <div class="col-12">
-                  <label class="field-label">Bank Name <span class="req-star">*</span></label>
-                  <input class="field-input" formControlName="bankName" placeholder="e.g. HDFC Bank"
-                         [class.input-error]="f['bankName'].invalid && f['bankName'].touched">
-                  <small class="err" *ngIf="f['bankName'].touched && f['bankName'].hasError('required')">Bank name is required.</small>
+                <div class="how-step">
+                  <div class="how-num">3</div>
+                  <div>They mark it as paid — you get notified</div>
+                </div>
+                <div class="how-step">
+                  <div class="how-num">4</div>
+                  <div>Payment record appears in your <strong>Patient Payments</strong> tab</div>
                 </div>
               </div>
-              <div class="info-note mt-3">
-                <i class="bi bi-info-circle me-1"></i>
-                Organizations will transfer your monthly salary to this account. Patients can also use bank transfer.
+
+              <!-- Bank flow -->
+              <div *ngIf="preferredMode==='BANK_TRANSFER'">
+                <div class="how-step">
+                  <div class="how-num">1</div>
+                  <div>Patient/organization initiates bank transfer to your account</div>
+                </div>
+                <div class="how-step">
+                  <div class="how-num">2</div>
+                  <div>Use NEFT (same day) or IMPS (instant) based on their bank</div>
+                </div>
+                <div class="how-step">
+                  <div class="how-num">3</div>
+                  <div>Organization processes your salary — slip appears in <strong>Salary</strong> tab</div>
+                </div>
+                <div class="how-step">
+                  <div class="how-num">4</div>
+                  <div>Track all payments in your <strong>Earnings</strong> tab</div>
+                </div>
+              </div>
+
+              <!-- Live preview of entered details -->
+              <div class="detail-preview mt-4" *ngIf="preferredMode==='UPI' && f['upiId'].value">
+                <div class="dp-label">Your UPI ID</div>
+                <div class="dp-value">{{ f['upiId'].value }}</div>
+              </div>
+              <div class="detail-preview mt-4" *ngIf="preferredMode==='BANK_TRANSFER' && bankFieldsEnabled">
+                <div class="dp-label">Bank</div>
+                <div class="dp-value">{{ f['bankName'].value || '—' }}</div>
+                <div class="dp-label mt-2">Account</div>
+                <div class="dp-value">{{ f['bankAccountNumber'].value || '—' }}</div>
+                <div class="dp-label mt-2">IFSC</div>
+                <div class="dp-value dp-mono">{{ f['bankIfscCode'].value || '—' }}</div>
               </div>
             </div>
 
-            <!-- Success / Error -->
-            <div class="alert-success mt-3" *ngIf="bankSuccess">
-              <i class="bi bi-check-circle-fill me-2"></i>{{ bankSuccess }}
-            </div>
-            <div class="alert-error mt-3" *ngIf="bankError">
-              <i class="bi bi-x-circle-fill me-2"></i>{{ bankError }}
-            </div>
-
-            <button type="submit" class="btn-save mt-4" [disabled]="isSavingBank">
-              <span *ngIf="!isSavingBank"><i class="bi bi-floppy-fill me-2"></i>Save Details</span>
-              <span *ngIf="isSavingBank"><span class="btn-spinner me-2"></span>Saving…</span>
-            </button>
-          </form>
+          </div>
         </div>
       </div>
 

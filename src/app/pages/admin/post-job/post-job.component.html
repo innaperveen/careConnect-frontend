@@ -72,6 +72,10 @@
         <i class="bi bi-briefcase me-1"></i> My Jobs
         <span class="pj-tab-count" *ngIf="myJobs.length > 0">{{ myJobs.length }}</span>
       </button>
+      <button class="pj-tab" [class.pj-tab-active]="activeTab === 'salary'"
+              (click)="activeTab = 'salary'; loadSalaryData()">
+        <i class="bi bi-cash-coin me-1"></i> Nurse Salary
+      </button>
     </div>
 
     <!-- SUCCESS / ERROR TOAST -->
@@ -375,6 +379,165 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- ===== SALARY TAB ===== -->
+    <div *ngIf="activeTab === 'salary'">
+
+      <div class="row g-4">
+
+        <!-- LEFT: Hired nurses list -->
+        <div class="col-md-5">
+          <div class="form-card">
+            <div class="form-card-title"><i class="bi bi-people-fill me-2"></i>Hired Nurses</div>
+
+            <div *ngIf="isLoadingSalary" class="text-center py-3">
+              <div class="spinner-border spinner-border-sm text-success"></div>
+              <span class="ms-2 text-muted small">Loading…</span>
+            </div>
+
+            <div *ngIf="!isLoadingSalary && hiredNurses.length === 0" class="text-center py-4 text-muted small">
+              <i class="bi bi-person-x fs-2 d-block mb-2" style="color:#c8ddd8;"></i>
+              No approved nurses yet. Approve applications first.
+            </div>
+
+            <div *ngFor="let nurse of hiredNurses" class="salary-nurse-card"
+                 [class.salary-nurse-selected]="selectedNurse?.nurseId === nurse.nurseId"
+                 (click)="selectNurseForSalary(nurse)">
+              <div class="sn-avatar">{{ nurse.nurseName?.charAt(0)?.toUpperCase() || 'N' }}</div>
+              <div class="sn-info">
+                <div class="sn-name">{{ nurse.nurseName }}</div>
+                <div class="sn-meta">{{ nurse.nurseSpecialization || 'General Nursing' }}</div>
+                <div class="sn-job">{{ nurse.jobTitle }}</div>
+                <!-- Bank details indicator -->
+                <div class="sn-bank" *ngIf="nurse.nurseBankAccount">
+                  <i class="bi bi-bank me-1"></i>{{ nurse.nurseBankAccount | slice:0:4 }}****
+                  <span *ngIf="nurse.nurseIfsc"> · {{ nurse.nurseIfsc }}</span>
+                </div>
+                <div class="sn-no-bank" *ngIf="!nurse.nurseBankAccount">
+                  <i class="bi bi-exclamation-circle me-1"></i>No bank details added
+                </div>
+              </div>
+              <i class="bi bi-chevron-right sn-arrow"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Salary form + History -->
+        <div class="col-md-7">
+
+          <!-- Salary Form -->
+          <div class="form-card mb-4" *ngIf="selectedNurse">
+            <div class="form-card-title">
+              <i class="bi bi-currency-rupee me-2"></i>
+              Process Salary — {{ selectedNurse.nurseName }}
+            </div>
+
+            <!-- Nurse bank details reminder -->
+            <div class="bank-info-box mb-3" *ngIf="selectedNurse.nurseBankAccount">
+              <i class="bi bi-bank me-2"></i>
+              Transfer to: <strong>{{ selectedNurse.nurseBankAccount }}</strong>
+              <span *ngIf="selectedNurse.nurseIfsc"> · {{ selectedNurse.nurseIfsc }}</span>
+              <span *ngIf="selectedNurse.nurseBankName"> · {{ selectedNurse.nurseBankName }}</span>
+            </div>
+            <div class="warn-info-box mb-3" *ngIf="!selectedNurse.nurseBankAccount">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              Nurse hasn't added bank details yet. Ask them to update from their Payments page.
+            </div>
+
+            <!-- Month selector -->
+            <div class="row g-3 mb-3">
+              <div class="col-12">
+                <label class="field-label">Salary Month *</label>
+                <select class="field-input" [(ngModel)]="salaryMonth">
+                  <option value="">Select month</option>
+                  <option *ngFor="let m of MONTH_OPTIONS" [value]="m">{{ m }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Salary components -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="field-label">Base Salary (₹) *</label>
+                <input type="number" class="field-input" [(ngModel)]="baseSalary"
+                       placeholder="e.g. 30000" min="1000">
+              </div>
+              <div class="col-md-6">
+                <label class="field-label">HRA (₹) <span style="color:#9ab8b0;font-size:0.78rem;">(optional)</span></label>
+                <input type="number" class="field-input" [(ngModel)]="hra"
+                       placeholder="e.g. 5000">
+              </div>
+              <div class="col-md-6">
+                <label class="field-label">Travel Allowance (₹) <span style="color:#9ab8b0;font-size:0.78rem;">(optional)</span></label>
+                <input type="number" class="field-input" [(ngModel)]="travelAllowance"
+                       placeholder="e.g. 1000">
+              </div>
+              <div class="col-md-6">
+                <label class="field-label">Other Allowances (₹) <span style="color:#9ab8b0;font-size:0.78rem;">(optional)</span></label>
+                <input type="number" class="field-input" [(ngModel)]="otherAllowances"
+                       placeholder="e.g. 500">
+              </div>
+            </div>
+
+            <!-- Live salary preview -->
+            <div class="salary-preview mb-3" *ngIf="grossPreview > 0">
+              <div class="sp-title">Salary Slip Preview</div>
+              <div class="sp-row"><span>Gross Salary</span><span class="sp-val">{{ formatSalary(grossPreview) }}</span></div>
+              <div class="sp-divider"></div>
+              <div class="sp-row sp-deduct"><span>TDS (10%)</span><span>– {{ formatSalary(tdsPreview) }}</span></div>
+              <div class="sp-row sp-deduct"><span>PF (12% of base)</span><span>– {{ formatSalary(pfPreview) }}</span></div>
+              <div class="sp-row sp-deduct"><span>ESI (0.75%)</span><span>– {{ formatSalary(esiPreview) }}</span></div>
+              <div class="sp-divider"></div>
+              <div class="sp-row sp-net"><span>Net Pay</span><span class="sp-net-val">{{ formatSalary(netPreview) }}</span></div>
+            </div>
+
+            <!-- Success / Error -->
+            <div class="toast-success mb-3" *ngIf="salarySuccessMsg">
+              <i class="bi bi-check-circle-fill me-2"></i>{{ salarySuccessMsg }}
+            </div>
+            <div class="toast-error mb-3" *ngIf="salaryErrorMsg">
+              <i class="bi bi-x-circle-fill me-2"></i>{{ salaryErrorMsg }}
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn-post" (click)="processSalary()" [disabled]="isProcessingSalary">
+                <span *ngIf="!isProcessingSalary"><i class="bi bi-send-fill me-2"></i>Process Salary — via Bank Transfer</span>
+                <span *ngIf="isProcessingSalary"><span class="btn-spinner me-2"></span>Processing…</span>
+              </button>
+              <button class="btn-cancel-sm" (click)="selectedNurse = null">Cancel</button>
+            </div>
+          </div>
+
+          <!-- No nurse selected placeholder -->
+          <div class="form-card text-center py-5 text-muted" *ngIf="!selectedNurse">
+            <i class="bi bi-arrow-left fs-2 d-block mb-2" style="color:#c8ddd8;"></i>
+            <p class="small">Select a nurse from the list to process their salary.</p>
+          </div>
+
+          <!-- Salary History -->
+          <div class="form-card">
+            <div class="form-card-title"><i class="bi bi-clock-history me-2"></i>Salary History</div>
+
+            <div *ngIf="salaryHistory.length === 0" class="text-center py-3 text-muted small">
+              No salary payments processed yet.
+            </div>
+
+            <div *ngFor="let p of salaryHistory" class="salary-hist-row">
+              <div class="shr-left">
+                <div class="shr-name">{{ p.nurseName }}</div>
+                <div class="shr-month">{{ p.salaryMonth }}</div>
+              </div>
+              <div class="shr-right">
+                <div class="shr-amount">{{ formatSalary(p.amount) }} <span class="shr-net-label">net</span></div>
+                <div class="shr-gross text-muted">Gross: {{ formatSalary(p.grossAmount) }}</div>
+                <span class="shr-badge">Processed</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
 
   </div>

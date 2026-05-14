@@ -16,10 +16,11 @@ export class PaymentsComponent implements OnInit {
 
   // ── Bank details ───────────────────────────────────────────────────────────
   bankForm!: FormGroup;
-  isSavingBank = false;
-  bankSuccess  = '';
-  bankError    = '';
+  isSavingBank   = false;
+  bankSuccess    = '';
+  bankError      = '';
   preferredMode: 'UPI' | 'BANK_TRANSFER' = 'UPI';
+  bankFieldsEnabled = false;   // enabled only after bank name selected
 
   // ── Shift payments (from patients) ────────────────────────────────────────
   shiftPayments: any[] = [];
@@ -28,10 +29,72 @@ export class PaymentsComponent implements OnInit {
   salaryPayments: any[] = [];
 
   // ── Earnings summary ──────────────────────────────────────────────────────
-  totalEarned    = 0;
-  pendingAmount  = 0;
+  totalEarned   = 0;
+  pendingAmount = 0;
 
-  constructor(private auth: AuthService, private fb: FormBuilder, private paymentSvc: PaymentService) {}
+  // ── All Indian Banks ──────────────────────────────────────────────────────
+  readonly BANK_LIST = [
+    // Public Sector
+    'State Bank of India (SBI)',
+    'Punjab National Bank (PNB)',
+    'Bank of Baroda',
+    'Canara Bank',
+    'Union Bank of India',
+    'Bank of India',
+    'Central Bank of India',
+    'Indian Bank',
+    'Indian Overseas Bank',
+    'UCO Bank',
+    'Bank of Maharashtra',
+    'Punjab & Sind Bank',
+    'IDBI Bank',
+    // Private Sector
+    'HDFC Bank',
+    'ICICI Bank',
+    'Axis Bank',
+    'Kotak Mahindra Bank',
+    'IndusInd Bank',
+    'Yes Bank',
+    'IDFC First Bank',
+    'Federal Bank',
+    'RBL Bank',
+    'Bandhan Bank',
+    'South Indian Bank',
+    'Karnataka Bank',
+    'DCB Bank',
+    'City Union Bank',
+    'Karur Vysya Bank',
+    'Tamilnad Mercantile Bank',
+    'CSB Bank',
+    'Dhanlaxmi Bank',
+    'Jammu & Kashmir Bank',
+    'Nainital Bank',
+    'DBS Bank India',
+    // Small Finance Banks
+    'AU Small Finance Bank',
+    'Equitas Small Finance Bank',
+    'Ujjivan Small Finance Bank',
+    'Jana Small Finance Bank',
+    'Utkarsh Small Finance Bank',
+    'ESAF Small Finance Bank',
+    'Suryoday Small Finance Bank',
+    'Capital Small Finance Bank',
+    'Fincare Small Finance Bank',
+    // Payments Banks
+    'Airtel Payments Bank',
+    'India Post Payments Bank (IPPB)',
+    'Fino Payments Bank',
+    // Foreign Banks
+    'Standard Chartered Bank',
+    'HSBC India',
+    'Deutsche Bank India',
+  ].sort();
+
+  constructor(
+    private auth:       AuthService,
+    private fb:         FormBuilder,
+    private paymentSvc: PaymentService
+  ) {}
 
   ngOnInit(): void {
     this.userId = this.auth.getUserId()!;
@@ -39,36 +102,140 @@ export class PaymentsComponent implements OnInit {
     this.loadAll();
   }
 
+  // ── Form setup ────────────────────────────────────────────────────────────
+
   private buildBankForm(): void {
     this.bankForm = this.fb.group({
       preferredPaymentMode: ['UPI', Validators.required],
       upiId:                [''],
-      bankAccountNumber:    [''],
-      bankIfscCode:         [''],
-      bankName:             ['']
+      bankName:             [''],
+      bankAccountNumber:    [{ value: '', disabled: true }],
+      bankIfscCode:         [{ value: '', disabled: true }]
     });
+
+    // Mode switch
     this.bankForm.get('preferredPaymentMode')!.valueChanges.subscribe(v => {
-      this.preferredMode = v;
-      this.updateBankValidators();
+      this.preferredMode    = v;
+      this.bankFieldsEnabled = false;
+      this.bankForm.get('bankName')?.setValue('');
+      this.bankForm.get('bankAccountNumber')?.setValue('');
+      this.bankForm.get('bankIfscCode')?.setValue('');
+      this.disableBankFields();
+      this.applyValidators();
+    });
+
+    // Bank name → enable fields
+    this.bankForm.get('bankName')!.valueChanges.subscribe(val => {
+      if (this.preferredMode === 'BANK_TRANSFER') {
+        if (val && val.trim()) {
+          this.bankFieldsEnabled = true;
+          this.enableBankFields();
+        } else {
+          this.bankFieldsEnabled = false;
+          this.disableBankFields();
+        }
+      }
     });
   }
 
-  private updateBankValidators(): void {
+  private enableBankFields(): void {
+    this.bankForm.get('bankAccountNumber')?.enable({ emitEvent: false });
+    this.bankForm.get('bankIfscCode')?.enable({ emitEvent: false });
+  }
+
+  private disableBankFields(): void {
+    this.bankForm.get('bankAccountNumber')?.disable({ emitEvent: false });
+    this.bankForm.get('bankIfscCode')?.disable({ emitEvent: false });
+  }
+
+  private applyValidators(): void {
     const upi  = this.bankForm.get('upiId')!;
+    const name = this.bankForm.get('bankName')!;
     const acc  = this.bankForm.get('bankAccountNumber')!;
     const ifsc = this.bankForm.get('bankIfscCode')!;
-    const name = this.bankForm.get('bankName')!;
+
     if (this.preferredMode === 'UPI') {
       upi.setValidators([Validators.required]);
-      acc.clearValidators(); ifsc.clearValidators(); name.clearValidators();
+      name.clearValidators();
+      acc.clearValidators();
+      ifsc.clearValidators();
     } else {
       upi.clearValidators();
-      acc.setValidators([Validators.required]);
-      ifsc.setValidators([Validators.required, Validators.pattern('^[A-Z]{4}0[A-Z0-9]{6}$')]);
       name.setValidators([Validators.required]);
+      acc.setValidators([
+        Validators.required,
+        Validators.pattern('^[0-9]{9,18}$')
+      ]);
+      ifsc.setValidators([
+        Validators.required,
+        Validators.pattern('^[A-Z]{4}0[A-Z0-9]{6}$')
+      ]);
     }
-    [upi, acc, ifsc, name].forEach(c => c.updateValueAndValidity({ emitEvent: false }));
+    [upi, name, acc, ifsc].forEach(c => c.updateValueAndValidity({ emitEvent: false }));
   }
+
+  get f() { return this.bankForm.controls; }
+
+  // Block non-digits AND enforce max 18 / min validation on account number
+  blockNonDigit(event: KeyboardEvent): boolean {
+    const allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    const isDigit     = /^[0-9]$/.test(event.key);
+
+    if (!isDigit && !allowedKeys.includes(event.key)) {
+      event.preventDefault();
+      return false;
+    }
+
+    // Hard block at 18 digits — prevent adding more
+    if (isDigit) {
+      const input = event.target as HTMLInputElement;
+      const currentLen = input.value.length;
+      const hasSelection = input.selectionStart !== input.selectionEnd;
+      if (currentLen >= 18 && !hasSelection) {
+        event.preventDefault();
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  // Auto-uppercase IFSC
+  uppercaseIfsc(): void {
+    const ctrl = this.bankForm.get('bankIfscCode')!;
+    const val  = (ctrl.value || '').toUpperCase();
+    ctrl.setValue(val, { emitEvent: false });
+  }
+
+  get accLen(): number { return (this.bankForm.get('bankAccountNumber')?.value || '').length; }
+  get ifscLen(): number { return (this.bankForm.get('bankIfscCode')?.value || '').length; }
+
+  // ── Save ──────────────────────────────────────────────────────────────────
+
+  saveBankDetails(): void {
+    this.applyValidators();
+    if (this.preferredMode === 'BANK_TRANSFER' && !this.bankFieldsEnabled) {
+      this.bankError = 'Please select a bank first.';
+      return;
+    }
+    if (this.bankForm.invalid) { this.bankForm.markAllAsTouched(); return; }
+
+    this.isSavingBank = true;
+    this.bankSuccess  = '';
+    this.bankError    = '';
+
+    const raw = this.bankForm.getRawValue();
+    this.paymentSvc.saveBankDetails(this.userId, raw).subscribe({
+      next: () => {
+        this.isSavingBank = false;
+        this.bankSuccess  = 'Payment details saved successfully!';
+        setTimeout(() => this.bankSuccess = '', 3000);
+      },
+      error: (err: Error) => { this.isSavingBank = false; this.bankError = err.message; }
+    });
+  }
+
+  // ── Data loading ──────────────────────────────────────────────────────────
 
   private loadAll(): void {
     this.isLoading = true;
@@ -84,30 +251,12 @@ export class PaymentsComponent implements OnInit {
   }
 
   private calcSummary(payments: any[]): void {
-    this.totalEarned = payments
+    this.totalEarned   = payments
       .filter((p: any) => p.status === 'PROCESSED')
       .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
     this.pendingAmount = payments
       .filter((p: any) => p.status === 'PENDING')
       .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
-  }
-
-  get f() { return this.bankForm.controls; }
-
-  saveBankDetails(): void {
-    this.updateBankValidators();
-    if (this.bankForm.invalid) { this.bankForm.markAllAsTouched(); return; }
-    this.isSavingBank = true;
-    this.bankSuccess  = '';
-    this.bankError    = '';
-    this.paymentSvc.saveBankDetails(this.userId, this.bankForm.value).subscribe({
-      next: () => {
-        this.isSavingBank = false;
-        this.bankSuccess  = 'Bank details saved successfully!';
-        setTimeout(() => this.bankSuccess = '', 3000);
-      },
-      error: (err: Error) => { this.isSavingBank = false; this.bankError = err.message; }
-    });
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -144,15 +293,6 @@ export class PaymentsComponent implements OnInit {
     if (!description) return '0';
     const part = description.split('|').find((p: string) => p.startsWith(key + '='));
     return part ? part.split('=')[1] : '0';
-  }
-
-  get netThisMonth(): string {
-    const now   = new Date();
-    const month = now.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
-    const total = [...this.shiftPayments, ...this.salaryPayments]
-      .filter((p: any) => p.status === 'PROCESSED' && this.formatDate(p.paymentDate).includes(now.getFullYear().toString()))
-      .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
-    return this.formatAmount(total);
   }
 
   logout(): void { this.auth.logout(); }
