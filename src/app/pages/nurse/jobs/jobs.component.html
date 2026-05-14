@@ -116,8 +116,31 @@
                 <option *ngFor="let t of jobTypes" [value]="t">{{ jobTypeLabels[t] }}</option>
               </select>
             </div>
+            <div class="col-md-2 col-6" *ngIf="facilityTypes.length > 1">
+              <select formControlName="facilityType" class="filter-input">
+                <option *ngFor="let f of facilityTypes" [value]="f">{{ f === 'All' ? 'All Facility Types' : f }}</option>
+              </select>
+            </div>
+            <div class="col-md-2 col-6" *ngIf="patientPopulations.length > 1">
+              <select formControlName="patientPopulation" class="filter-input">
+                <option *ngFor="let p of patientPopulations" [value]="p">{{ p === 'All' ? 'All Patient Types' : p }}</option>
+              </select>
+            </div>
           </div>
-          <p class="results-count mt-2 mb-0">{{ filteredJobs.length }} job{{ filteredJobs.length !== 1 ? 's' : '' }} found</p>
+          <div class="d-flex align-items-center justify-content-between mt-2 flex-wrap gap-2">
+            <p class="results-count mb-0">{{ filteredJobs.length }} job{{ filteredJobs.length !== 1 ? 's' : '' }} found</p>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn-save-search" (click)="saveSearch()" title="Save current filters">
+                <i class="bi bi-bookmark me-1"></i>Save Search
+              </button>
+              <button type="button" class="btn-load-search" *ngIf="savedSearchExists" (click)="loadSearch()" title="Load saved filters">
+                <i class="bi bi-bookmark-fill me-1"></i>Load Saved
+              </button>
+              <button type="button" class="btn-clear-search" *ngIf="savedSearchExists" (click)="clearSearch()" title="Clear saved search">
+                <i class="bi bi-trash3 me-1"></i>Clear
+              </button>
+            </div>
+          </div>
         </div>
 
         <div *ngFor="let job of filteredJobs" class="job-card mb-3">
@@ -240,15 +263,55 @@
           <button class="btn-close" (click)="closeModal()"></button>
         </div>
         <div class="modal-body-custom">
+
+          <!-- Tags row -->
           <div class="d-flex flex-wrap gap-2 mb-3">
             <span class="meta-pill"><i class="bi bi-briefcase me-1"></i>{{ formatJobType(selectedJob.jobType) }}</span>
+            <span class="meta-pill" *ngIf="selectedJob.department"><i class="bi bi-building me-1"></i>{{ selectedJob.department }}</span>
             <span class="meta-pill" *ngIf="selectedJob.specialization"><i class="bi bi-heart-pulse me-1"></i>{{ selectedJob.specialization }}</span>
+            <span class="meta-pill" *ngIf="selectedJob.facilityType"><i class="bi bi-hospital me-1"></i>{{ selectedJob.facilityType }}</span>
             <span class="salary-chip">{{ formatSalary(selectedJob) }}/mo</span>
             <span class="urgency-badge" [ngClass]="urgencyClass(selectedJob.priority)">{{ selectedJob.priority || 'Normal' }}</span>
           </div>
-          <p class="small text-muted mb-3">{{ selectedJob.description || 'No description provided.' }}</p>
-          <div *ngIf="selectedJob.shiftDetails" class="small text-muted mb-2"><i class="bi bi-clock me-1"></i>{{ selectedJob.shiftDetails }}</div>
-          <div *ngIf="selectedJob.deadline" class="small text-muted mb-2"><i class="bi bi-calendar-x me-1"></i>Deadline: {{ selectedJob.deadline | date:'mediumDate' }}</div>
+
+          <!-- Info grid — always visible -->
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="modal-info-item"><i class="bi bi-people-fill me-1"></i><strong>Patients:</strong> {{ selectedJob.patientPopulation || '—' }}</div>
+            </div>
+            <div class="col-6">
+              <div class="modal-info-item"><i class="bi bi-person-check me-1"></i><strong>Openings:</strong> {{ selectedJob.openings != null ? selectedJob.openings : '—' }}</div>
+            </div>
+            <div class="col-6">
+              <div class="modal-info-item"><i class="bi bi-clock me-1"></i><strong>Shift:</strong> {{ selectedJob.shiftDetails || '—' }}</div>
+            </div>
+            <div class="col-6">
+              <div class="modal-info-item"><i class="bi bi-calendar-x me-1"></i><strong>Deadline:</strong>
+                {{ selectedJob.deadline ? (selectedJob.deadline | date:'d MMM y, h:mm a') : '—' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <p class="small text-muted mb-3" *ngIf="selectedJob.description">{{ selectedJob.description }}</p>
+
+          <!-- Working Conditions — always show section -->
+          <div class="modal-notes-box mb-3">
+            <i class="bi bi-info-circle me-1"></i><strong>Working Conditions:</strong>
+            {{ selectedJob.workingConditions || 'Not specified' }}
+          </div>
+
+          <!-- Benefits — always show section -->
+          <div class="mb-3">
+            <small class="text-muted d-block mb-1"><i class="bi bi-gift me-1"></i><strong>Benefits Offered:</strong></small>
+            <div *ngIf="selectedJob.benefits; else noBenefits" class="d-flex flex-wrap gap-1">
+              <span class="benefit-tag" *ngFor="let b of selectedJob.benefits.split(',')">{{ b.trim() }}</span>
+            </div>
+            <ng-template #noBenefits>
+              <span class="text-muted small">None specified</span>
+            </ng-template>
+          </div>
+
           <div *ngIf="applySuccess" class="alert-success-toast mt-3"><i class="bi bi-check-circle-fill me-2"></i>Application submitted!</div>
           <div *ngIf="applyError" class="alert alert-danger mt-3 py-2 px-3 small"><i class="bi bi-exclamation-circle me-1"></i>{{ applyError }}</div>
         </div>

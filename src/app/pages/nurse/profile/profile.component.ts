@@ -131,7 +131,7 @@ export class ProfileComponent implements OnInit {
 
       // Phone
       phoneCountryCode: [dis('+91')],
-      phone: [dis(''), [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      phone: [dis(''), [Validators.required, Validators.pattern('^[6-9][0-9]{9}$')]],
 
       // Professional
       specialization: [dis(''), Validators.required],
@@ -143,7 +143,7 @@ export class ProfileComponent implements OnInit {
       bio:            [dis(''), Validators.maxLength(500)],
 
       // Address
-      addressLine1: [dis(''), [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
+      addressLine1: [dis(''), [Validators.required, Validators.minLength(5), Validators.maxLength(100), Validators.pattern("^[A-Za-z0-9 ,.\\/\\-']+$")]],
       addressLine2: [dis(''), Validators.maxLength(100)],
       landmark:     [dis(''), Validators.maxLength(60)],
       state:        [dis(''), Validators.required],
@@ -262,6 +262,16 @@ export class ProfileComponent implements OnInit {
   }
 
   // ── State / city cascade ──────────────────────────────────────────────────
+
+  onPhoneCodeChange(code: string): void {
+    const ctrl = this.profileForm.get('phone');
+    if (code === '+91') {
+      ctrl?.setValidators([Validators.required, Validators.pattern('^[6-9][0-9]{9}$')]);
+    } else {
+      ctrl?.setValidators([Validators.required, Validators.pattern('^[0-9]{6,15}$')]);
+    }
+    ctrl?.updateValueAndValidity({ emitEvent: false });
+  }
 
   onStateChange(state: string): void {
     this.cities = [];

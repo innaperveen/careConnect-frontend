@@ -260,6 +260,7 @@
 .djd-label { font-size: 0.7rem; color: #9ab8b0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 .djd-val { font-size: 0.87rem; font-weight: 600; color: #1a3b3a; }
 .djd-description { font-size: 0.86rem; color: #4e6e68; line-height: 1.6; margin: 0; }
+.djd-benefit-tag { background: #e3f6ef; color: #0f5241; border-radius: 20px; padding: 3px 10px; font-size: 0.77rem; font-weight: 600; display: inline-block; }
 
 .djd-skills-row { margin-top: 12px; }
 .djd-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }

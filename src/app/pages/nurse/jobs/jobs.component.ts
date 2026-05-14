@@ -49,13 +49,18 @@ export class JobsComponent implements OnInit {
   withdrawError        = '';
 
   // ── Filter dropdowns ─────────────────────────────────────────
-  locations:   string[] = ['All'];
-  specialties: string[] = ['All'];
+  locations:          string[] = ['All'];
+  specialties:        string[] = ['All'];
+  facilityTypes:      string[] = ['All'];
+  patientPopulations: string[] = ['All'];
   jobTypes    = ['All', 'PERMANENT', 'TEMPORARY', 'CONTRACT', 'EMERGENCY'];
   jobTypeLabels: Record<string, string> = {
     All: 'All Types', PERMANENT: 'Permanent', TEMPORARY: 'Temporary',
     CONTRACT: 'Contract', EMERGENCY: 'Emergency'
   };
+
+  savedSearchExists = false;
+  private get searchKey(): string { return `cc_saved_search_${this.auth.getUserId() ?? 'nurse'}`; }
 
   constructor(
     private auth:        AuthService,
@@ -65,8 +70,12 @@ export class JobsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.filterForm = this.fb.group({ location: ['All'], specialty: ['All'], jobType: ['All'], search: [''] });
+    this.filterForm = this.fb.group({
+      location: ['All'], specialty: ['All'], jobType: ['All'],
+      facilityType: ['All'], patientPopulation: ['All'], search: ['']
+    });
     this.filterForm.valueChanges.subscribe(() => this.applyFilters());
+    this.savedSearchExists = !!localStorage.getItem(this.searchKey);
     this.loadAll();
   }
 
@@ -111,18 +120,24 @@ export class JobsComponent implements OnInit {
 
         // Available: exclude already-applied and declined
         const rawJobs = result.jobs || [];
-        this.allJobs  = rawJobs.filter((j: any) => !this.appliedJobIds.has(j.id));
+        this.allJobs  = rawJobs
+          .filter((j: any) => !this.appliedJobIds.has(j.id))
+          .sort((a: any, b: any) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
         this.filteredJobs = [...this.allJobs];
 
-        this.openRequests = (result.open || []).filter((r: any) =>
-          !this.appliedRequestIds.has(r.id) && !this.declinedRequestIds.has(r.id)
-        );
+        this.openRequests = ((result.open || []) as any[])
+          .filter((r: any) => !this.appliedRequestIds.has(r.id) && !this.declinedRequestIds.has(r.id))
+          .sort((a: any, b: any) => new Date(b.createdAt ?? b.appointmentDate ?? 0).getTime() - new Date(a.createdAt ?? a.appointmentDate ?? 0).getTime());
 
         // Build filter dropdowns from backend data
-        const locs  = [...new Set(rawJobs.map((j: any) => j.location).filter(Boolean))];
-        const specs = [...new Set(rawJobs.map((j: any) => j.specialization).filter(Boolean))];
-        this.locations   = ['All', ...(locs as string[])];
-        this.specialties = ['All', ...(specs as string[])];
+        const locs    = [...new Set(rawJobs.map((j: any) => j.location).filter(Boolean))];
+        const specs   = [...new Set(rawJobs.map((j: any) => j.specialization).filter(Boolean))];
+        const facTypes = [...new Set(rawJobs.map((j: any) => j.facilityType).filter(Boolean))];
+        const pops    = [...new Set(rawJobs.map((j: any) => j.patientPopulation).filter(Boolean))];
+        this.locations          = ['All', ...(locs as string[])];
+        this.specialties        = ['All', ...(specs as string[])];
+        this.facilityTypes      = ['All', ...(facTypes as string[])];
+        this.patientPopulations = ['All', ...(pops as string[])];
 
         this.isLoading = false;
       },
@@ -131,15 +146,33 @@ export class JobsComponent implements OnInit {
   }
 
   applyFilters(): void {
-    const { location, specialty, jobType, search } = this.filterForm.value;
+    const { location, specialty, jobType, facilityType, patientPopulation, search } = this.filterForm.value;
     this.filteredJobs = this.allJobs.filter(j => {
-      const matchLoc  = location  === 'All' || (j.location      || '').toLowerCase().includes(location.toLowerCase());
-      const matchType = jobType   === 'All' || (j.jobType       || '').toUpperCase() === jobType;
-      const matchSpec = specialty === 'All' || (j.specialization || '').toLowerCase().includes(specialty.toLowerCase());
-      const matchSrch = !search   || (j.jobTitle        || '').toLowerCase().includes(search.toLowerCase())
-                                  || (j.organizationName || '').toLowerCase().includes(search.toLowerCase());
-      return matchLoc && matchType && matchSpec && matchSrch;
+      const matchLoc  = location         === 'All' || (j.location         || '').toLowerCase().includes(location.toLowerCase());
+      const matchType = jobType          === 'All' || (j.jobType          || '').toUpperCase() === jobType;
+      const matchSpec = specialty        === 'All' || (j.specialization   || '').toLowerCase().includes(specialty.toLowerCase());
+      const matchFac  = facilityType     === 'All' || (j.facilityType     || '').toLowerCase() === facilityType.toLowerCase();
+      const matchPop  = patientPopulation === 'All' || (j.patientPopulation || '').toLowerCase() === patientPopulation.toLowerCase();
+      const matchSrch = !search || (j.jobTitle        || '').toLowerCase().includes(search.toLowerCase())
+                                || (j.organizationName || '').toLowerCase().includes(search.toLowerCase());
+      return matchLoc && matchType && matchSpec && matchFac && matchPop && matchSrch;
     });
+  }
+
+  saveSearch(): void {
+    localStorage.setItem(this.searchKey, JSON.stringify(this.filterForm.value));
+    this.savedSearchExists = true;
+  }
+
+  loadSearch(): void {
+    const raw = localStorage.getItem(this.searchKey);
+    if (raw) { this.filterForm.setValue(JSON.parse(raw)); }
+  }
+
+  clearSearch(): void {
+    localStorage.removeItem(this.searchKey);
+    this.savedSearchExists = false;
+    this.filterForm.reset({ location: 'All', specialty: 'All', jobType: 'All', facilityType: 'All', patientPopulation: 'All', search: '' });
   }
 
   // ── Org job actions ──────────────────────────────────────────

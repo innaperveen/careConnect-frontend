@@ -115,7 +115,7 @@
         <div class="row g-3 mb-3">
           <div class="col-md-4">
             <label class="field-label">Country Code</label>
-            <select formControlName="phoneCountryCode" class="field-input">
+            <select formControlName="phoneCountryCode" class="field-input" (change)="onPhoneCodeChange($any($event.target).value)">
               <option *ngFor="let cc of countryCodes" [value]="cc.code">{{ cc.label }}</option>
             </select>
           </div>
@@ -123,9 +123,9 @@
             <label class="field-label">Phone Number *</label>
             <input type="tel" formControlName="phone" class="field-input" maxlength="10"
               placeholder="10-digit mobile number"
-              [class.input-error]="f['phone'].touched && f['phone'].invalid">
+              [class.input-error]="f['phone'].invalid && (f['phone'].dirty || f['phone'].touched)">
             <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('required')">Phone is required.</small>
-            <small class="err" *ngIf="f['phone'].touched && f['phone'].hasError('pattern')">Enter exactly 10 digits.</small>
+            <small class="err" *ngIf="f['phone'].dirty && f['phone'].hasError('pattern')">Enter a valid 10-digit mobile number (must start with 6, 7, 8, or 9).</small>
           </div>
         </div>
 
@@ -235,10 +235,11 @@
             <label class="field-label">Address Line 1 *</label>
             <input type="text" formControlName="addressLine1" class="field-input" maxlength="100"
               placeholder="House / Flat No., Street, Area"
-              [class.input-error]="f['addressLine1'].touched && f['addressLine1'].invalid">
+              [class.input-error]="f['addressLine1'].invalid && (f['addressLine1'].dirty || f['addressLine1'].touched)">
             <small class="err" *ngIf="f['addressLine1'].touched && f['addressLine1'].hasError('required')">Address Line 1 is required.</small>
             <small class="err" *ngIf="f['addressLine1'].touched && f['addressLine1'].hasError('minlength')">Minimum 5 characters.</small>
             <small class="err" *ngIf="f['addressLine1'].touched && f['addressLine1'].hasError('maxlength')">Maximum 100 characters.</small>
+            <small class="err" *ngIf="f['addressLine1'].dirty && f['addressLine1'].hasError('pattern')">Only letters, numbers, spaces, commas, periods, hyphens, and slashes allowed.</small>
           </div>
           <div class="col-md-6">
             <label class="field-label">Address Line 2</label>

@@ -163,7 +163,7 @@
               <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                 <p class="job-title mb-0">{{ job.title }}</p>
                 <span class="type-badge" [class.type-patient]="job.type === 'patient'">
-                  {{ job.type === 'patient' ? 'Patient Request' : 'Hospital / Org' }}
+                  {{ job.type === 'patient' ? 'Patient Request' : (job.raw?.facilityType || 'Hospital') }}
                 </span>
                 <span class="urgency-badge-sm" *ngIf="job.priority && job.priority !== 'Normal'"
                   [ngClass]="priorityClass(job.priority)">
@@ -261,7 +261,7 @@
     <div>
       <h5 class="djd-title">{{ selectedDashJob.title }}</h5>
       <span class="type-badge" [class.type-patient]="selectedDashJob.type === 'patient'">
-        {{ selectedDashJob.type === 'patient' ? 'Patient Request' : 'Hospital / Org' }}
+        {{ selectedDashJob.type === 'patient' ? 'Patient Request' : (selectedDashJob.raw?.facilityType || 'Hospital') }}
       </span>
     </div>
     <button class="djd-close" (click)="closeDashJob()"><i class="bi bi-x-lg"></i></button>
@@ -302,6 +302,22 @@
               </span>
             </span>
           </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.facilityType">
+            <span class="djd-label">Facility Type</span>
+            <span class="djd-val">{{ selectedDashJob.raw.facilityType }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.patientPopulation">
+            <span class="djd-label">Patient Population</span>
+            <span class="djd-val">{{ selectedDashJob.raw.patientPopulation }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.openings != null">
+            <span class="djd-label">Openings</span>
+            <span class="djd-val">{{ selectedDashJob.raw.openings }}</span>
+          </div>
+          <div class="djd-item" *ngIf="selectedDashJob.raw.shiftDetails">
+            <span class="djd-label">Shift</span>
+            <span class="djd-val">{{ selectedDashJob.raw.shiftDetails }}</span>
+          </div>
           <div class="djd-item" *ngIf="selectedDashJob.raw.salaryMin || selectedDashJob.raw.salaryMax">
             <span class="djd-label">Salary Range</span>
             <span class="djd-val" style="color:#0f6b51;font-weight:700;">
@@ -310,7 +326,7 @@
           </div>
           <div class="djd-item" *ngIf="selectedDashJob.raw.deadline">
             <span class="djd-label">Deadline</span>
-            <span class="djd-val">{{ selectedDashJob.raw.deadline | date:'mediumDate' }}</span>
+            <span class="djd-val">{{ selectedDashJob.raw.deadline | date:'d MMM y, h:mm a' }}</span>
           </div>
         </div>
       </div>
@@ -318,6 +334,18 @@
       <div class="djd-section" *ngIf="selectedDashJob.raw.description">
         <div class="djd-section-title"><i class="bi bi-file-text-fill me-2"></i>Job Description</div>
         <p class="djd-description">{{ selectedDashJob.raw.description }}</p>
+      </div>
+
+      <div class="djd-section" *ngIf="selectedDashJob.raw.workingConditions">
+        <div class="djd-section-title"><i class="bi bi-info-circle-fill me-2"></i>Working Conditions</div>
+        <p class="djd-description">{{ selectedDashJob.raw.workingConditions }}</p>
+      </div>
+
+      <div class="djd-section" *ngIf="selectedDashJob.raw.benefits">
+        <div class="djd-section-title"><i class="bi bi-gift-fill me-2"></i>Benefits Offered</div>
+        <div class="d-flex flex-wrap gap-2 mt-1">
+          <span class="djd-benefit-tag" *ngFor="let b of selectedDashJob.raw.benefits.split(',')">{{ b.trim() }}</span>
+        </div>
       </div>
     </ng-container>
 
