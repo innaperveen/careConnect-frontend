@@ -26,14 +26,30 @@ function dobRangeValidator(minAge: number, maxAge: number): ValidatorFn {
   };
 }
 
-const PASS_VALIDATORS  = [Validators.required, Validators.minLength(12), Validators.maxLength(18)];
+const PASS_VALIDATORS = [Validators.required, Validators.minLength(12), Validators.maxLength(18)];
+
+// Email: only gmail / yahoo / outlook / infosys with .com / .in / .org
+const EMAIL_PATTERN   = '^[a-zA-Z0-9._%+\\-]+@(gmail|yahoo|outlook|infosys)\\.(com|in|org)$';
 const EMAIL_VALIDATORS = [
   Validators.required,
   Validators.email,
-  Validators.pattern('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.com$'),
+  Validators.pattern(EMAIL_PATTERN),
 ];
 
-// First name: letters only, no dot, min 3 max 30
+// Address: letters, digits, spaces, comma, period, hyphen, slash, apostrophe only
+const ADDR_PATTERN = "^[A-Za-z0-9 ,.\\/\\-']+$";
+const ADDR1_VALIDATORS = [
+  Validators.required,
+  Validators.minLength(5),
+  Validators.maxLength(100),
+  Validators.pattern(ADDR_PATTERN),
+];
+const ADDR2_VALIDATORS = [
+  Validators.maxLength(100),
+  Validators.pattern("^[A-Za-z0-9 ,.\\/\\-']*$"),
+];
+
+// First name: letters only, min 3 max 30
 const FIRST_NAME_VALIDATORS = [
   Validators.required,
   Validators.minLength(3),
@@ -67,13 +83,15 @@ export class RegisterComponent implements OnInit {
   orgForm!:     FormGroup;
   isLoading = false;
 
-  // Geo data
-  states: string[] = [];
-  cities: string[] = [];
-  nurseStates: string[] = [];
-  nurseCities: string[] = [];
-  orgStates: string[] = [];
-  orgCities: string[] = [];
+  // Geo data - all forms use country-aware lists
+  patStateList:   string[] = [];
+  patCityList:    string[] = [];
+  nurseStateList: string[] = [];
+  nurseCityList:  string[] = [];
+
+  // Org address geo (country-aware)
+  orgStateList: string[] = [];
+  orgCityList:  string[] = [];
 
   // Auto-calculated age from DOB
   calculatedAge: number | null = null;
@@ -84,19 +102,29 @@ export class RegisterComponent implements OnInit {
   showOPass    = false;  showOConfirm = false;
 
   // DOB limits
-  readonly maxDob: string; // today minus 1 year (min age = 1)
-  readonly minDob: string; // today minus 120 years
+  readonly maxDob: string;
+  readonly minDob: string;
 
-  // Country codes for phone
+  // Duplicate check flags for org reg/license
+  regDuplicateError     = false;
+  licenseDuplicateError = false;
+
+  // Duplicate check flags for email (all three forms)
+  patEmailDuplicateError   = false;
+  nurseEmailDuplicateError = false;
+  orgEmailDuplicateError   = false;
+
+  // Country codes — short format: "IN +91"
   countryCodes = [
-    { label: '🇮🇳 +91 India',         code: '+91' },
-    { label: '🇺🇸 +1  USA/Canada',     code: '+1'  },
-    { label: '🇬🇧 +44 UK',             code: '+44' },
-    { label: '🇦🇺 +61 Australia',      code: '+61' },
-    { label: '🇦🇪 +971 UAE',           code: '+971'},
-    { label: '🇸🇬 +65 Singapore',      code: '+65' },
-    { label: '🇩🇪 +49 Germany',        code: '+49' },
-    { label: '🇫🇷 +33 France',         code: '+33' },
+    { label: 'IN +91',  code: '+91'  },
+    { label: 'US +1',   code: '+1'   },
+    { label: 'UK +44',  code: '+44'  },
+    { label: 'AU +61',  code: '+61'  },
+    { label: 'AE +971', code: '+971' },
+    { label: 'SG +65',  code: '+65'  },
+    { label: 'DE +49',  code: '+49'  },
+    { label: 'FR +33',  code: '+33'  },
+    { label: 'CA +1',   code: '+1'   },
   ];
 
   bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -114,6 +142,7 @@ export class RegisterComponent implements OnInit {
     { label: '6–8 Years',  value: '6-8 years'  },
     { label: '8+ Years',   value: '8+ years'   },
   ];
+
   orgTypes = ['Hospital', 'Nursing Home', 'Clinic', 'Care Center', 'Rehabilitation Center', 'Other'];
   designations = [
     'Hospital Administrator', 'Medical Director', 'Chief Executive Officer (CEO)',
@@ -121,18 +150,135 @@ export class RegisterComponent implements OnInit {
     'HR Manager', 'Operations Manager', 'Other'
   ];
 
+  // ── Country → State → City data for org address ───────────────────────────
+  readonly COUNTRY_DATA: Record<string, Record<string, string[]>> = {
+    'India': {
+      'Andhra Pradesh':     ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Kakinada'],
+      'Arunachal Pradesh':  ['Itanagar', 'Naharlagun'],
+      'Assam':              ['Guwahati', 'Silchar', 'Dibrugarh', 'Jorhat'],
+      'Bihar':              ['Patna', 'Gaya', 'Muzaffarpur', 'Bhagalpur'],
+      'Chhattisgarh':       ['Raipur', 'Bhilai', 'Bilaspur', 'Korba'],
+      'Delhi':              ['New Delhi', 'North Delhi', 'South Delhi', 'East Delhi', 'West Delhi'],
+      'Goa':                ['Panaji', 'Margao', 'Vasco da Gama'],
+      'Gujarat':            ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar'],
+      'Haryana':            ['Gurugram', 'Faridabad', 'Ambala', 'Rohtak', 'Hisar'],
+      'Himachal Pradesh':   ['Shimla', 'Manali', 'Dharamshala', 'Solan'],
+      'Jammu & Kashmir':    ['Jammu', 'Srinagar', 'Anantnag', 'Udhampur'],
+      'Jharkhand':          ['Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro'],
+      'Karnataka':          ['Bengaluru', 'Mysuru', 'Hubli', 'Mangaluru', 'Belagavi'],
+      'Kerala':             ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam'],
+      'Madhya Pradesh':     ['Bhopal', 'Indore', 'Jabalpur', 'Gwalior', 'Ujjain'],
+      'Maharashtra':        ['Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Aurangabad', 'Thane'],
+      'Manipur':            ['Imphal', 'Thoubal'],
+      'Meghalaya':          ['Shillong', 'Tura'],
+      'Mizoram':            ['Aizawl', 'Lunglei'],
+      'Nagaland':           ['Kohima', 'Dimapur'],
+      'Odisha':             ['Bhubaneswar', 'Cuttack', 'Rourkela', 'Berhampur'],
+      'Punjab':             ['Chandigarh', 'Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala'],
+      'Rajasthan':          ['Jaipur', 'Jodhpur', 'Udaipur', 'Kota', 'Ajmer', 'Bikaner'],
+      'Sikkim':             ['Gangtok', 'Namchi'],
+      'Tamil Nadu':         ['Chennai', 'Coimbatore', 'Madurai', 'Salem', 'Tiruchirappalli'],
+      'Telangana':          ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar'],
+      'Tripura':            ['Agartala', 'Udaipur'],
+      'Uttar Pradesh':      ['Lucknow', 'Agra', 'Kanpur', 'Varanasi', 'Noida', 'Ghaziabad', 'Meerut'],
+      'Uttarakhand':        ['Dehradun', 'Haridwar', 'Rishikesh', 'Nainital'],
+      'West Bengal':        ['Kolkata', 'Howrah', 'Durgapur', 'Siliguri', 'Asansol'],
+      'Other':              ['Other'],
+    },
+    'United States': {
+      'California':         ['Los Angeles', 'San Francisco', 'San Diego', 'San Jose', 'Sacramento'],
+      'New York':           ['New York City', 'Buffalo', 'Rochester', 'Albany', 'Yonkers'],
+      'Texas':              ['Houston', 'Dallas', 'Austin', 'San Antonio', 'Fort Worth'],
+      'Florida':            ['Miami', 'Orlando', 'Tampa', 'Jacksonville', 'Fort Lauderdale'],
+      'Illinois':           ['Chicago', 'Aurora', 'Naperville', 'Joliet'],
+      'Pennsylvania':       ['Philadelphia', 'Pittsburgh', 'Allentown', 'Erie'],
+      'Ohio':               ['Columbus', 'Cleveland', 'Cincinnati', 'Toledo'],
+      'Georgia':            ['Atlanta', 'Augusta', 'Savannah', 'Macon'],
+      'North Carolina':     ['Charlotte', 'Raleigh', 'Greensboro', 'Durham'],
+      'Michigan':           ['Detroit', 'Grand Rapids', 'Ann Arbor', 'Flint'],
+      'Washington':         ['Seattle', 'Spokane', 'Tacoma', 'Bellevue'],
+      'Arizona':            ['Phoenix', 'Tucson', 'Mesa', 'Chandler'],
+      'Massachusetts':      ['Boston', 'Worcester', 'Springfield', 'Cambridge'],
+      'Other':              ['Other'],
+    },
+    'United Kingdom': {
+      'England':            ['London', 'Manchester', 'Birmingham', 'Leeds', 'Liverpool', 'Sheffield'],
+      'Scotland':           ['Edinburgh', 'Glasgow', 'Aberdeen', 'Dundee'],
+      'Wales':              ['Cardiff', 'Swansea', 'Newport'],
+      'Northern Ireland':   ['Belfast', 'Londonderry'],
+      'Other':              ['Other'],
+    },
+    'United Arab Emirates': {
+      'Abu Dhabi':          ['Abu Dhabi City', 'Al Ain', 'Madinat Zayed'],
+      'Dubai':              ['Dubai City', 'Deira', 'Bur Dubai', 'Jumeirah'],
+      'Sharjah':            ['Sharjah City', 'Khor Fakkan'],
+      'Ajman':              ['Ajman City'],
+      'Fujairah':           ['Fujairah City'],
+      'Ras Al Khaimah':     ['Ras Al Khaimah City'],
+      'Umm Al Quwain':      ['Umm Al Quwain City'],
+      'Other':              ['Other'],
+    },
+    'Australia': {
+      'New South Wales':              ['Sydney', 'Newcastle', 'Wollongong', 'Central Coast'],
+      'Victoria':                     ['Melbourne', 'Geelong', 'Ballarat', 'Bendigo'],
+      'Queensland':                   ['Brisbane', 'Gold Coast', 'Sunshine Coast', 'Townsville'],
+      'Western Australia':            ['Perth', 'Fremantle', 'Bunbury'],
+      'South Australia':              ['Adelaide', 'Mount Gambier'],
+      'Tasmania':                     ['Hobart', 'Launceston'],
+      'Australian Capital Territory': ['Canberra'],
+      'Northern Territory':           ['Darwin'],
+      'Other':                        ['Other'],
+    },
+    'Singapore': {
+      'Central Region':    ['Orchard', 'Marina Bay', 'Bugis', 'Chinatown'],
+      'East Region':       ['Tampines', 'Bedok', 'Changi', 'Pasir Ris'],
+      'North Region':      ['Woodlands', 'Yishun', 'Sembawang'],
+      'North-East Region': ['Hougang', 'Sengkang', 'Punggol', 'Serangoon'],
+      'West Region':       ['Jurong', 'Clementi', 'Bukit Batok', 'Choa Chu Kang'],
+      'Other':             ['Other'],
+    },
+    'Germany': {
+      'Bavaria':                ['Munich', 'Nuremberg', 'Augsburg', 'Regensburg'],
+      'Berlin':                 ['Berlin'],
+      'Hamburg':                ['Hamburg'],
+      'North Rhine-Westphalia': ['Cologne', 'Düsseldorf', 'Dortmund', 'Essen', 'Bonn'],
+      'Baden-Württemberg':      ['Stuttgart', 'Karlsruhe', 'Freiburg', 'Heidelberg'],
+      'Saxony':                 ['Dresden', 'Leipzig', 'Chemnitz'],
+      'Hesse':                  ['Frankfurt', 'Wiesbaden', 'Kassel'],
+      'Other':                  ['Other'],
+    },
+    'Canada': {
+      'Ontario':          ['Toronto', 'Ottawa', 'Mississauga', 'Hamilton', 'Brampton'],
+      'Quebec':           ['Montreal', 'Quebec City', 'Laval', 'Gatineau'],
+      'British Columbia': ['Vancouver', 'Surrey', 'Burnaby', 'Victoria'],
+      'Alberta':          ['Calgary', 'Edmonton', 'Red Deer'],
+      'Manitoba':         ['Winnipeg', 'Brandon'],
+      'Saskatchewan':     ['Saskatoon', 'Regina'],
+      'Nova Scotia':      ['Halifax', 'Dartmouth'],
+      'Other':            ['Other'],
+    },
+    'France': {
+      'Île-de-France':    ['Paris', 'Versailles', 'Boulogne-Billancourt', 'Saint-Denis'],
+      'Provence-Alpes':   ['Marseille', 'Nice', 'Toulon', 'Aix-en-Provence'],
+      'Auvergne-Rhône':   ['Lyon', 'Grenoble', 'Clermont-Ferrand', 'Saint-Étienne'],
+      'Other':            ['Other'],
+    },
+  };
+
+  get orgCountries(): string[] { return Object.keys(this.COUNTRY_DATA); }
+
   showModal    = false;
   modalType: 'success' | 'error' = 'success';
   modalTitle   = '';
   modalMessage = '';
 
   constructor(
-    private fb:    FormBuilder,
+    private fb:     FormBuilder,
     private router: Router,
-    private auth:  AuthService,
+    private auth:   AuthService,
     private geoSvc: GeoService
   ) {
-    const today = new Date();
+    const today    = new Date();
     const minAge1  = new Date(today.getFullYear() - 1,   today.getMonth(), today.getDate());
     const maxAge120 = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());
     this.maxDob = minAge1.toISOString().split('T')[0];
@@ -143,9 +289,8 @@ export class RegisterComponent implements OnInit {
     this.buildPatientForm();
     this.buildNurseForm();
     this.buildOrgForm();
-
-    // Load states for patient + nurse + org address dropdowns
-    this.geoSvc.getStates().subscribe(s => { this.states = s; this.nurseStates = s; this.orgStates = s; });
+    // Pre-load India states for patient + nurse (default country = India)
+    this.geoSvc.getStates().subscribe(s => { this.patStateList = s; this.nurseStateList = s; });
   }
 
   // ── Form builders ──────────────────────────────────────────────────────────
@@ -162,123 +307,228 @@ export class RegisterComponent implements OnInit {
 
   private buildPatientForm(): void {
     this.patientForm = this.fb.group({
-      // Name
-      firstName:  ['', FIRST_NAME_VALIDATORS],
-      middleName: ['', [Validators.maxLength(30), Validators.pattern('^[A-Za-z]*$')]],
-      lastName:   ['', [Validators.required, Validators.maxLength(30), lastNameValidator()]],
-
-      // Personal
-      dob:        ['', [Validators.required, dobRangeValidator(1, 120)]],
-      gender:     ['', Validators.required],
-      bloodGroup: ['', Validators.required],
-
-      // Contact
-      email:           ['', EMAIL_VALIDATORS],
-      phoneCountryCode:[ '+91' ],
-      phone:           ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-
-      // Address
-      addressLine1: ['', [Validators.required, Validators.maxLength(100)]],
-      addressLine2: ['', Validators.maxLength(100)],
-      landmark:     ['', Validators.maxLength(60)],
-      country:      [{ value: 'India', disabled: true }],
-      state:        ['', Validators.required],
-      city:         ['', Validators.required],
-      pincode:      ['', [Validators.required, Validators.pattern('^[1-9][0-9]{5}$')]],
-
-      // Security
-      password:        ['', PASS_VALIDATORS],
-      confirmPassword: ['', Validators.required],
+      firstName:        ['', FIRST_NAME_VALIDATORS],
+      middleName:       ['', [Validators.maxLength(30), Validators.pattern('^[A-Za-z]*$')]],
+      lastName:         ['', [Validators.required, Validators.maxLength(30), lastNameValidator()]],
+      dob:              ['', [Validators.required, dobRangeValidator(1, 120)]],
+      gender:           ['', Validators.required],
+      bloodGroup:       ['', Validators.required],
+      email:            ['', EMAIL_VALIDATORS],
+      phoneCountryCode: ['+91'],
+      phone:            ['', [Validators.required, Validators.pattern('^[6-9][0-9]{9}$')]],
+      addressLine1:     ['', ADDR1_VALIDATORS],
+      addressLine2:     ['', ADDR2_VALIDATORS],
+      landmark:         ['', Validators.maxLength(60)],
+      country:          ['India', Validators.required],
+      state:            ['', Validators.required],
+      city:             ['', Validators.required],
+      pincode:          ['', [Validators.required, Validators.pattern('^[1-9][0-9]{5}$')]],
+      password:         ['', PASS_VALIDATORS],
+      confirmPassword:  ['', Validators.required],
     }, { validators: passwordMatchValidator });
   }
 
   private buildNurseForm(): void {
     this.nurseForm = this.fb.group({
-      // Name
-      firstName:  ['', FIRST_NAME_VALIDATORS],
-      middleName: ['', [Validators.maxLength(30), Validators.pattern('^[A-Za-z]*$')]],
-      lastName:   ['', [Validators.required, Validators.maxLength(30), lastNameValidator()]],
-
-      // Professional
-      licenseNumber:  ['', [Validators.required, Validators.pattern('^[A-Z]{2}[0-9]{10}$')]],
-      specialization: ['', Validators.required],
-      experience:     ['', Validators.required],
-      availability:   ['', Validators.required],
-
-      // Contact
+      firstName:        ['', FIRST_NAME_VALIDATORS],
+      middleName:       ['', [Validators.maxLength(30), Validators.pattern('^[A-Za-z]*$')]],
+      lastName:         ['', [Validators.required, Validators.maxLength(30), lastNameValidator()]],
+      licenseNumber:    ['', [Validators.required, Validators.pattern('^[A-Z]{2}[0-9]{10}$')]],
+      specialization:   ['', Validators.required],
+      experience:       ['', Validators.required],
+      availability:     ['', Validators.required],
       email:            ['', EMAIL_VALIDATORS],
       phoneCountryCode: ['+91'],
-      phone:            ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-
-      // Address
-      addressLine1: ['', [Validators.required, Validators.maxLength(100)]],
-      addressLine2: ['', Validators.maxLength(100)],
-      landmark:     ['', Validators.maxLength(60)],
-      country:      [{ value: 'India', disabled: true }],
-      state:        ['', Validators.required],
-      city:         ['', Validators.required],
-      pincode:      ['', [Validators.required, Validators.pattern('^[1-9][0-9]{5}$')]],
-
-      // Security
-      password:        ['', PASS_VALIDATORS],
-      confirmPassword: ['', Validators.required],
+      phone:            ['', [Validators.required, Validators.pattern('^[6-9][0-9]{9}$')]],
+      addressLine1:     ['', ADDR1_VALIDATORS],
+      addressLine2:     ['', ADDR2_VALIDATORS],
+      landmark:         ['', Validators.maxLength(60)],
+      country:          ['India', Validators.required],
+      state:            ['', Validators.required],
+      city:             ['', Validators.required],
+      pincode:          ['', [Validators.required, Validators.pattern('^[1-9][0-9]{5}$')]],
+      password:         ['', PASS_VALIDATORS],
+      confirmPassword:  ['', Validators.required],
     }, { validators: passwordMatchValidator });
   }
 
   private buildOrgForm(): void {
-    const ORG_EMAIL_V = [
-      Validators.required,
-      Validators.email,
-      Validators.pattern('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.(com|org|in)$'),
-    ];
     this.orgForm = this.fb.group({
-      // Organization identity
       orgType:           ['', Validators.required],
       orgName:           [{ value: '', disabled: true }, [
-        Validators.required, Validators.minLength(3), Validators.maxLength(30),
+        Validators.required, Validators.minLength(3), Validators.maxLength(50),
         Validators.pattern("^[A-Za-z][A-Za-z .,\\-&()'\\/]*$")
       ]],
       regNumber:         ['', [Validators.required, Validators.pattern('^[A-Za-z]{6}$')]],
       licenseNumber:     ['', [Validators.required, Validators.pattern('^[0-9]{8}$')]],
-      // Contact person
       contactFirstName:  ['', FIRST_NAME_VALIDATORS],
       contactMiddleName: ['', [Validators.maxLength(30), Validators.pattern('^[A-Za-z]*$')]],
       contactLastName:   ['', [Validators.required, Validators.maxLength(30), lastNameValidator()]],
       designation:       ['', Validators.required],
-      // Contact details
-      email:             ['', ORG_EMAIL_V],
+      email:             ['', [
+        Validators.required,
+        Validators.email,
+        Validators.pattern(EMAIL_PATTERN),
+      ]],
       phoneCountryCode:  ['+91'],
-      phone:             ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      // Address
-      addressLine1:      ['', [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
-      addressLine2:      ['', Validators.maxLength(100)],
+      phone:             ['', [Validators.required, Validators.pattern('^[6-9][0-9]{9}$')]],
+      addressLine1:      ['', ADDR1_VALIDATORS],
+      addressLine2:      ['', ADDR2_VALIDATORS],
       landmark:          ['', Validators.maxLength(60)],
-      country:           [{ value: 'India', disabled: true }],
+      country:           ['', Validators.required],
       state:             ['', Validators.required],
       city:              ['', Validators.required],
-      pincode:           ['', [Validators.required, Validators.pattern('^[1-9][0-9]{5}$')]],
-      website:           [''],
-      // Security
+      pincode:           ['', [Validators.required, Validators.pattern('^[A-Za-z0-9 \\-]{3,10}$')]],
+      website:           ['', [Validators.pattern('^(https?://)?(www\\.)?[a-zA-Z0-9][a-zA-Z0-9\\-]+(\\.(com|in|org|gov\\.in))(/[^\\s]*)?$')]],
       password:          ['', PASS_VALIDATORS],
       confirmPassword:   ['', Validators.required],
     }, { validators: passwordMatchValidator });
   }
 
-  // ── State/city cascade ─────────────────────────────────────────────────────
+  // ── Phone validator (country-code aware) ──────────────────────────────────
 
-  onStateChange(stateName: string): void {
-    this.cities = [];
-    this.patientForm.get('city')?.setValue('');
-    if (stateName) {
-      this.geoSvc.getCities(stateName).subscribe(c => this.cities = c);
+  private updatePhoneValidator(form: FormGroup, code: string): void {
+    const ctrl = form.get('phone');
+    if (code === '+91') {
+      ctrl?.setValidators([Validators.required, Validators.pattern('^[6-9][0-9]{9}$')]);
+    } else {
+      ctrl?.setValidators([Validators.required, Validators.pattern('^[0-9]{6,15}$')]);
+    }
+    ctrl?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  onPatPhoneCodeChange(code: string): void   { this.updatePhoneValidator(this.patientForm, code); }
+  onNursePhoneCodeChange(code: string): void  { this.updatePhoneValidator(this.nurseForm, code); }
+  onOrgPhoneCodeChange(code: string): void    { this.updatePhoneValidator(this.orgForm, code); }
+
+  // ── Key blocking helpers ───────────────────────────────────────────────────
+
+  blockNonAlpha(e: KeyboardEvent): void {
+    const ctrl = ['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End','Space'];
+    if (ctrl.includes(e.key)) return;
+    if (!/^[A-Za-z\s.,\-&()'\\/]$/.test(e.key)) e.preventDefault();
+  }
+
+  blockNonLetter(e: KeyboardEvent): void {
+    const ctrl = ['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End'];
+    if (ctrl.includes(e.key)) return;
+    if (!/^[A-Za-z]$/.test(e.key)) e.preventDefault();
+  }
+
+  blockNonDigit(e: KeyboardEvent): void {
+    const ctrl = ['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End'];
+    if (ctrl.includes(e.key)) return;
+    if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+  }
+
+  // Last name: letters + single dot allowed
+  blockNonLetterOrDot(e: KeyboardEvent): void {
+    const ctrl = ['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End'];
+    if (ctrl.includes(e.key)) return;
+    if (!/^[A-Za-z.]$/.test(e.key)) e.preventDefault();
+  }
+
+  // ── Auto-capitalize first letter ──────────────────────────────────────────
+
+  capitalizeFirst(ctrl: AbstractControl | null): void {
+    if (!ctrl) return;
+    const v: string = ctrl.value || '';
+    if (v.length > 0 && v[0] !== v[0].toUpperCase()) {
+      ctrl.setValue(v[0].toUpperCase() + v.slice(1), { emitEvent: false });
     }
   }
 
-  onNurseStateChange(stateName: string): void {
-    this.nurseCities = [];
+  // ── Duplicate check ───────────────────────────────────────────────────────
+
+  checkPatEmail(): void {
+    const val = (this.patientForm.get('email')?.value || '').trim().toLowerCase();
+    if (!val || this.patientForm.get('email')?.invalid) { this.patEmailDuplicateError = false; return; }
+    this.auth.checkEmail(val).subscribe(exists => this.patEmailDuplicateError = exists);
+  }
+
+  checkNurseEmail(): void {
+    const val = (this.nurseForm.get('email')?.value || '').trim().toLowerCase();
+    if (!val || this.nurseForm.get('email')?.invalid) { this.nurseEmailDuplicateError = false; return; }
+    this.auth.checkEmail(val).subscribe(exists => this.nurseEmailDuplicateError = exists);
+  }
+
+  checkOrgEmail(): void {
+    const val = (this.orgForm.get('email')?.value || '').trim().toLowerCase();
+    if (!val || this.orgForm.get('email')?.invalid) { this.orgEmailDuplicateError = false; return; }
+    this.auth.checkEmail(val).subscribe(exists => this.orgEmailDuplicateError = exists);
+  }
+
+  checkRegDuplicate(): void {
+    const val = (this.orgForm.get('regNumber')?.value || '').toUpperCase();
+    if (val.length !== 6 || !/^[A-Za-z]{6}$/.test(val)) { this.regDuplicateError = false; return; }
+    this.auth.checkOrgField('regNumber', val).subscribe(exists => this.regDuplicateError = exists);
+  }
+
+  checkLicenseDuplicate(): void {
+    const val = this.orgForm.get('licenseNumber')?.value || '';
+    if (val.length !== 8 || !/^[0-9]{8}$/.test(val)) { this.licenseDuplicateError = false; return; }
+    this.auth.checkOrgField('licenseNumber', val).subscribe(exists => this.licenseDuplicateError = exists);
+  }
+
+  // ── State/city cascade ─────────────────────────────────────────────────────
+
+  onPatCountryChange(country: string): void {
+    this.patStateList = [];
+    this.patCityList  = [];
+    this.patientForm.get('state')?.setValue('');
+    this.patientForm.get('city')?.setValue('');
+    if (country === 'India') {
+      this.geoSvc.getStates().subscribe(s => this.patStateList = s);
+    } else {
+      this.patStateList = Object.keys(this.COUNTRY_DATA[country] || {});
+    }
+    const pc = this.patientForm.get('pincode');
+    if (country === 'India') {
+      pc?.setValidators([Validators.required, Validators.pattern('^[1-9][0-9]{5}$')]);
+    } else {
+      pc?.setValidators([Validators.required, Validators.pattern('^[A-Za-z0-9 \\-]{3,10}$')]);
+    }
+    pc?.updateValueAndValidity();
+  }
+
+  onStateChange(stateName: string): void {
+    this.patCityList = [];
+    this.patientForm.get('city')?.setValue('');
+    const country = this.patientForm.get('country')?.value || 'India';
+    if (country === 'India') {
+      this.geoSvc.getCities(stateName).subscribe(c => this.patCityList = c);
+    } else {
+      this.patCityList = this.COUNTRY_DATA[country]?.[stateName] || [];
+    }
+  }
+
+  onNurseCountryChange(country: string): void {
+    this.nurseStateList = [];
+    this.nurseCityList  = [];
+    this.nurseForm.get('state')?.setValue('');
     this.nurseForm.get('city')?.setValue('');
-    if (stateName) {
-      this.geoSvc.getCities(stateName).subscribe(c => this.nurseCities = c);
+    if (country === 'India') {
+      this.geoSvc.getStates().subscribe(s => this.nurseStateList = s);
+    } else {
+      this.nurseStateList = Object.keys(this.COUNTRY_DATA[country] || {});
+    }
+    const pc = this.nurseForm.get('pincode');
+    if (country === 'India') {
+      pc?.setValidators([Validators.required, Validators.pattern('^[1-9][0-9]{5}$')]);
+    } else {
+      pc?.setValidators([Validators.required, Validators.pattern('^[A-Za-z0-9 \\-]{3,10}$')]);
+    }
+    pc?.updateValueAndValidity();
+  }
+
+  onNurseStateChange(stateName: string): void {
+    this.nurseCityList = [];
+    this.nurseForm.get('city')?.setValue('');
+    const country = this.nurseForm.get('country')?.value || 'India';
+    if (country === 'India') {
+      this.geoSvc.getCities(stateName).subscribe(c => this.nurseCityList = c);
+    } else {
+      this.nurseCityList = this.COUNTRY_DATA[country]?.[stateName] || [];
     }
   }
 
@@ -287,12 +537,26 @@ export class RegisterComponent implements OnInit {
     if (val) { ctrl?.enable(); } else { ctrl?.disable(); ctrl?.setValue(''); }
   }
 
-  onOrgStateChange(stateName: string): void {
-    this.orgCities = [];
+  onOrgCountryChange(country: string): void {
+    this.orgStateList = Object.keys(this.COUNTRY_DATA[country] || {});
+    this.orgCityList  = [];
+    this.orgForm.get('state')?.setValue('');
     this.orgForm.get('city')?.setValue('');
-    if (stateName) {
-      this.geoSvc.getCities(stateName).subscribe(c => this.orgCities = c);
+    // Adjust pincode validator by country
+    const pincodeCtrl = this.orgForm.get('pincode');
+    if (country === 'India') {
+      pincodeCtrl?.setValidators([Validators.required, Validators.pattern('^[1-9][0-9]{5}$')]);
+    } else {
+      pincodeCtrl?.setValidators([Validators.required, Validators.pattern('^[A-Za-z0-9 \\-]{3,10}$')]);
     }
+    pincodeCtrl?.updateValueAndValidity();
+  }
+
+  onOrgStateChange(stateName: string): void {
+    this.orgCityList = [];
+    this.orgForm.get('city')?.setValue('');
+    const country = this.orgForm.get('country')?.value || '';
+    this.orgCityList = this.COUNTRY_DATA[country]?.[stateName] || [];
   }
 
   // ── Form getters (patient) ─────────────────────────────────────────────────
@@ -349,6 +613,7 @@ export class RegisterComponent implements OnInit {
   get oAddr1()   { return this.orgForm.get('addressLine1')!; }
   get oAddr2()   { return this.orgForm.get('addressLine2')!; }
   get oLandmark(){ return this.orgForm.get('landmark')!; }
+  get oCountry() { return this.orgForm.get('country')!; }
   get oCity()    { return this.orgForm.get('city')!; }
   get oState()   { return this.orgForm.get('state')!; }
   get oPincode() { return this.orgForm.get('pincode')!; }
@@ -368,6 +633,8 @@ export class RegisterComponent implements OnInit {
   // ── Submit ─────────────────────────────────────────────────────────────────
 
   register(): void {
+    if (this.regDuplicateError || this.licenseDuplicateError ||
+        this.patEmailDuplicateError || this.nurseEmailDuplicateError || this.orgEmailDuplicateError) return;
     const form = this.activeForm;
     if (form.invalid) { form.markAllAsTouched(); return; }
 
@@ -387,32 +654,31 @@ export class RegisterComponent implements OnInit {
 
   private buildPayload(): any {
     if (this.role === 'patient') {
-      const v = this.patientForm.getRawValue(); // getRawValue includes disabled 'country'
+      const v = this.patientForm.getRawValue();
       return {
-        role:            'PATIENT',
-        firstName:       v.firstName.trim(),
-        middleName:      v.middleName?.trim() || '',
-        lastName:        v.lastName.trim(),
-        email:           v.email.trim().toLowerCase(),
-        password:        v.password,
-        phoneCountryCode:v.phoneCountryCode,
-        phone:           v.phone,
-        dob:             v.dob,      // "yyyy-MM-dd"
-        dateOfBirth:     v.dob,
-        gender:          v.gender,
-        bloodGroup:      v.bloodGroup,
-        addressLine1:    v.addressLine1.trim(),
-        addressLine2:    v.addressLine2?.trim() || '',
-        landmark:        v.landmark?.trim()     || '',
-        country:         v.country,
-        state:           v.state,
-        city:            v.city,
-        pincode:         v.pincode,
+        role:         'PATIENT',
+        firstName:    v.firstName.trim(),
+        middleName:   v.middleName?.trim() || '',
+        lastName:     v.lastName.trim(),
+        email:        v.email.trim().toLowerCase(),
+        password:     v.password,
+        phone:        v.phoneCountryCode + v.phone,
+        dob:          v.dob,
+        dateOfBirth:  v.dob,
+        gender:       v.gender,
+        bloodGroup:   v.bloodGroup,
+        addressLine1: v.addressLine1.trim(),
+        addressLine2: v.addressLine2?.trim() || '',
+        landmark:     v.landmark?.trim()     || '',
+        country:      v.country || 'India',
+        state:        v.state,
+        city:         v.city,
+        pincode:      v.pincode,
       };
     }
 
     if (this.role === 'nurse') {
-      const v         = this.nurseForm.getRawValue();
+      const v          = this.nurseForm.getRawValue();
       const firstName  = (v.firstName  || '').trim();
       const middleName = (v.middleName || '').trim();
       const lastName   = (v.lastName   || '').trim();
@@ -421,33 +687,29 @@ export class RegisterComponent implements OnInit {
         '0-2 years': 0, '2-4 years': 2, '4-6 years': 4, '6-8 years': 6, '8+ years': 8
       };
       return {
-        role:             'NURSE',
-        firstName,
-        middleName,
-        lastName,
-        fullName,
-        email:            v.email.trim().toLowerCase(),
-        password:         v.password,
-        phoneCountryCode: v.phoneCountryCode,
-        phone:            v.phone,
-        licenseNumber:    v.licenseNumber.trim(),
-        specialization:   v.specialization,
-        experienceYears:  expMap[v.experience] ?? 0,
-        availability:     v.availability,
-        addressLine1:     v.addressLine1.trim(),
-        addressLine2:     v.addressLine2?.trim() || '',
-        landmark:         v.landmark?.trim()     || '',
-        country:          v.country || 'India',
-        state:            v.state,
-        city:             v.city,
-        pincode:          v.pincode,
+        role:            'NURSE',
+        firstName, middleName, lastName, fullName,
+        email:           v.email.trim().toLowerCase(),
+        password:        v.password,
+        phone:           v.phoneCountryCode + v.phone,
+        licenseNumber:   v.licenseNumber.trim(),
+        specialization:  v.specialization,
+        experienceYears: expMap[v.experience] ?? 0,
+        availability:    v.availability,
+        addressLine1:    v.addressLine1.trim(),
+        addressLine2:    v.addressLine2?.trim() || '',
+        landmark:        v.landmark?.trim()     || '',
+        country:         v.country || 'India',
+        state:           v.state,
+        city:            v.city,
+        pincode:         v.pincode,
       };
     }
 
-    const v        = this.orgForm.getRawValue();
-    const cFirst   = (v.contactFirstName  || '').trim();
-    const cMiddle  = (v.contactMiddleName || '').trim();
-    const cLast    = (v.contactLastName   || '').trim();
+    const v       = this.orgForm.getRawValue();
+    const cFirst  = (v.contactFirstName  || '').trim();
+    const cMiddle = (v.contactMiddleName || '').trim();
+    const cLast   = (v.contactLastName   || '').trim();
     const contactPerson = [cFirst, cMiddle, cLast].filter(Boolean).join(' ');
     return {
       role:              'ORGANIZATION',
@@ -456,19 +718,18 @@ export class RegisterComponent implements OnInit {
       password:          v.password,
       orgName:           (v.orgName || '').trim(),
       orgType:           v.orgType,
-      regNumber:         v.regNumber.trim(),
-      orgLicenseNumber:  v.licenseNumber.trim(),
+      regNumber:         (v.regNumber || '').trim().toUpperCase(),
+      orgLicenseNumber:  (v.licenseNumber || '').trim(),
       contactFirstName:  cFirst,
       contactMiddleName: cMiddle,
       contactLastName:   cLast,
       contactPerson,
       designation:       v.designation,
-      phoneCountryCode:  v.phoneCountryCode,
-      phone:             v.phone,
+      phone:             v.phoneCountryCode + v.phone,
       addressLine1:      v.addressLine1.trim(),
       addressLine2:      v.addressLine2?.trim() || '',
       landmark:          v.landmark?.trim()     || '',
-      country:           v.country || 'India',
+      country:           v.country,
       city:              v.city,
       state:             v.state,
       pincode:           v.pincode,

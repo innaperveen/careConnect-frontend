@@ -32,6 +32,7 @@ export class PostJobComponent implements OnInit {
   orgLocation   = '';
   jobTitles:    string[] = [];
   showOtherTitle = false;
+  selectedBenefits = new Set<string>();
 
   private userId!: number;
 
@@ -71,6 +72,11 @@ export class PostJobComponent implements OnInit {
     'Wound Care', 'Palliative Care', 'Physiotherapy', 'Other'
   ];
 
+  readonly PATIENT_POPULATION_OPTIONS = [
+    'All Ages', 'Pediatric (Children)', 'Adult', 'Geriatric (Elderly)',
+    'Maternity & Newborn', 'Post-Surgical', 'Critical / ICU Patients', 'Home Care Patients'
+  ];
+
   readonly SHIFT_OPTIONS = [
     'Morning (6 AM – 2 PM)', 'Afternoon (2 PM – 10 PM)', 'Night (10 PM – 6 AM)',
     'Rotational', '12-Hour Day Shift', '12-Hour Night Shift', 'Flexible'
@@ -78,27 +84,35 @@ export class PostJobComponent implements OnInit {
 
   readonly OPENINGS_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20];
 
+  readonly BENEFITS_OPTIONS = [
+    'Health Insurance', 'Accommodation', 'Transportation Allowance',
+    'Meals Provided', 'EPF / Provident Fund', 'Annual Bonus',
+    'Overtime Pay', 'Medical Leave'
+  ];
+
   constructor(
     private fb:           FormBuilder,
     private adminService: AdminService,
     private auth:         AuthService
   ) {
     this.jobForm = this.fb.group({
-      department:    ['', Validators.required],
-      jobTitle:      ['', Validators.required],
-      jobTitleOther: ['', [Validators.minLength(3), Validators.maxLength(20),
-                           Validators.pattern('^[A-Za-z /\\-]+$')]],
-      openings:      ['', Validators.required],
-      location:      [{ value: '', disabled: true }, Validators.required],
-      jobType:       ['', Validators.required],
-      specialization:['', Validators.required],
-      description:   [{ value: '', disabled: true },
-                      [Validators.required, Validators.minLength(10), Validators.maxLength(100)]],
-      shiftDetails:  ['', Validators.required],
-      salaryMin:     ['', [Validators.min(5000), Validators.max(500000)]],
-      salaryMax:     ['', [Validators.min(5000), Validators.max(500000)]],
-      priority:      ['Normal', Validators.required],
-      deadline:      ['', Validators.required],
+      department:      ['', Validators.required],
+      jobTitle:        ['', Validators.required],
+      jobTitleOther:   ['', [Validators.minLength(3), Validators.maxLength(20),
+                             Validators.pattern('^[A-Za-z /\\-]+$')]],
+      openings:        ['', Validators.required],
+      location:        [{ value: '', disabled: true }, Validators.required],
+      jobType:         ['', Validators.required],
+      patientPopulation: ['', Validators.required],
+      specialization:  ['', Validators.required],
+      description:     [{ value: '', disabled: true },
+                        [Validators.required, Validators.minLength(10), Validators.maxLength(100)]],
+      workingConditions: ['', [Validators.maxLength(150)]],
+      shiftDetails:    ['', Validators.required],
+      salaryMin:       ['', [Validators.min(10000), Validators.max(75000)]],
+      salaryMax:       ['', [Validators.min(10000), Validators.max(75000)]],
+      priority:        ['Normal', Validators.required],
+      deadline:        ['', Validators.required],
     }, { validators: salaryRangeValidator() });
   }
 
@@ -128,7 +142,6 @@ export class PostJobComponent implements OnInit {
   }
 
   get f() { return this.jobForm.controls; }
-
   get descLen(): number { return (this.jobForm.get('description')?.value || '').length; }
 
   onDepartmentChange(dept: string): void {
@@ -148,6 +161,15 @@ export class PostJobComponent implements OnInit {
     if (spec) { ctrl?.enable(); } else { ctrl?.disable(); ctrl?.setValue(''); }
   }
 
+  toggleBenefit(b: string): void {
+    this.selectedBenefits.has(b) ? this.selectedBenefits.delete(b) : this.selectedBenefits.add(b);
+  }
+
+  benefitsLabel(job: any): string {
+    if (!job.benefits) return '—';
+    return job.benefits.split(',').join(' · ');
+  }
+
   onSubmit(): void {
     if (this.jobForm.invalid) { this.jobForm.markAllAsTouched(); return; }
 
@@ -159,32 +181,44 @@ export class PostJobComponent implements OnInit {
       return;
     }
 
+    const v = this.jobForm.getRawValue();
+
+    // Guard: description (disabled until spec selected) must be non-empty after trim
+    const trimmedDesc = (v.description || '').trim();
+    if (!trimmedDesc || trimmedDesc.length < 10) {
+      this.errorMsg = 'Job Description is required (min 10 characters). Please select a specialization and fill in the description.';
+      setTimeout(() => this.errorMsg = '', 5000);
+      return;
+    }
+
     this.isPosting  = true;
     this.successMsg = '';
     this.errorMsg   = '';
-
-    const v = this.jobForm.getRawValue();
     const payload = {
-      jobTitle:       selectedTitle === 'Other' ? otherTitle : selectedTitle,
-      department:     v.department,
-      openings:       Number(v.openings),
-      location:       v.location,
-      jobType:        v.jobType,
-      specialization: v.specialization,
-      description:    (v.description || '').trim(),
-      shiftDetails:   v.shiftDetails,
-      salaryMin:      v.salaryMin ? parseFloat(v.salaryMin) : null,
-      salaryMax:      v.salaryMax ? parseFloat(v.salaryMax) : null,
-      priority:       v.priority,
-      deadline:       v.deadline ? v.deadline + ':00' : null,
+      jobTitle:         selectedTitle === 'Other' ? otherTitle : selectedTitle,
+      department:       v.department,
+      openings:         Number(v.openings),
+      location:         v.location,
+      jobType:          v.jobType,
+      patientPopulation: v.patientPopulation,
+      specialization:   v.specialization,
+      description:      (v.description || '').trim(),
+      workingConditions: v.workingConditions?.trim() || '',
+      benefits:         Array.from(this.selectedBenefits).join(','),
+      shiftDetails:     v.shiftDetails,
+      salaryMin:        v.salaryMin ? parseFloat(v.salaryMin) : null,
+      salaryMax:        v.salaryMax ? parseFloat(v.salaryMax) : null,
+      priority:         v.priority,
+      deadline:         v.deadline ? v.deadline + ':00' : null,
     };
 
     this.adminService.createJob(this.userId, payload).subscribe({
       next: (created) => {
-        this.isPosting      = false;
-        this.successMsg     = 'Job posted successfully!';
-        this.jobTitles      = [];
-        this.showOtherTitle = false;
+        this.isPosting       = false;
+        this.successMsg      = 'Job posted successfully!';
+        this.jobTitles       = [];
+        this.showOtherTitle  = false;
+        this.selectedBenefits.clear();
         this.jobForm.reset({ priority: 'Normal' });
         this.jobForm.get('location')?.setValue(this.orgLocation);
         this.jobForm.get('description')?.disable();

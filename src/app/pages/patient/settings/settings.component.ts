@@ -179,9 +179,9 @@ export class SettingsComponent implements OnInit {
       bloodGroup: [{ value: '', disabled: true }],
       // Phone
       phoneCountryCode: [{ value: '+91', disabled: true }],
-      phone:            [{ value: '', disabled: true }, [Validators.pattern('^[0-9]{10}$')]],
+      phone:            [{ value: '', disabled: true }, [Validators.pattern('^[6-9][0-9]{9}$')]],
       // Address
-      addressLine1: [{ value: '', disabled: true }, [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
+      addressLine1: [{ value: '', disabled: true }, [Validators.required, Validators.minLength(5), Validators.maxLength(100), Validators.pattern("^[A-Za-z0-9 ,.\\/\\-']+$")]],
       addressLine2: [{ value: '', disabled: true }, Validators.maxLength(100)],
       landmark:     [{ value: '', disabled: true }, Validators.maxLength(60)],
       country:      [{ value: 'India', disabled: true }],
@@ -227,6 +227,16 @@ export class SettingsComponent implements OnInit {
     const m = t.getMonth() - d.getMonth();
     if (m < 0 || (m === 0 && t.getDate() < d.getDate())) age--;
     this.calculatedAge = (age >= 0 && age <= 120) ? age : null;
+  }
+
+  onPhoneCodeChange(code: string): void {
+    const ctrl = this.profileForm.get('phone');
+    if (code === '+91') {
+      ctrl?.setValidators([Validators.pattern('^[6-9][0-9]{9}$')]);
+    } else {
+      ctrl?.setValidators([Validators.pattern('^[0-9]{6,15}$')]);
+    }
+    ctrl?.updateValueAndValidity({ emitEvent: false });
   }
 
   onStateChange(state: string): void {

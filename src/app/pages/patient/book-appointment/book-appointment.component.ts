@@ -10,7 +10,7 @@ import { GeoService } from '../../../services/geo.service';
 const EMAIL_V = [
   Validators.required,
   Validators.email,
-  Validators.pattern('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.com$'),
+  Validators.pattern('^[a-zA-Z0-9._%+\\-]+@(gmail|yahoo|outlook|infosys)\\.(com|in|org)$'),
 ];
 
 const FIRST_NAME_V = [
@@ -139,8 +139,8 @@ export class BookAppointmentComponent implements OnInit {
       lastName:         [dis(''), [Validators.required, Validators.maxLength(30), lastNameV()]],
       email:            [dis(''), EMAIL_V],
       phoneCountryCode: [dis('+91')],
-      phone:            [dis(''), [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-      addressLine1:     [dis(''), [Validators.required, Validators.maxLength(100)]],
+      phone:            [dis(''), [Validators.required, Validators.pattern('^[6-9][0-9]{9}$')]],
+      addressLine1:     [dis(''), [Validators.required, Validators.minLength(5), Validators.maxLength(100), Validators.pattern("^[A-Za-z0-9 ,.\\/\\-']+$")]],
       addressLine2:     [dis(''), Validators.maxLength(100)],
       landmark:         [dis(''), Validators.maxLength(60)],
       state:            [dis(''), Validators.required],
@@ -368,6 +368,16 @@ export class BookAppointmentComponent implements OnInit {
         this.errorMsg  = err.message;
       }
     });
+  }
+
+  onPhoneCodeChange(code: string): void {
+    const ctrl = this.bookingForm.get('phone');
+    if (code === '+91') {
+      ctrl?.setValidators([Validators.required, Validators.pattern('^[6-9][0-9]{9}$')]);
+    } else {
+      ctrl?.setValidators([Validators.required, Validators.pattern('^[0-9]{6,15}$')]);
+    }
+    ctrl?.updateValueAndValidity({ emitEvent: false });
   }
 
   logout(): void { this.auth.logout(); }

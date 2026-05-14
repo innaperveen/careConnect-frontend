@@ -135,6 +135,10 @@ export class AdminService {
     let message = 'Something went wrong. Please try again.';
     if (err.status === 0) {
       message = 'Cannot connect to server. Make sure the backend is running.';
+    } else if (err.error?.data && typeof err.error.data === 'object') {
+      // field-level validation errors — show the first one
+      const fieldErrors = Object.values(err.error.data) as string[];
+      message = fieldErrors.join(' | ');
     } else if (err.error?.message) {
       message = err.error.message;
     } else if (err.status === 404) {

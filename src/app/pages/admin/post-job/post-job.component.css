@@ -78,3 +78,8 @@ textarea.field-input { resize: vertical; border-radius: 12px; }
 .btn-reopen-job:hover { background: #d4edda; }
 .btn-delete-job { background: none; color: #c0392b; border: 1.5px solid #f4c0c0; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; padding: 0; }
 .btn-delete-job:hover { background: #fde8e8; }
+
+/* ── BENEFIT CHIPS ──────────────────────────────────────── */
+.benefit-chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 13px; border-radius: 20px; border: 1.5px solid #d4e5df; background: white; font-size: 0.8rem; font-weight: 500; color: #4e6e68; cursor: pointer; transition: all 0.18s; user-select: none; }
+.benefit-chip:hover { background: #eef9f5; border-color: #9ecfc2; }
+.benefit-chip-active { background: #e3f6ef; border-color: #0f5241; color: #0f5241; font-weight: 600; }

@@ -47,7 +47,7 @@ export class TeamManagementComponent implements OnInit {
                              Validators.pattern('^[A-Za-z.]+$')]],
       role:            ['', Validators.required],
       email:           ['', [Validators.required, Validators.email,
-                             Validators.pattern('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.com$')]],
+                             Validators.pattern('^[a-zA-Z0-9._%+\\-]+@(gmail|yahoo|outlook|infosys)\\.(com|in|org)$')]],
       phoneCountryCode:['+91'],
       phone:           ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
       joinDate:        ['', Validators.required]

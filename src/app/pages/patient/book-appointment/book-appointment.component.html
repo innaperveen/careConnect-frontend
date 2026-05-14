@@ -123,7 +123,7 @@
                 [class.field-readonly]="isSelf"
                 [class.input-err]="bookingForm.get('email')?.touched && bookingForm.get('email')?.invalid">
               <small class="err" *ngIf="bookingForm.get('email')?.touched && bookingForm.get('email')?.hasError('required')">Email is required.</small>
-              <small class="err" *ngIf="bookingForm.get('email')?.touched && (bookingForm.get('email')?.hasError('email') || bookingForm.get('email')?.hasError('pattern'))">Enter a valid .com email address (e.g. name@example.com).</small>
+              <small class="err" *ngIf="bookingForm.get('email')?.touched && (bookingForm.get('email')?.hasError('email') || bookingForm.get('email')?.hasError('pattern'))">Use a Gmail, Yahoo, Outlook, or Infosys email (e.g. name@gmail.com).</small>
             </div>
           </div>
 
@@ -132,7 +132,8 @@
             <div class="col-md-4">
               <label class="field-label">Country Code</label>
               <select class="field-input" formControlName="phoneCountryCode"
-                [class.field-readonly]="isSelf">
+                [class.field-readonly]="isSelf"
+                (change)="onPhoneCodeChange($any($event.target).value)">
                 <option *ngFor="let cc of countryCodes" [value]="cc.code">{{ cc.label }}</option>
               </select>
             </div>
@@ -141,9 +142,9 @@
               <input class="field-input" formControlName="phone"
                 placeholder="10-digit mobile number" maxlength="10"
                 [class.field-readonly]="isSelf"
-                [class.input-err]="bookingForm.get('phone')?.touched && bookingForm.get('phone')?.invalid">
+                [class.input-err]="bookingForm.get('phone')?.invalid && (bookingForm.get('phone')?.dirty || bookingForm.get('phone')?.touched)">
               <small class="err" *ngIf="bookingForm.get('phone')?.touched && bookingForm.get('phone')?.hasError('required')">Phone number is required.</small>
-              <small class="err" *ngIf="bookingForm.get('phone')?.touched && bookingForm.get('phone')?.hasError('pattern')">Enter exactly 10 digits.</small>
+              <small class="err" *ngIf="bookingForm.get('phone')?.dirty && bookingForm.get('phone')?.hasError('pattern')">Enter a valid 10-digit mobile number (must start with 6, 7, 8, or 9).</small>
             </div>
           </div>
 
@@ -154,8 +155,9 @@
               <input class="field-input" formControlName="addressLine1"
                 placeholder="House / Flat No., Street, Area" maxlength="100"
                 [class.field-readonly]="isSelf"
-                [class.input-err]="bookingForm.get('addressLine1')?.touched && bookingForm.get('addressLine1')?.invalid">
+                [class.input-err]="bookingForm.get('addressLine1')?.invalid && (bookingForm.get('addressLine1')?.dirty || bookingForm.get('addressLine1')?.touched)">
               <small class="err" *ngIf="bookingForm.get('addressLine1')?.touched && bookingForm.get('addressLine1')?.hasError('required')">Address Line 1 is required.</small>
+              <small class="err" *ngIf="bookingForm.get('addressLine1')?.dirty && bookingForm.get('addressLine1')?.hasError('pattern')">Only letters, numbers, spaces, commas, periods, hyphens, and slashes allowed.</small>
             </div>
             <div class="col-md-6">
               <label class="field-label">Address Line 2</label>

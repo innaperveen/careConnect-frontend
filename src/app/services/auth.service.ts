@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -19,6 +19,16 @@ export class AuthService {
   register(payload: any): Observable<any> {
     return this.http.post(`${this.API}/auth/register`, payload)
       .pipe(catchError(this.handleError));
+  }
+
+  checkOrgField(field: 'regNumber' | 'licenseNumber', value: string): Observable<boolean> {
+    return this.http.get<any>(`${this.API}/auth/check`, { params: { field, value } })
+      .pipe(map(r => r.data?.exists ?? false), catchError(() => of(false)));
+  }
+
+  checkEmail(email: string): Observable<boolean> {
+    return this.http.get<any>(`${this.API}/auth/check`, { params: { field: 'email', value: email.toLowerCase() } })
+      .pipe(map(r => r.data?.exists ?? false), catchError(() => of(false)));
   }
 
   changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {

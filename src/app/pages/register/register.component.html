@@ -33,32 +33,41 @@
       <!-- Name: 3 separate fields -->
       <div class="row">
         <div class="field-wrap">
+          <label class="field-label">First Name <span class="req-star">*</span></label>
           <input type="text" placeholder="First Name *" formControlName="firstName"
-            [class.input-error]="pFirst.invalid && pFirst.touched">
-          <small *ngIf="pFirst.touched && pFirst.hasError('required')">First name is required.</small>
-          <small *ngIf="pFirst.touched && pFirst.hasError('minlength')">Minimum 3 letters required.</small>
-          <small *ngIf="pFirst.touched && pFirst.hasError('maxlength')">Maximum 30 characters.</small>
-          <small *ngIf="pFirst.touched && pFirst.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
+            [class.input-error]="pFirst.invalid && pFirst.dirty"
+            (keypress)="blockNonLetter($event)"
+            (input)="capitalizeFirst(pFirst)">
+          <small *ngIf="pFirst.dirty && pFirst.hasError('required')">First name is required.</small>
+          <small *ngIf="pFirst.dirty && pFirst.hasError('minlength')">Minimum 3 letters required.</small>
+          <small *ngIf="pFirst.dirty && pFirst.hasError('maxlength')">Maximum 30 characters.</small>
+          <small *ngIf="pFirst.dirty && pFirst.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
         </div>
         <div class="field-wrap">
+                    <label class="field-label">Middle Name <span class="req-star">*</span></label>
           <input type="text" placeholder="Middle Name (optional)" formControlName="middleName"
-            [class.input-error]="pMiddle.invalid && pMiddle.touched">
-          <small *ngIf="pMiddle.touched && pMiddle.hasError('maxlength')">Maximum 30 characters.</small>
-          <small *ngIf="pMiddle.touched && pMiddle.hasError('pattern')">Only letters allowed.</small>
+            [class.input-error]="pMiddle.invalid && pMiddle.dirty"
+            (keypress)="blockNonLetter($event)"
+            (input)="capitalizeFirst(pMiddle)">
+          <small *ngIf="pMiddle.dirty && pMiddle.hasError('maxlength')">Maximum 30 characters.</small>
+          <small *ngIf="pMiddle.dirty && pMiddle.hasError('pattern')">Only letters allowed.</small>
         </div>
         <div class="field-wrap">
+          <label class="field-label">Last Name <span class="req-star">*</span></label>
           <input type="text" placeholder="Last Name *" formControlName="lastName"
-            [class.input-error]="pLast.invalid && pLast.touched">
-          <small *ngIf="pLast.touched && pLast.hasError('required')">Last name is required.</small>
-          <small *ngIf="pLast.touched && pLast.hasError('maxlength')">Maximum 30 characters.</small>
-          <small *ngIf="pLast.touched && pLast.hasError('invalidLastName')">Min 3 letters, or a single dot (.) for single-name individuals.</small>
+            [class.input-error]="pLast.invalid && pLast.dirty"
+            (keypress)="blockNonLetterOrDot($event)"
+            (input)="capitalizeFirst(pLast)">
+          <small *ngIf="pLast.dirty && pLast.hasError('required')">Last name is required.</small>
+          <small *ngIf="pLast.dirty && pLast.hasError('maxlength')">Maximum 30 characters.</small>
+          <small *ngIf="pLast.dirty && pLast.hasError('invalidLastName')">Min 3 letters, or a single dot (.) for single-name individuals.</small>
         </div>
       </div>
 
       <!-- DOB + Auto Age -->
       <div class="row">
         <div class="field-wrap">
-          <label class="field-label">Date of Birth *</label>
+          <label class="field-label">Date of Birth <span class="req-star">*</span></label>
           <input type="date" formControlName="dob"
             [max]="maxDob" [min]="minDob"
             (change)="onDobChange($any($event.target).value)"
@@ -74,7 +83,7 @@
             placeholder="Select DOB first">
         </div>
         <div class="field-wrap">
-          <label class="field-label">&nbsp;</label>
+          <label class="field-label">Gender <span class="req-star">*</span></label>
           <select formControlName="gender" [class.input-error]="pGender.invalid && pGender.touched">
             <option value="" disabled>Gender *</option>
             <option value="Male">Male</option>
@@ -85,7 +94,7 @@
           <small *ngIf="pGender.touched && pGender.hasError('required')">Please select a gender.</small>
         </div>
         <div class="field-wrap">
-          <label class="field-label">&nbsp;</label>
+          <label class="field-label">Blood Group <span class="req-star">*</span></label>
           <select formControlName="bloodGroup" [class.input-error]="pBlood.invalid && pBlood.touched">
             <option value="" disabled>Blood Group *</option>
             <option *ngFor="let bg of bloodGroups" [value]="bg">{{ bg }}</option>
@@ -98,38 +107,44 @@
 
       <!-- Email -->
       <div class="field-wrap">
+        <label class="field-label">Email Address <span class="req-star">*</span></label>
         <input type="email" placeholder="Email Address *" formControlName="email"
-          [class.input-error]="pEmail.invalid && pEmail.touched">
+          [class.input-error]="(pEmail.invalid && pEmail.touched) || patEmailDuplicateError"
+          (blur)="checkPatEmail()">
         <small *ngIf="pEmail.touched && pEmail.hasError('required')">Email is required.</small>
-        <small *ngIf="pEmail.touched && (pEmail.hasError('email') || pEmail.hasError('pattern'))">Enter a valid .com email address (e.g. name@example.com).</small>
+        <small *ngIf="pEmail.touched && (pEmail.hasError('email') || pEmail.hasError('pattern'))">Enter a valid email</small>
+        <small *ngIf="patEmailDuplicateError" style="color:#c0392b;font-weight:600;">This email is already registered. Please login instead.</small>
       </div>
 
       <!-- Phone with country code — two field-wraps inside a row -->
       <div class="row phone-row-outer">
         <div class="field-wrap phone-cc-wrap">
           <label class="field-label">Country Code</label>
-          <select formControlName="phoneCountryCode">
+          <select formControlName="phoneCountryCode" (change)="onPatPhoneCodeChange($any($event.target).value)">
             <option *ngFor="let cc of countryCodes" [value]="cc.code">{{ cc.label }}</option>
           </select>
         </div>
         <div class="field-wrap">
-          <label class="field-label">Phone Number *</label>
+          <label class="field-label">Phone Number <span class="req-star">*</span></label>
           <input type="tel" placeholder="10-digit mobile number" formControlName="phone"
-            [class.input-error]="pPhone.invalid && pPhone.touched"
+            [class.input-error]="pPhone.invalid && (pPhone.dirty || pPhone.touched)"
             maxlength="10">
           <small *ngIf="pPhone.touched && pPhone.hasError('required')">Phone number is required.</small>
-          <small *ngIf="pPhone.touched && pPhone.hasError('pattern')">Enter exactly 10 digits. No spaces or dashes.</small>
+          <small *ngIf="pPhone.dirty && pPhone.hasError('pattern')">Enter a valid 10-digit mobile number.</small>
         </div>
       </div>
 
       <div class="section-label">Residential Address</div>
 
       <div class="field-wrap">
+        <label class="field-label">Address Line 1 <span class="req-star">*</span></label>
         <input type="text" placeholder="Address Line 1 — House / Flat No., Street, Area *"
           formControlName="addressLine1" maxlength="100"
-          [class.input-error]="pAddr1.invalid && pAddr1.touched">
+          [class.input-error]="pAddr1.invalid && (pAddr1.dirty || pAddr1.touched)">
         <small *ngIf="pAddr1.touched && pAddr1.hasError('required')">Address Line 1 is required.</small>
+        <small *ngIf="pAddr1.touched && pAddr1.hasError('minlength')">Minimum 5 characters.</small>
         <small *ngIf="pAddr1.touched && pAddr1.hasError('maxlength')">Maximum 100 characters.</small>
+        <small *ngIf="pAddr1.dirty && pAddr1.hasError('pattern')">Only letters, numbers, spaces, commas, periods, hyphens, and slashes allowed.</small>
       </div>
 
       <div class="field-wrap">
@@ -142,31 +157,42 @@
           formControlName="landmark" maxlength="60">
       </div>
 
-      <!-- Country fixed + State -->
-      <div class="country-notice">
-        <i class="bi bi-geo-fill me-1"></i> Country: <strong>India 🇮🇳</strong>
+      <!-- Country dropdown -->
+      <div class="field-wrap">
+        <label class="field-label">Country <span class="req-star">*</span></label>
+        <select formControlName="country"
+          [class.input-error]="pState.invalid && patientForm.get('country')?.touched"
+          (change)="onPatCountryChange($any($event.target).value)">
+          <option value="" disabled>Select Country *</option>
+          <option *ngFor="let c of orgCountries" [value]="c">{{ c }}</option>
+        </select>
+        <small *ngIf="patientForm.get('country')?.touched && patientForm.get('country')?.hasError('required')">Please select a country.</small>
       </div>
 
       <div class="row state-city-row">
         <div class="field-wrap state-field">
+          <label class="field-label">State <span class="req-star">*</span></label>
           <select formControlName="state"
             [class.input-error]="pState.invalid && pState.touched"
+            [disabled]="patStateList.length === 0"
             (change)="onStateChange($any($event.target).value)">
-            <option value="" disabled>Select State *</option>
-            <option *ngFor="let s of states" [value]="s">{{ s }}</option>
+            <option value="" disabled>{{ patStateList.length ? 'Select State *' : 'Select Country first' }}</option>
+            <option *ngFor="let s of patStateList" [value]="s">{{ s }}</option>
           </select>
           <small *ngIf="pState.touched && pState.hasError('required')">Please select a state.</small>
         </div>
         <div class="field-wrap city-field">
+          <label class="field-label">City <span class="req-star">*</span></label>
           <select formControlName="city"
             [class.input-error]="pCity.invalid && pCity.touched"
-            [disabled]="cities.length === 0">
-            <option value="" disabled>{{ cities.length ? 'Select City *' : 'Select State first' }}</option>
-            <option *ngFor="let c of cities" [value]="c">{{ c }}</option>
+            [disabled]="patCityList.length === 0">
+            <option value="" disabled>{{ patCityList.length ? 'Select City *' : 'Select State first' }}</option>
+            <option *ngFor="let c of patCityList" [value]="c">{{ c }}</option>
           </select>
           <small *ngIf="pCity.touched && pCity.hasError('required')">Please select a city.</small>
         </div>
         <div class="field-wrap pincode-field">
+          <label class="field-label">Pincode <span class="req-star">*</span></label>
           <input type="text" placeholder="Pincode *" formControlName="pincode" maxlength="6"
             [class.input-error]="pPincode.invalid && pPincode.touched">
           <small *ngIf="pPincode.touched && pPincode.hasError('required')">Pincode is required.</small>
@@ -178,6 +204,7 @@
 
       <div class="row">
         <div class="field-wrap">
+          <label class="field-label">Password <span class="req-star">*</span></label>
           <div class="pass-wrap">
             <input [type]="showPPass ? 'text' : 'password'" placeholder="Password (12–18 characters)"
               formControlName="password" [class.input-error]="pPass.invalid && pPass.touched">
@@ -190,6 +217,7 @@
           <small *ngIf="pPass.touched && pPass.hasError('maxlength')">Maximum 18 characters allowed.</small>
         </div>
         <div class="field-wrap">
+          <label class="field-label">Confirm Password <span class="req-star">*</span></label>
           <div class="pass-wrap">
             <input [type]="showPConfirm ? 'text' : 'password'" placeholder="Confirm Password"
               formControlName="confirmPassword" (paste)="$event.preventDefault()"
@@ -203,7 +231,7 @@
         </div>
       </div>
 
-      <button type="submit" class="submit-btn" [disabled]="patientForm.invalid || isLoading">
+      <button type="submit" class="submit-btn" [disabled]="isLoading">
         <span *ngIf="!isLoading">Create Patient Account</span>
         <span *ngIf="isLoading" class="spinner-wrap"><span class="btn-spinner"></span> Registering…</span>
       </button>
@@ -217,25 +245,34 @@
       <!-- Name: 3 separate fields -->
       <div class="row">
         <div class="field-wrap">
+          <label class="field-label">First Name <span class="req-star">*</span></label>
           <input type="text" placeholder="First Name *" formControlName="firstName"
-            [class.input-error]="nFirst.invalid && nFirst.touched">
-          <small *ngIf="nFirst.touched && nFirst.hasError('required')">First name is required.</small>
-          <small *ngIf="nFirst.touched && nFirst.hasError('minlength')">Minimum 3 letters required.</small>
-          <small *ngIf="nFirst.touched && nFirst.hasError('maxlength')">Maximum 30 characters.</small>
-          <small *ngIf="nFirst.touched && nFirst.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
+            [class.input-error]="nFirst.invalid && nFirst.dirty"
+            (keypress)="blockNonLetter($event)"
+            (input)="capitalizeFirst(nFirst)">
+          <small *ngIf="nFirst.dirty && nFirst.hasError('required')">First name is required.</small>
+          <small *ngIf="nFirst.dirty && nFirst.hasError('minlength')">Minimum 3 letters required.</small>
+          <small *ngIf="nFirst.dirty && nFirst.hasError('maxlength')">Maximum 30 characters.</small>
+          <small *ngIf="nFirst.dirty && nFirst.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
         </div>
         <div class="field-wrap">
+                    <label class="field-label">Middle Name <span class="req-star">*</span></label>
           <input type="text" placeholder="Middle Name (optional)" formControlName="middleName"
-            [class.input-error]="nMiddle.invalid && nMiddle.touched">
-          <small *ngIf="nMiddle.touched && nMiddle.hasError('maxlength')">Maximum 30 characters.</small>
-          <small *ngIf="nMiddle.touched && nMiddle.hasError('pattern')">Only letters allowed.</small>
+            [class.input-error]="nMiddle.invalid && nMiddle.dirty"
+            (keypress)="blockNonLetter($event)"
+            (input)="capitalizeFirst(nMiddle)">
+          <small *ngIf="nMiddle.dirty && nMiddle.hasError('maxlength')">Maximum 30 characters.</small>
+          <small *ngIf="nMiddle.dirty && nMiddle.hasError('pattern')">Only letters allowed.</small>
         </div>
         <div class="field-wrap">
+          <label class="field-label">Last Name <span class="req-star">*</span></label>
           <input type="text" placeholder="Last Name *" formControlName="lastName"
-            [class.input-error]="nLast.invalid && nLast.touched">
-          <small *ngIf="nLast.touched && nLast.hasError('required')">Last name is required.</small>
-          <small *ngIf="nLast.touched && nLast.hasError('maxlength')">Maximum 30 characters.</small>
-          <small *ngIf="nLast.touched && nLast.hasError('invalidLastName')">Min 3 letters, or a single dot (.) for single-name individuals.</small>
+            [class.input-error]="nLast.invalid && nLast.dirty"
+            (keypress)="blockNonLetterOrDot($event)"
+            (input)="capitalizeFirst(nLast)">
+          <small *ngIf="nLast.dirty && nLast.hasError('required')">Last name is required.</small>
+          <small *ngIf="nLast.dirty && nLast.hasError('maxlength')">Maximum 30 characters.</small>
+          <small *ngIf="nLast.dirty && nLast.hasError('invalidLastName')">Min 3 letters, or a single dot (.) for single-name individuals.</small>
         </div>
       </div>
 
@@ -244,12 +281,14 @@
       <!-- License + Specialization -->
       <div class="row">
         <div class="field-wrap">
+          <label class="field-label">License Number <span class="req-star">*</span></label>
           <input type="text" placeholder="License Number * (e.g. AB1234567890)" formControlName="licenseNumber"
             [class.input-error]="nLicense.invalid && nLicense.touched" maxlength="12">
           <small *ngIf="nLicense.touched && nLicense.hasError('required')">License number is required.</small>
           <small *ngIf="nLicense.touched && nLicense.hasError('pattern')">Format: 2 capital letters + 10 digits (e.g. AB1234567890).</small>
         </div>
         <div class="field-wrap">
+          <label class="field-label">Specialization <span class="req-star">*</span></label>
           <select formControlName="specialization" [class.input-error]="nSpec.invalid && nSpec.touched">
             <option value="" disabled>Select Specialization *</option>
             <option *ngFor="let s of specializations" [value]="s">{{ s }}</option>
@@ -261,6 +300,7 @@
       <!-- Experience + Availability -->
       <div class="row">
         <div class="field-wrap">
+          <label class="field-label">Experience <span class="req-star">*</span></label>
           <select formControlName="experience" [class.input-error]="nExp.invalid && nExp.touched">
             <option value="" disabled>Years of Experience *</option>
             <option *ngFor="let e of experienceOptions" [value]="e.value">{{ e.label }}</option>
@@ -268,6 +308,7 @@
           <small *ngIf="nExp.touched && nExp.hasError('required')">Please select experience range.</small>
         </div>
         <div class="field-wrap">
+          <label class="field-label">Availability <span class="req-star">*</span></label>
           <select formControlName="availability" [class.input-error]="nAvail.invalid && nAvail.touched">
             <option value="" disabled>Availability *</option>
             <option value="Full-Time">Full-Time</option>
@@ -283,37 +324,43 @@
 
       <!-- Email -->
       <div class="field-wrap">
+        <label class="field-label">Email Address <span class="req-star">*</span></label>
         <input type="email" placeholder="Email Address *" formControlName="email"
-          [class.input-error]="nEmail.invalid && nEmail.touched">
+          [class.input-error]="(nEmail.invalid && nEmail.touched) || nurseEmailDuplicateError"
+          (blur)="checkNurseEmail()">
         <small *ngIf="nEmail.touched && nEmail.hasError('required')">Email is required.</small>
-        <small *ngIf="nEmail.touched && (nEmail.hasError('email') || nEmail.hasError('pattern'))">Enter a valid .com email address (e.g. name@example.com).</small>
+        <small *ngIf="nEmail.touched && (nEmail.hasError('email') || nEmail.hasError('pattern'))">Use a Gmail, Yahoo, Outlook, or Infosys email (e.g. name@gmail.com).</small>
+        <small *ngIf="nurseEmailDuplicateError" style="color:#c0392b;font-weight:600;">This email is already registered. Please login instead.</small>
       </div>
 
       <!-- Phone with country code -->
       <div class="row phone-row-outer">
         <div class="field-wrap phone-cc-wrap">
           <label class="field-label">Country Code</label>
-          <select formControlName="phoneCountryCode">
+          <select formControlName="phoneCountryCode" (change)="onNursePhoneCodeChange($any($event.target).value)">
             <option *ngFor="let cc of countryCodes" [value]="cc.code">{{ cc.label }}</option>
           </select>
         </div>
         <div class="field-wrap">
-          <label class="field-label">Phone Number *</label>
+          <label class="field-label">Phone Number <span class="req-star">*</span></label>
           <input type="tel" placeholder="10-digit mobile number" formControlName="phone"
-            [class.input-error]="nPhone.invalid && nPhone.touched" maxlength="10">
+            [class.input-error]="nPhone.invalid && (nPhone.dirty || nPhone.touched)" maxlength="10">
           <small *ngIf="nPhone.touched && nPhone.hasError('required')">Phone number is required.</small>
-          <small *ngIf="nPhone.touched && nPhone.hasError('pattern')">Enter exactly 10 digits. No spaces or dashes.</small>
+          <small *ngIf="nPhone.dirty && nPhone.hasError('pattern')">Enter a valid 10-digit mobile number (must start with 6, 7, 8, or 9).</small>
         </div>
       </div>
 
       <div class="section-label">Residential Address</div>
 
       <div class="field-wrap">
+        <label class="field-label">Address Line 1 <span class="req-star">*</span></label>
         <input type="text" placeholder="Address Line 1 — House / Flat No., Street, Area *"
           formControlName="addressLine1" maxlength="100"
-          [class.input-error]="nAddr1.invalid && nAddr1.touched">
+          [class.input-error]="nAddr1.invalid && (nAddr1.dirty || nAddr1.touched)">
         <small *ngIf="nAddr1.touched && nAddr1.hasError('required')">Address Line 1 is required.</small>
+        <small *ngIf="nAddr1.touched && nAddr1.hasError('minlength')">Minimum 5 characters.</small>
         <small *ngIf="nAddr1.touched && nAddr1.hasError('maxlength')">Maximum 100 characters.</small>
+        <small *ngIf="nAddr1.dirty && nAddr1.hasError('pattern')">Only letters, numbers, spaces, commas, periods, hyphens, and slashes allowed.</small>
       </div>
 
       <div class="field-wrap">
@@ -326,30 +373,42 @@
           formControlName="landmark" maxlength="60">
       </div>
 
-      <div class="country-notice">
-        <i class="bi bi-geo-fill me-1"></i> Country: <strong>India 🇮🇳</strong>
+      <!-- Country dropdown -->
+      <div class="field-wrap">
+        <label class="field-label">Country <span class="req-star">*</span></label>
+        <select formControlName="country"
+          [class.input-error]="nurseForm.get('country')?.invalid && nurseForm.get('country')?.touched"
+          (change)="onNurseCountryChange($any($event.target).value)">
+          <option value="" disabled>Select Country *</option>
+          <option *ngFor="let c of orgCountries" [value]="c">{{ c }}</option>
+        </select>
+        <small *ngIf="nurseForm.get('country')?.touched && nurseForm.get('country')?.hasError('required')">Please select a country.</small>
       </div>
 
       <div class="row state-city-row">
         <div class="field-wrap state-field">
+          <label class="field-label">State <span class="req-star">*</span></label>
           <select formControlName="state"
             [class.input-error]="nState.invalid && nState.touched"
+            [disabled]="nurseStateList.length === 0"
             (change)="onNurseStateChange($any($event.target).value)">
-            <option value="" disabled>Select State *</option>
-            <option *ngFor="let s of nurseStates" [value]="s">{{ s }}</option>
+            <option value="" disabled>{{ nurseStateList.length ? 'Select State *' : 'Select Country first' }}</option>
+            <option *ngFor="let s of nurseStateList" [value]="s">{{ s }}</option>
           </select>
           <small *ngIf="nState.touched && nState.hasError('required')">Please select a state.</small>
         </div>
         <div class="field-wrap city-field">
+          <label class="field-label">City <span class="req-star">*</span></label>
           <select formControlName="city"
             [class.input-error]="nCity.invalid && nCity.touched"
-            [disabled]="nurseCities.length === 0">
-            <option value="" disabled>{{ nurseCities.length ? 'Select City *' : 'Select State first' }}</option>
-            <option *ngFor="let c of nurseCities" [value]="c">{{ c }}</option>
+            [disabled]="nurseCityList.length === 0">
+            <option value="" disabled>{{ nurseCityList.length ? 'Select City *' : 'Select State first' }}</option>
+            <option *ngFor="let c of nurseCityList" [value]="c">{{ c }}</option>
           </select>
           <small *ngIf="nCity.touched && nCity.hasError('required')">Please select a city.</small>
         </div>
         <div class="field-wrap pincode-field">
+          <label class="field-label">Pincode <span class="req-star">*</span></label>
           <input type="text" placeholder="Pincode *" formControlName="pincode" maxlength="6"
             [class.input-error]="nPincode.invalid && nPincode.touched">
           <small *ngIf="nPincode.touched && nPincode.hasError('required')">Pincode is required.</small>
@@ -361,6 +420,7 @@
 
       <div class="row">
         <div class="field-wrap">
+          <label class="field-label">Password <span class="req-star">*</span></label>
           <div class="pass-wrap">
             <input [type]="showNPass ? 'text' : 'password'" placeholder="Password (12–18 characters)"
               formControlName="password" [class.input-error]="nPass.invalid && nPass.touched">
@@ -373,6 +433,7 @@
           <small *ngIf="nPass.touched && nPass.hasError('maxlength')">Maximum 18 characters allowed.</small>
         </div>
         <div class="field-wrap">
+          <label class="field-label">Confirm Password <span class="req-star">*</span></label>
           <div class="pass-wrap">
             <input [type]="showNConfirm ? 'text' : 'password'" placeholder="Confirm Password"
               formControlName="confirmPassword" (paste)="$event.preventDefault()"
@@ -386,8 +447,7 @@
         </div>
       </div>
 
-      <button type="submit" class="submit-btn"
-        [disabled]="nurseForm.invalid || isLoading">
+      <button type="submit" class="submit-btn" [disabled]="isLoading">
         <span *ngIf="!isLoading">Create Nurse Account</span>
         <span *ngIf="isLoading" class="spinner-wrap"><span class="btn-spinner"></span> Registering…</span>
       </button>
@@ -400,6 +460,7 @@
 
       <!-- Step 1: Type first — enables org name -->
       <div class="field-wrap">
+        <label class="field-label">Organization Type <span class="req-star">*</span></label>
         <select formControlName="orgType" [class.input-error]="oType.invalid && oType.touched"
           (change)="onOrgTypeChange($any($event.target).value)">
           <option value="" disabled>Organization Type *</option>
@@ -410,27 +471,39 @@
 
       <!-- Org Name: unlocked after type is chosen -->
       <div class="field-wrap">
+        <label class="field-label">Organization Name <span class="req-star">*</span></label>
         <input type="text" placeholder="Organization Name * (select type first)" formControlName="orgName"
-          [class.input-error]="oName.invalid && oName.touched" maxlength="30">
+          [class.input-error]="oName.invalid && oName.touched" maxlength="50"
+          (keypress)="blockNonAlpha($event)"
+          (input)="capitalizeFirst(oName)">
         <small *ngIf="oName.touched && oName.hasError('required')">Organization name is required.</small>
         <small *ngIf="oName.touched && oName.hasError('minlength')">Organization name must be at least 3 characters.</small>
-        <small *ngIf="oName.touched && oName.hasError('maxlength')">Organization name must not exceed 30 characters.</small>
+        <small *ngIf="oName.touched && oName.hasError('maxlength')">Organization name must not exceed 50 characters.</small>
         <small *ngIf="oName.touched && oName.hasError('pattern')">Only letters and basic punctuation allowed. No numbers.</small>
       </div>
 
       <!-- Registration Number + License Number -->
       <div class="row">
         <div class="field-wrap">
+          <label class="field-label">Registration Number <span class="req-star">*</span></label>
           <input type="text" placeholder="Registration Number * (6 letters, e.g. ABCDEF)" formControlName="regNumber"
-            [class.input-error]="oReg.invalid && oReg.touched" maxlength="6">
+            [class.input-error]="(oReg.invalid && oReg.touched) || regDuplicateError" maxlength="6"
+            (keypress)="blockNonLetter($event)"
+            (blur)="checkRegDuplicate()"
+            style="text-transform:uppercase;">
           <small *ngIf="oReg.touched && oReg.hasError('required')">Registration number is required.</small>
           <small *ngIf="oReg.touched && oReg.hasError('pattern')">Must be exactly 6 letters (A–Z). No numbers or special characters.</small>
+          <small *ngIf="regDuplicateError" style="color:#c0392b;font-weight:600;">This registration number is already registered.</small>
         </div>
         <div class="field-wrap">
+          <label class="field-label">License Number <span class="req-star">*</span></label>
           <input type="text" placeholder="License Number * (8 digits, e.g. 12345678)" formControlName="licenseNumber"
-            [class.input-error]="oLicense.invalid && oLicense.touched" maxlength="8">
+            [class.input-error]="(oLicense.invalid && oLicense.touched) || licenseDuplicateError" maxlength="8"
+            (keypress)="blockNonDigit($event)"
+            (blur)="checkLicenseDuplicate()">
           <small *ngIf="oLicense.touched && oLicense.hasError('required')">License number is required.</small>
           <small *ngIf="oLicense.touched && oLicense.hasError('pattern')">Must be exactly 8 digits (0–9). No letters or special characters.</small>
+          <small *ngIf="licenseDuplicateError" style="color:#c0392b;font-weight:600;">This license number is already registered.</small>
         </div>
       </div>
 
@@ -439,30 +512,40 @@
       <!-- Contact person: 3 name fields -->
       <div class="row">
         <div class="field-wrap">
+          <label class="field-label">Contact First Name <span class="req-star">*</span></label>
           <input type="text" placeholder="Contact First Name *" formControlName="contactFirstName"
-            [class.input-error]="oCFirst.invalid && oCFirst.touched" maxlength="30">
-          <small *ngIf="oCFirst.touched && oCFirst.hasError('required')">First name is required.</small>
-          <small *ngIf="oCFirst.touched && oCFirst.hasError('minlength')">Minimum 3 letters.</small>
-          <small *ngIf="oCFirst.touched && oCFirst.hasError('maxlength')">Maximum 30 characters.</small>
-          <small *ngIf="oCFirst.touched && oCFirst.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
+            [class.input-error]="oCFirst.invalid && oCFirst.dirty" maxlength="30"
+            (keypress)="blockNonLetter($event)"
+            (input)="capitalizeFirst(oCFirst)">
+          <small *ngIf="oCFirst.dirty && oCFirst.hasError('required')">First name is required.</small>
+          <small *ngIf="oCFirst.dirty && oCFirst.hasError('minlength')">Minimum 3 letters.</small>
+          <small *ngIf="oCFirst.dirty && oCFirst.hasError('maxlength')">Maximum 30 characters.</small>
+          <small *ngIf="oCFirst.dirty && oCFirst.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
         </div>
         <div class="field-wrap">
+                    <label class="field-label">Middle Name <span class="req-star">*</span></label>
           <input type="text" placeholder="Middle Name (optional)" formControlName="contactMiddleName"
-            [class.input-error]="oCMiddle.invalid && oCMiddle.touched" maxlength="30">
-          <small *ngIf="oCMiddle.touched && oCMiddle.hasError('maxlength')">Maximum 30 characters.</small>
-          <small *ngIf="oCMiddle.touched && oCMiddle.hasError('pattern')">Only letters allowed.</small>
+            [class.input-error]="oCMiddle.invalid && oCMiddle.dirty" maxlength="30"
+            (keypress)="blockNonLetter($event)"
+            (input)="capitalizeFirst(oCMiddle)">
+          <small *ngIf="oCMiddle.dirty && oCMiddle.hasError('maxlength')">Maximum 30 characters.</small>
+          <small *ngIf="oCMiddle.dirty && oCMiddle.hasError('pattern')">Only letters allowed.</small>
         </div>
         <div class="field-wrap">
+          <label class="field-label">Contact Last Name <span class="req-star">*</span></label>
           <input type="text" placeholder="Contact Last Name *" formControlName="contactLastName"
-            [class.input-error]="oCLast.invalid && oCLast.touched" maxlength="30">
-          <small *ngIf="oCLast.touched && oCLast.hasError('required')">Contact last name is required.</small>
-          <small *ngIf="oCLast.touched && oCLast.hasError('maxlength')">Contact last name must not exceed 30 characters.</small>
-          <small *ngIf="oCLast.touched && oCLast.hasError('invalidLastName')">Min 3 letters, or a single dot (.) for single-name individuals.</small>
+            [class.input-error]="oCLast.invalid && oCLast.dirty" maxlength="30"
+            (keypress)="blockNonLetterOrDot($event)"
+            (input)="capitalizeFirst(oCLast)">
+          <small *ngIf="oCLast.dirty && oCLast.hasError('required')">Contact last name is required.</small>
+          <small *ngIf="oCLast.dirty && oCLast.hasError('maxlength')">Contact last name must not exceed 30 characters.</small>
+          <small *ngIf="oCLast.dirty && oCLast.hasError('invalidLastName')">Min 3 letters, or a single dot (.) for single-name individuals.</small>
         </div>
       </div>
 
       <!-- Designation dropdown -->
       <div class="field-wrap">
+        <label class="field-label">Designation <span class="req-star">*</span></label>
         <select formControlName="designation" [class.input-error]="oDesig.invalid && oDesig.touched">
           <option value="" disabled>Designation *</option>
           <option *ngFor="let d of designations" [value]="d">{{ d }}</option>
@@ -472,38 +555,44 @@
 
       <!-- Official Email -->
       <div class="field-wrap">
+        <label class="field-label">Email Address <span class="req-star">*</span></label>
         <input type="email" placeholder="Official Email * (e.g. admin@hospital.com)"
-          formControlName="email" [class.input-error]="oEmail.invalid && oEmail.touched">
+          formControlName="email"
+          [class.input-error]="(oEmail.invalid && oEmail.touched) || orgEmailDuplicateError"
+          (blur)="checkOrgEmail()">
         <small *ngIf="oEmail.touched && oEmail.hasError('required')">Email is required.</small>
-        <small *ngIf="oEmail.touched && (oEmail.hasError('email') || oEmail.hasError('pattern'))">Enter a valid official email ending in .com, .org, .in, or .gov.in.</small>
+        <small *ngIf="oEmail.touched && (oEmail.hasError('email') || oEmail.hasError('pattern'))">Use a Gmail, Yahoo, Outlook, or Infosys email (e.g. name@gmail.com / name@infosys.in).</small>
+        <small *ngIf="orgEmailDuplicateError" style="color:#c0392b;font-weight:600;">This email is already registered. Please login instead.</small>
       </div>
 
       <!-- Phone with country code -->
       <div class="row phone-row-outer">
         <div class="field-wrap phone-cc-wrap">
           <label class="field-label">Country Code</label>
-          <select formControlName="phoneCountryCode">
+          <select formControlName="phoneCountryCode" (change)="onOrgPhoneCodeChange($any($event.target).value)">
             <option *ngFor="let cc of countryCodes" [value]="cc.code">{{ cc.label }}</option>
           </select>
         </div>
         <div class="field-wrap">
-          <label class="field-label">Phone Number *</label>
+          <label class="field-label">Phone Number <span class="req-star">*</span></label>
           <input type="tel" placeholder="10-digit number" formControlName="phone"
-            [class.input-error]="oPhone.invalid && oPhone.touched" maxlength="10">
+            [class.input-error]="oPhone.invalid && (oPhone.dirty || oPhone.touched)" maxlength="10">
           <small *ngIf="oPhone.touched && oPhone.hasError('required')">Phone is required.</small>
-          <small *ngIf="oPhone.touched && oPhone.hasError('pattern')">Enter exactly 10 digits. No spaces or dashes.</small>
+          <small *ngIf="oPhone.dirty && oPhone.hasError('pattern')">Enter a valid 10-digit mobile number (must start with 6, 7, 8, or 9).</small>
         </div>
       </div>
 
       <div class="section-label">Organization Address</div>
 
       <div class="field-wrap">
+        <label class="field-label">Address Line 1 <span class="req-star">*</span></label>
         <input type="text" placeholder="Address Line 1 — Building No., Street, Area *"
           formControlName="addressLine1" maxlength="100"
-          [class.input-error]="oAddr1.invalid && oAddr1.touched">
+          [class.input-error]="oAddr1.invalid && (oAddr1.dirty || oAddr1.touched)">
         <small *ngIf="oAddr1.touched && oAddr1.hasError('required')">Address Line 1 is required.</small>
         <small *ngIf="oAddr1.touched && oAddr1.hasError('minlength')">Minimum 5 characters.</small>
         <small *ngIf="oAddr1.touched && oAddr1.hasError('maxlength')">Maximum 100 characters.</small>
+        <small *ngIf="oAddr1.dirty && oAddr1.hasError('pattern')">Only letters, numbers, spaces, commas, periods, hyphens, and slashes allowed.</small>
       </div>
 
       <div class="field-wrap">
@@ -516,30 +605,42 @@
           formControlName="landmark" maxlength="60">
       </div>
 
-      <div class="country-notice">
-        <i class="bi bi-geo-fill me-1"></i> Country: <strong>India 🇮🇳</strong>
+      <!-- Country dropdown -->
+      <div class="field-wrap">
+        <label class="field-label">Country <span class="req-star">*</span></label>
+        <select formControlName="country"
+          [class.input-error]="oCountry.invalid && oCountry.touched"
+          (change)="onOrgCountryChange($any($event.target).value)">
+          <option value="" disabled>Select Country *</option>
+          <option *ngFor="let c of orgCountries" [value]="c">{{ c }}</option>
+        </select>
+        <small *ngIf="oCountry.touched && oCountry.hasError('required')">Please select a country.</small>
       </div>
 
       <div class="row state-city-row">
         <div class="field-wrap state-field">
+          <label class="field-label">State <span class="req-star">*</span></label>
           <select formControlName="state"
             [class.input-error]="oState.invalid && oState.touched"
+            [disabled]="orgStateList.length === 0"
             (change)="onOrgStateChange($any($event.target).value)">
-            <option value="" disabled>Select State *</option>
-            <option *ngFor="let s of orgStates" [value]="s">{{ s }}</option>
+            <option value="" disabled>{{ orgStateList.length ? 'Select State *' : 'Select Country first' }}</option>
+            <option *ngFor="let s of orgStateList" [value]="s">{{ s }}</option>
           </select>
           <small *ngIf="oState.touched && oState.hasError('required')">Please select a state.</small>
         </div>
         <div class="field-wrap city-field">
+          <label class="field-label">City <span class="req-star">*</span></label>
           <select formControlName="city"
             [class.input-error]="oCity.invalid && oCity.touched"
-            [disabled]="orgCities.length === 0">
-            <option value="" disabled>{{ orgCities.length ? 'Select City *' : 'Select State first' }}</option>
-            <option *ngFor="let c of orgCities" [value]="c">{{ c }}</option>
+            [disabled]="orgCityList.length === 0">
+            <option value="" disabled>{{ orgCityList.length ? 'Select City *' : 'Select State first' }}</option>
+            <option *ngFor="let c of orgCityList" [value]="c">{{ c }}</option>
           </select>
           <small *ngIf="oCity.touched && oCity.hasError('required')">Please select a city.</small>
         </div>
         <div class="field-wrap pincode-field">
+          <label class="field-label">Pincode <span class="req-star">*</span></label>
           <input type="text" placeholder="Pincode *" formControlName="pincode" maxlength="6"
             [class.input-error]="oPincode.invalid && oPincode.touched">
           <small *ngIf="oPincode.touched && oPincode.hasError('required')">Pincode is required.</small>
@@ -548,13 +649,17 @@
       </div>
 
       <div class="field-wrap">
-        <input type="url" placeholder="Website (optional) — https://www.hospital.com" formControlName="website">
+        <input type="url" placeholder="Website (optional) — https://www.hospital.com" formControlName="website"
+          [class.input-error]="orgForm.get('website')?.dirty && orgForm.get('website')?.hasError('pattern')">
+        <small *ngIf="orgForm.get('website')?.dirty && orgForm.get('website')?.hasError('pattern')">
+          Enter a valid URL ending in .com / .in / .org / .gov.in (e.g. www.hospital.com or https://hospital.gov.in).</small>
       </div>
 
       <div class="section-label">Set Password</div>
 
       <div class="row">
         <div class="field-wrap">
+          <label class="field-label">Password <span class="req-star">*</span></label>
           <div class="pass-wrap">
             <input [type]="showOPass ? 'text' : 'password'" placeholder="Password (12–18 characters)"
               formControlName="password" [class.input-error]="oPass.invalid && oPass.touched">
@@ -567,6 +672,7 @@
           <small *ngIf="oPass.touched && oPass.hasError('maxlength')">Maximum 18 characters allowed.</small>
         </div>
         <div class="field-wrap">
+          <label class="field-label">Confirm Password <span class="req-star">*</span></label>
           <div class="pass-wrap">
             <input [type]="showOConfirm ? 'text' : 'password'" placeholder="Confirm Password"
               formControlName="confirmPassword" (paste)="$event.preventDefault()"
@@ -585,8 +691,7 @@
         Your organization account will be reviewed within 24 hours before activation.
       </p>
 
-      <button type="submit" class="submit-btn"
-        [disabled]="orgForm.invalid || isLoading">
+      <button type="submit" class="submit-btn" [disabled]="isLoading">
         <span *ngIf="!isLoading">Register Organization</span>
         <span *ngIf="isLoading" class="spinner-wrap"><span class="btn-spinner"></span> Registering…</span>
       </button>

@@ -1,3 +1,7 @@
+    /* Required field asterisk */
+    .req-star { color: #c0392b; font-weight: 700; margin-left: 2px; }
+    .field-label { display: block; font-size: 0.8rem; font-weight: 600; color: #444; margin-bottom: 4px; }
+
     /* ===== RESET & GLOBAL REFINEMENTS ===== */
     * {
       margin: 0;

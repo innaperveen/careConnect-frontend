@@ -32,12 +32,14 @@ export class AdminDashboardComponent implements OnInit {
   ];
 
   readonly COUNTRY_CODES = [
-    { label: '🇮🇳 +91 India',     code: '+91' },
-    { label: '🇺🇸 +1  USA/Canada', code: '+1'  },
-    { label: '🇬🇧 +44 UK',         code: '+44' },
-    { label: '🇦🇺 +61 Australia',  code: '+61' },
-    { label: '🇦🇪 +971 UAE',       code: '+971'},
-    { label: '🇸🇬 +65 Singapore',  code: '+65' },
+    { label: 'IN +91',  code: '+91'  },
+    { label: 'US +1',   code: '+1'   },
+    { label: 'UK +44',  code: '+44'  },
+    { label: 'AU +61',  code: '+61'  },
+    { label: 'AE +971', code: '+971' },
+    { label: 'SG +65',  code: '+65'  },
+    { label: 'DE +49',  code: '+49'  },
+    { label: 'CA +1',   code: '+1'   },
   ];
 
   readonly SPECIALIZATION_OPTIONS = [
@@ -180,7 +182,7 @@ export class AdminDashboardComponent implements OnInit {
       contactPerson: [{ value: this.org.contactPerson, disabled: true }],
       designation:   [{ value: this.org.designation,   disabled: true }],
       phone:         [{ value: this.org.phone,          disabled: true }],
-      website:       [v('website'), [Validators.pattern('^(https?://)?(www\\.)?[a-zA-Z0-9][a-zA-Z0-9\\-\\.]*\\.(com|in)(/.*)?$')]],
+      website:       [v('website'), [Validators.pattern('^(https?://)?(www\\.)?[a-zA-Z0-9][a-zA-Z0-9\\-]+(\\.(com|in|org|gov\\.in))(/[^\\s]*)?$')]],
       bedCapacity:   [v('bedCapacity'),  [Validators.min(1), Validators.max(10000)]],
       accreditation: [v('accreditation')],
 
@@ -194,10 +196,10 @@ export class AdminDashboardComponent implements OnInit {
       c2Designation: [this.org.contact2Designation],
       c2Email:       [this.org.contact2Email,
                       [Validators.email,
-                       Validators.pattern('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.(com|org|in)$')]],
+                       Validators.pattern('^[a-zA-Z0-9._%+\\-]+@(gmail|yahoo|outlook|infosys)\\.(com|in|org)$')]],
       c2PhoneCode:   [this.org.contact2Phone?.startsWith('+') ? this.org.contact2Phone.substring(0, this.org.contact2Phone.indexOf(' ') > 0 ? this.org.contact2Phone.indexOf(' ') : 3) : '+91'],
-      c2Phone:       [this.org.contact2Phone?.replace(/^\+\d+\s?/, '') || '',
-                      [Validators.pattern('^[0-9]{10}$')]],
+      c2Phone:       [this.org.contact2Phone?.replace(/^\+\d{1,4}\s?/, '') || '',
+                      [Validators.pattern('^[6-9][0-9]{9}$')]],
     });
 
     // Pre-select existing specializations
@@ -207,6 +209,43 @@ export class AdminDashboardComponent implements OnInit {
 
     this.saveError = '';
     this.editOpen  = true;
+  }
+
+  // ── Key helpers ────────────────────────────────────────────────
+  blockNonLetter(e: KeyboardEvent): void {
+    const nav = ['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End'];
+    if (nav.includes(e.key)) return;
+    if (!/^[A-Za-z]$/.test(e.key)) e.preventDefault();
+  }
+
+  blockNonLetterOrDot(e: KeyboardEvent): void {
+    const nav = ['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End'];
+    if (nav.includes(e.key)) return;
+    if (!/^[A-Za-z.]$/.test(e.key)) e.preventDefault();
+  }
+
+  blockNonDigit(e: KeyboardEvent): void {
+    const nav = ['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End'];
+    if (nav.includes(e.key)) return;
+    if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+  }
+
+  capitalizeFirstField(fieldName: string): void {
+    const ctrl = this.editForm?.get(fieldName);
+    if (!ctrl) return;
+    const v: string = ctrl.value || '';
+    if (v.length > 0 && v[0] !== v[0].toUpperCase()) {
+      ctrl.setValue(v[0].toUpperCase() + v.slice(1), { emitEvent: false });
+    }
+  }
+
+  onC2PhoneCodeChange(code: string): void {
+    const ctrl = this.editForm?.get('c2Phone');
+    if (!ctrl) return;
+    ctrl.setValidators(code === '+91'
+      ? [Validators.pattern('^[6-9][0-9]{9}$')]
+      : [Validators.pattern('^[0-9]{6,15}$')]);
+    ctrl.updateValueAndValidity({ emitEvent: false });
   }
 
   toggleSpec(spec: string): void {

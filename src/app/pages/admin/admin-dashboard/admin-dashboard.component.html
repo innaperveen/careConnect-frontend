@@ -355,8 +355,8 @@
           <div class="col-md-6">
             <label class="edit-label">Website</label>
             <input class="edit-input" formControlName="website" placeholder="www.hospital.com or https://hospital.com"
-                   [class.input-err]="editForm.get('website')?.touched && editForm.get('website')?.invalid">
-            <small class="err" *ngIf="editForm.get('website')?.touched && editForm.get('website')?.hasError('pattern')">Website must end with .com, .in, or .gov.in (e.g. www.hospital.com).</small>
+                   [class.input-err]="editForm.get('website')?.dirty && editForm.get('website')?.invalid">
+            <small class="err" *ngIf="editForm.get('website')?.dirty && editForm.get('website')?.hasError('pattern')">Enter a valid URL ending in .com / .in / .org / .gov.in (e.g. www.hospital.com or https://hospital.gov.in).</small>
           </div>
         </div>
 
@@ -397,25 +397,31 @@
           <div class="col-md-4">
             <label class="edit-label">First Name</label>
             <input class="edit-input" formControlName="c2FirstName" placeholder="First name" maxlength="30"
-                   [class.input-err]="editForm.get('c2FirstName')?.touched && editForm.get('c2FirstName')?.invalid">
-            <small class="err" *ngIf="editForm.get('c2FirstName')?.touched && editForm.get('c2FirstName')?.hasError('minlength')">Minimum 3 letters required.</small>
-            <small class="err" *ngIf="editForm.get('c2FirstName')?.touched && editForm.get('c2FirstName')?.hasError('maxlength')">First name must not exceed 30 characters.</small>
-            <small class="err" *ngIf="editForm.get('c2FirstName')?.touched && editForm.get('c2FirstName')?.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
+                   [class.input-err]="editForm.get('c2FirstName')?.dirty && editForm.get('c2FirstName')?.invalid"
+                   (keypress)="blockNonLetter($event)"
+                   (input)="capitalizeFirstField('c2FirstName')">
+            <small class="err" *ngIf="editForm.get('c2FirstName')?.dirty && editForm.get('c2FirstName')?.hasError('minlength')">Minimum 3 letters required.</small>
+            <small class="err" *ngIf="editForm.get('c2FirstName')?.dirty && editForm.get('c2FirstName')?.hasError('maxlength')">First name must not exceed 30 characters.</small>
+            <small class="err" *ngIf="editForm.get('c2FirstName')?.dirty && editForm.get('c2FirstName')?.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
           </div>
           <div class="col-md-4">
             <label class="edit-label">Middle Name</label>
             <input class="edit-input" formControlName="c2MiddleName" placeholder="Middle name (optional)" maxlength="30"
-                   [class.input-err]="editForm.get('c2MiddleName')?.touched && editForm.get('c2MiddleName')?.invalid">
-            <small class="err" *ngIf="editForm.get('c2MiddleName')?.touched && editForm.get('c2MiddleName')?.hasError('maxlength')">Maximum 30 characters.</small>
-            <small class="err" *ngIf="editForm.get('c2MiddleName')?.touched && editForm.get('c2MiddleName')?.hasError('pattern')">Only letters allowed.</small>
+                   [class.input-err]="editForm.get('c2MiddleName')?.dirty && editForm.get('c2MiddleName')?.invalid"
+                   (keypress)="blockNonLetter($event)"
+                   (input)="capitalizeFirstField('c2MiddleName')">
+            <small class="err" *ngIf="editForm.get('c2MiddleName')?.dirty && editForm.get('c2MiddleName')?.hasError('maxlength')">Maximum 30 characters.</small>
+            <small class="err" *ngIf="editForm.get('c2MiddleName')?.dirty && editForm.get('c2MiddleName')?.hasError('pattern')">Only letters allowed.</small>
           </div>
           <div class="col-md-4">
             <label class="edit-label">Last Name</label>
             <input class="edit-input" formControlName="c2LastName" placeholder="Last name" maxlength="30"
-                   [class.input-err]="editForm.get('c2LastName')?.touched && editForm.get('c2LastName')?.invalid">
-            <small class="err" *ngIf="editForm.get('c2LastName')?.touched && editForm.get('c2LastName')?.hasError('minlength')">Minimum 3 letters required.</small>
-            <small class="err" *ngIf="editForm.get('c2LastName')?.touched && editForm.get('c2LastName')?.hasError('maxlength')">Last name must not exceed 30 characters.</small>
-            <small class="err" *ngIf="editForm.get('c2LastName')?.touched && editForm.get('c2LastName')?.hasError('pattern')">Only letters and dot allowed. No numbers.</small>
+                   [class.input-err]="editForm.get('c2LastName')?.dirty && editForm.get('c2LastName')?.invalid"
+                   (keypress)="blockNonLetterOrDot($event)"
+                   (input)="capitalizeFirstField('c2LastName')">
+            <small class="err" *ngIf="editForm.get('c2LastName')?.dirty && editForm.get('c2LastName')?.hasError('minlength')">Minimum 3 letters required.</small>
+            <small class="err" *ngIf="editForm.get('c2LastName')?.dirty && editForm.get('c2LastName')?.hasError('maxlength')">Last name must not exceed 30 characters.</small>
+            <small class="err" *ngIf="editForm.get('c2LastName')?.dirty && editForm.get('c2LastName')?.hasError('pattern')">Only letters and dot allowed. No numbers.</small>
           </div>
           <div class="col-md-6">
             <label class="edit-label">Designation</label>
@@ -427,20 +433,21 @@
           <div class="col-md-6">
             <label class="edit-label">Official Email</label>
             <input class="edit-input" formControlName="c2Email" placeholder="e.g. contact@hospital.com"
-                   [class.input-err]="editForm.get('c2Email')?.touched && editForm.get('c2Email')?.invalid">
-            <small class="err" *ngIf="editForm.get('c2Email')?.touched && editForm.get('c2Email')?.hasError('required')">Email is required.</small>
-            <small class="err" *ngIf="editForm.get('c2Email')?.touched && (editForm.get('c2Email')?.hasError('email') || editForm.get('c2Email')?.hasError('pattern'))">Enter a valid official email ending in .com, .org, or .in (e.g. name@hospital.com).</small>
+                   [class.input-err]="editForm.get('c2Email')?.dirty && editForm.get('c2Email')?.invalid">
+            <small class="err" *ngIf="editForm.get('c2Email')?.dirty && (editForm.get('c2Email')?.hasError('email') || editForm.get('c2Email')?.hasError('pattern'))">Use a Gmail, Yahoo, Outlook, or Infosys email (e.g. name@gmail.com / name@infosys.in).</small>
           </div>
           <div class="col-md-6">
             <label class="edit-label">Phone</label>
             <div class="d-flex gap-2">
-              <select class="edit-input" formControlName="c2PhoneCode" style="flex:0 0 180px;">
+              <select class="edit-input" formControlName="c2PhoneCode" style="flex:0 0 180px;"
+                (change)="onC2PhoneCodeChange($any($event.target).value)">
                 <option *ngFor="let cc of COUNTRY_CODES" [value]="cc.code">{{ cc.label }}</option>
               </select>
               <div style="flex:1;">
                 <input class="edit-input" formControlName="c2Phone" placeholder="10-digit number" maxlength="10"
-                       [class.input-err]="editForm.get('c2Phone')?.touched && editForm.get('c2Phone')?.invalid">
-                <small class="err" *ngIf="editForm.get('c2Phone')?.touched && editForm.get('c2Phone')?.hasError('pattern')">Enter exactly 10 digits. No spaces or dashes.</small>
+                       [class.input-err]="editForm.get('c2Phone')?.dirty && editForm.get('c2Phone')?.invalid"
+                       (keypress)="blockNonDigit($event)">
+                <small class="err" *ngIf="editForm.get('c2Phone')?.dirty && editForm.get('c2Phone')?.hasError('pattern')">Enter a valid 10-digit mobile number (must start with 6, 7, 8, or 9).</small>
               </div>
             </div>
           </div>
@@ -480,7 +487,7 @@
 
         <small class="err d-block mb-2" *ngIf="saveError">{{ saveError }}</small>
         <div class="d-flex gap-2">
-          <button type="submit" class="btn-save-profile" [disabled]="editForm.invalid || isSaving">
+          <button type="submit" class="btn-save-profile" [disabled]="isSaving">
             <span *ngIf="!isSaving"><i class="bi bi-check-lg me-1"></i>Save Changes</span>
             <span *ngIf="isSaving"><span class="btn-spinner me-2"></span>Saving…</span>
           </button>
