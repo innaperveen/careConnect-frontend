@@ -1,16 +1,20 @@
 import { AuthService } from '../../../services/auth.service';
 import { NurseService } from '../../../services/nurse.service';
-import { Component, OnInit } from '@angular/core';
+import { NotificationService } from '../../../services/notification.service';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-applications',
   templateUrl: './applications.component.html',
   styleUrls: ['./applications.component.css']
 })
-export class ApplicationsComponent implements OnInit {
+export class ApplicationsComponent implements OnInit, OnDestroy {
 
   filterStatus = 'All';
   isLoading    = true;
+  unreadCount  = 0;
+  private notifSub!: Subscription;
 
   applications: any[] = [];
 
@@ -20,17 +24,21 @@ export class ApplicationsComponent implements OnInit {
     All: 'All', PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected'
   };
 
-  constructor(private auth: AuthService, private nurseSvc: NurseService) {}
+  constructor(private auth: AuthService, private nurseSvc: NurseService, private notifSvc: NotificationService) {}
 
   ngOnInit(): void {
     const userId = this.auth.getUserId();
     if (!userId) { this.isLoading = false; return; }
+    this.notifSvc.initSSE(userId);
+    this.notifSub = this.notifSvc.unreadCount$.subscribe(c => this.unreadCount = c);
 
     this.nurseSvc.getApplications(userId).subscribe({
       next: (data) => { this.applications = data || []; this.isLoading = false; },
       error: ()     => { this.isLoading = false; }
     });
   }
+
+  ngOnDestroy(): void { this.notifSub?.unsubscribe(); }
 
   get filtered() {
     if (this.filterStatus === 'All') return this.applications;

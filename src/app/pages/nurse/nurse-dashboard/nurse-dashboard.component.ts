@@ -2,8 +2,9 @@ import { AuthService } from '../../../services/auth.service';
 import { NurseService } from '../../../services/nurse.service';
 import { AppointmentService } from '../../../services/appointment.service';
 import { PaymentService } from '../../../services/payment.service';
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { NotificationService } from '../../../services/notification.service';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { forkJoin, Subscription } from 'rxjs';
 
 interface DashJob {
   type:      'org' | 'patient';
@@ -15,12 +16,6 @@ interface DashJob {
   salaryRaw: number;
   priority?: string;
   raw:       any;
-}
-
-interface Notification {
-  message: string;
-  time:    string;
-  read:    boolean;
 }
 
 @Component({
@@ -50,18 +45,11 @@ export class NurseDashboardComponent implements OnInit, OnDestroy {
   ];
 
   isAvailable       = true;
-  notificationsOpen = false;
-  notifications: Notification[] = [];
 
   recentAppointments: any[] = [];
   recentApplications: any[] = [];
   topJobs: DashJob[]   = [];
   selectedDashJob: DashJob | null = null;
-
-  private knownJobIds  = new Set<string>();
-  private eventSource?: EventSource;
-
-  private readonly SSE_URL = 'http://localhost:8080/api/notifications/stream';
 
   // Mark Shift Done modal
   shiftModal: any = null;      // the appointment being marked
@@ -71,16 +59,22 @@ export class NurseDashboardComponent implements OnInit, OnDestroy {
   isMarkingShift    = false;
   shiftSuccessMsg   = '';
 
+  unreadCount = 0;
+  private notifSub!: Subscription;
+
   constructor(
     private auth:        AuthService,
     private nurseSvc:    NurseService,
     private apptService: AppointmentService,
-    private paymentSvc:  PaymentService
+    private paymentSvc:  PaymentService,
+    private notifSvc:    NotificationService
   ) {}
 
   ngOnInit(): void {
     const userId = this.auth.getUserId();
     if (!userId) { this.isLoading = false; return; }
+    this.notifSvc.initSSE(userId);
+    this.notifSub = this.notifSvc.unreadCount$.subscribe(c => this.unreadCount = c);
 
     forkJoin({
       profile:      this.nurseSvc.getProfile(userId),
@@ -93,16 +87,11 @@ export class NurseDashboardComponent implements OnInit, OnDestroy {
         this.buildProfile(profile);
         this.buildAppointments(appointments);
         this.buildApplications(applications);
-        this.buildTopJobs(orgJobs, openRequests, true);
+        this.buildTopJobs(orgJobs, openRequests);
         this.isLoading = false;
-        this.setupSSE();
       },
       error: () => { this.isLoading = false; }
     });
-  }
-
-  ngOnDestroy(): void {
-    this.eventSource?.close();
   }
 
   // ── Builders ────────────────────────────────────────────────────────────────
@@ -133,17 +122,11 @@ export class NurseDashboardComponent implements OnInit, OnDestroy {
     }));
   }
 
-  private buildTopJobs(orgJobs: any[], openRequests: any[], initial: boolean): void {
+  private buildTopJobs(orgJobs: any[], openRequests: any[]): void {
     const dashJobs: DashJob[] = [];
 
     // Org / hospital jobs
     for (const j of (orgJobs || [])) {
-      const key = `org-${j.id}`;
-      if (initial) this.knownJobIds.add(key);
-      else if (!this.knownJobIds.has(key)) {
-        this.knownJobIds.add(key);
-        this.pushNotification(`New job posted: ${j.jobTitle} at ${j.organizationName || 'an organisation'}`);
-      }
       const salaryMax = j.salaryMax || j.salaryMin || 0;
       dashJobs.push({
         type:       'org',
@@ -160,12 +143,6 @@ export class NurseDashboardComponent implements OnInit, OnDestroy {
 
     // Patient requests
     for (const r of (openRequests || [])) {
-      const key = `req-${r.id}`;
-      if (initial) this.knownJobIds.add(key);
-      else if (!this.knownJobIds.has(key)) {
-        this.knownJobIds.add(key);
-        this.pushNotification(`New patient request: ${r.careNeeds} in ${r.patientCity || r.patientState || 'your area'}`);
-      }
       const loc = [r.patientCity, r.patientState].filter(Boolean).join(', ') || 'India';
       dashJobs.push({
         type:       'patient',
@@ -186,46 +163,6 @@ export class NurseDashboardComponent implements OnInit, OnDestroy {
     this.topJobs = dashJobs.slice(0, 5);
   }
 
-  // ── SSE ─────────────────────────────────────────────────────────────────────
-
-  private setupSSE(): void {
-    this.eventSource = new EventSource(this.SSE_URL);
-
-    this.eventSource.addEventListener('NEW_JOB', (event: MessageEvent) => {
-      const [title, org, location] = event.data.split('|');
-      const msg = org
-        ? `New job posted: ${title} at ${org}${location ? ' · ' + location : ''}`
-        : `New job posted: ${title}`;
-      this.pushNotification(msg);
-      this.refreshJobs();
-    });
-
-    this.eventSource.addEventListener('NEW_REQUEST', (event: MessageEvent) => {
-      const [care, loc] = event.data.split('|');
-      this.pushNotification(`New patient request: ${care} in ${loc || 'your area'}`);
-      this.refreshJobs();
-    });
-
-    // EventSource reconnects automatically on error — no extra handling needed
-  }
-
-  private refreshJobs(): void {
-    forkJoin({
-      orgJobs:      this.nurseSvc.getJobs(),
-      openRequests: this.apptService.getOpen(),
-    }).subscribe({
-      next: ({ orgJobs, openRequests }) => {
-        this.buildTopJobs(orgJobs, openRequests, false);
-      },
-      error: () => {}
-    });
-  }
-
-  private pushNotification(message: string): void {
-    this.notifications.unshift({ message, time: 'just now', read: false });
-    if (this.notifications.length > 20) this.notifications.pop();
-  }
-
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   private calcCompletion(profile: any): number {
@@ -243,16 +180,7 @@ export class NurseDashboardComponent implements OnInit, OnDestroy {
     return m[jt] ?? jt;
   }
 
-  toggleAvailability(): void  { this.isAvailable = !this.isAvailable; }
-
-  toggleNotifications(): void {
-    this.notificationsOpen = !this.notificationsOpen;
-    if (this.notificationsOpen) {
-      this.notifications.forEach(n => n.read = true);
-    }
-  }
-
-  hasUnread(): boolean { return this.notifications.some(n => !n.read); }
+  toggleAvailability(): void { this.isAvailable = !this.isAvailable; }
 
   priorityClass(p?: string): string {
     if (!p) return '';
@@ -303,6 +231,8 @@ export class NurseDashboardComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  ngOnDestroy(): void { this.notifSub?.unsubscribe(); }
 
   logout(): void { this.auth.logout(); }
 }

@@ -1,17 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { PaymentService } from '../../../services/payment.service';
+import { NotificationService } from '../../../services/notification.service';
+import { NurseService } from '../../../services/nurse.service';
 
 @Component({
   selector: 'app-payments',
   templateUrl: './payments.component.html',
   styleUrls: ['./payments.component.css']
 })
-export class PaymentsComponent implements OnInit {
+export class PaymentsComponent implements OnInit, OnDestroy {
 
   activeTab: 'bank' | 'shifts' | 'salary' | 'earnings' = 'shifts';
-  isLoading = true;
+  isLoading    = true;
+  unreadCount  = 0;
   userId!: number;
 
   // ── Bank details ───────────────────────────────────────────────────────────
@@ -31,6 +35,8 @@ export class PaymentsComponent implements OnInit {
   // ── Earnings summary ──────────────────────────────────────────────────────
   totalEarned   = 0;
   pendingAmount = 0;
+
+  private notifSub!: Subscription;
 
   // ── All Indian Banks ──────────────────────────────────────────────────────
   readonly BANK_LIST = [
@@ -93,14 +99,21 @@ export class PaymentsComponent implements OnInit {
   constructor(
     private auth:       AuthService,
     private fb:         FormBuilder,
-    private paymentSvc: PaymentService
+    private paymentSvc: PaymentService,
+    private notifSvc:   NotificationService,
+    private nurseSvc:   NurseService
   ) {}
 
   ngOnInit(): void {
     this.userId = this.auth.getUserId()!;
     this.buildBankForm();
     this.loadAll();
+    this.loadBankDetails();
+    this.notifSvc.initSSE(this.userId);
+    this.notifSub = this.notifSvc.unreadCount$.subscribe(c => this.unreadCount = c);
   }
+
+  ngOnDestroy(): void { this.notifSub?.unsubscribe(); }
 
   // ── Form setup ────────────────────────────────────────────────────────────
 
@@ -236,6 +249,29 @@ export class PaymentsComponent implements OnInit {
   }
 
   // ── Data loading ──────────────────────────────────────────────────────────
+
+  private loadBankDetails(): void {
+    this.nurseSvc.getProfile(this.userId).subscribe({
+      next: (data: any) => {
+        if (!data) return;
+        const mode = data.preferredPaymentMode || 'UPI';
+        this.preferredMode = mode;
+        this.bankForm.patchValue({ preferredPaymentMode: mode });
+        if (mode === 'UPI' && data.upiId) {
+          this.bankForm.patchValue({ upiId: data.upiId });
+        } else if (mode === 'BANK_TRANSFER' && data.bankName) {
+          this.bankFieldsEnabled = true;
+          this.enableBankFields();
+          this.bankForm.patchValue({
+            bankName:          data.bankName,
+            bankAccountNumber: data.bankAccountNumber || '',
+            bankIfscCode:      data.bankIfscCode || ''
+          });
+        }
+      },
+      error: () => {}
+    });
+  }
 
   private loadAll(): void {
     this.isLoading = true;

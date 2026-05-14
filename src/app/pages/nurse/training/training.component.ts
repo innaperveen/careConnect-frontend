@@ -1,5 +1,7 @@
 ﻿import { AuthService } from '../../../services/auth.service';
-import { Component } from '@angular/core';
+import { NotificationService } from '../../../services/notification.service';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 
 interface Course {
   id: number;
@@ -27,9 +29,22 @@ interface Certification {
   templateUrl: './training.component.html',
   styleUrls: ['./training.component.css']
 })
-export class TrainingComponent {
+export class TrainingComponent implements OnInit, OnDestroy {
 
-  constructor(private auth: AuthService) {}
+  unreadCount = 0;
+  private notifSub!: Subscription;
+
+  constructor(private auth: AuthService, private notifSvc: NotificationService) {}
+
+  ngOnInit(): void {
+    const userId = this.auth.getUserId();
+    if (userId) {
+      this.notifSvc.initSSE(userId);
+      this.notifSub = this.notifSvc.unreadCount$.subscribe(c => this.unreadCount = c);
+    }
+  }
+
+  ngOnDestroy(): void { this.notifSub?.unsubscribe(); }
 
 
   activeTab: 'courses' | 'certifications' | 'transcripts' = 'courses';

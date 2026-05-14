@@ -1,24 +1,28 @@
 import { AuthService } from '../../../services/auth.service';
 import { NurseService } from '../../../services/nurse.service';
 import { AppointmentService } from '../../../services/appointment.service';
-import { Component, OnInit } from '@angular/core';
+import { NotificationService } from '../../../services/notification.service';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-jobs',
   templateUrl: './jobs.component.html',
   styleUrls: ['./jobs.component.css']
 })
-export class JobsComponent implements OnInit {
+export class JobsComponent implements OnInit, OnDestroy {
 
   filterForm!: FormGroup;
   isLoading = true;
   activeTab: 'available' | 'applied' = 'available';
+  unreadCount   = 0;
+  private notifSub!: Subscription;
 
   // ── Available: Org jobs ──────────────────────────────────────
-  allJobs:      any[] = [];   // backend jobs minus already-applied
-  filteredJobs: any[] = [];
+  allJobs:       any[] = [];   // backend jobs minus already-applied
+  filteredJobs:  any[] = [];
+  emergencyJobs: any[] = [];   // emergency-flagged jobs
 
   // ── Available: Patient requests ──────────────────────────────
   openRequests: any[] = [];   // backend open minus applied/declined
@@ -66,7 +70,8 @@ export class JobsComponent implements OnInit {
     private auth:        AuthService,
     private nurseSvc:    NurseService,
     private apptService: AppointmentService,
-    private fb:          FormBuilder
+    private fb:          FormBuilder,
+    private notifSvc:    NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -76,6 +81,12 @@ export class JobsComponent implements OnInit {
     });
     this.filterForm.valueChanges.subscribe(() => this.applyFilters());
     this.savedSearchExists = !!localStorage.getItem(this.searchKey);
+    const uid = this.auth.getUserId();
+    if (uid) {
+      this.notifSvc.initSSE(uid);
+      this.notifSub = this.notifSvc.unreadCount$.subscribe(c => this.unreadCount = c);
+    }
+    this.nurseSvc.getEmergencyJobs().subscribe(jobs => this.emergencyJobs = jobs);
     this.loadAll();
   }
 
@@ -285,6 +296,8 @@ export class JobsComponent implements OnInit {
     return [req.patientFirstName, req.patientMiddleName, req.patientLastName]
       .filter((s: string) => !!s).join(' ') || req.patientName || '—';
   }
+
+  ngOnDestroy(): void { this.notifSub?.unsubscribe(); }
 
   logout(): void { this.auth.logout(); }
 }

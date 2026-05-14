@@ -12,6 +12,7 @@
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-schedule" routerLinkActive="active"><i class="bi bi-calendar3"></i> Schedule</a></li>
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-payments" routerLinkActive="active"><i class="bi bi-cash-stack"></i> Payments</a></li>
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-training" routerLinkActive="active"><i class="bi bi-mortarboard"></i> Training</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-notifications" routerLinkActive="active"><i class="bi bi-bell-fill"></i> Notifications<span *ngIf="unreadCount>0" style="background:#ef4444;color:white;border-radius:20px;font-size:.65rem;font-weight:700;padding:1px 7px;margin-left:auto;">{{unreadCount}}</span></a></li>
       <div class="sidebar-divider mt-auto"></div>
       <li class="nav-item">
         <a class="nav-link-custom logout-link" style="cursor:pointer;" (click)="logout()">
@@ -53,6 +54,36 @@
            TAB: AVAILABLE
       ════════════════════════════════════════════ -->
       <ng-container *ngIf="activeTab === 'available'">
+
+        <!-- ── EMERGENCY JOBS (shown at top if any exist) ── -->
+        <div *ngIf="emergencyJobs.length > 0" class="emerg-section mb-4">
+          <div class="emerg-section-hdr">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Emergency Assignments
+            <span class="emerg-count ms-2">{{ emergencyJobs.length }}</span>
+            <span class="emerg-section-sub ms-2">— Urgent response required</span>
+          </div>
+          <div *ngFor="let job of emergencyJobs" class="emerg-job-card" (click)="openDetails(job)">
+            <div class="emerg-job-left">
+              <div class="emerg-badge"><i class="bi bi-exclamation-circle-fill"></i> EMERGENCY</div>
+              <div class="emerg-job-title">{{ job.jobTitle }}</div>
+              <div class="emerg-job-meta">
+                <span><i class="bi bi-building me-1"></i>{{ job.organizationName }}</span>
+                <span *ngIf="job.location"><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</span>
+                <span *ngIf="job.specialization"><i class="bi bi-person-badge me-1"></i>{{ job.specialization }}</span>
+              </div>
+              <div class="emerg-contact mt-2" *ngIf="job.emergencyContact">
+                <i class="bi bi-telephone-fill me-1"></i> Emergency Contact: <strong>{{ job.emergencyContact }}</strong>
+              </div>
+            </div>
+            <div class="emerg-job-right">
+              <div class="emerg-salary" *ngIf="job.salaryMin || job.salaryMax">{{ formatSalary(job) }}<small>/mo</small></div>
+              <button class="emerg-apply-btn" (click)="$event.stopPropagation(); applyToJob(job)">
+                <i class="bi bi-lightning-fill me-1"></i>Quick Apply
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Patient Requests -->
         <div class="mb-4">

@@ -1,0 +1,73 @@
+<div class="d-flex">
+  <!-- SIDEBAR -->
+  <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
+    <div class="sidebar-brand"><i class="bi bi-heart-pulse-fill"></i><span>CareConnect</span></div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-dashboard" routerLinkActive="active"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-profile" routerLinkActive="active"><i class="bi bi-person-badge"></i> My Profile</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-available-jobs" routerLinkActive="active"><i class="bi bi-briefcase"></i> Jobs</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-applications" routerLinkActive="active"><i class="bi bi-journal-bookmark-fill"></i> Applications</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-my-patients" routerLinkActive="active"><i class="bi bi-people-fill"></i> My Patients</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-schedule" routerLinkActive="active"><i class="bi bi-calendar3"></i> Schedule</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-payments" routerLinkActive="active"><i class="bi bi-cash-stack"></i> Payments</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-training" routerLinkActive="active"><i class="bi bi-mortarboard"></i> Training</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-notifications" routerLinkActive="active"><i class="bi bi-bell-fill"></i> Notifications<span *ngIf="unreadCount>0" style="background:#ef4444;color:white;border-radius:20px;font-size:.65rem;font-weight:700;padding:1px 7px;margin-left:auto;">{{unreadCount}}</span></a></li>
+      <div class="sidebar-divider mt-auto"></div>
+      <li class="nav-item"><a class="nav-link-custom logout-link" style="cursor:pointer;" (click)="logout()"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+    </ul>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main-content p-4 w-100">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="page-title">
+          <i class="bi bi-bell-fill me-2 text-danger"></i>Notifications
+          <span class="unread-chip ms-2" *ngIf="unreadCount > 0">{{ unreadCount }} unread</span>
+        </h4>
+        <p class="page-subtitle">Emergency alerts, shift updates, and payment notifications</p>
+      </div>
+      <button class="btn-mark-all" *ngIf="unreadCount > 0" (click)="markAllRead()">
+        <i class="bi bi-check2-all me-1"></i>Mark all as read
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-danger" role="status"></div>
+      <p class="mt-2 text-muted">Loading notifications…</p>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="!isLoading && notifications.length === 0" class="notif-empty">
+      <i class="bi bi-bell-slash fs-1 d-block mb-3"></i>
+      <h6>No notifications yet</h6>
+      <p>You'll see emergency alerts, shift confirmations, and payment updates here.</p>
+    </div>
+
+    <!-- List -->
+    <div *ngIf="!isLoading && notifications.length > 0">
+
+      <!-- Emergency section first -->
+      <div *ngFor="let n of notifications" class="notif-card" [class.notif-unread]="!n.isRead"
+           [class.notif-emergency]="n.type === 'EMERGENCY_JOB'" (click)="markRead(n)">
+        <div class="notif-icon-wrap" [class.icon-emerg]="n.type === 'EMERGENCY_JOB'"
+             [class.icon-shift]="n.type === 'SHIFT'" [class.icon-pay]="n.type === 'PAYMENT'">
+          <i class="bi" [ngClass]="typeIcon(n.type)"></i>
+        </div>
+        <div class="notif-body">
+          <div class="notif-top">
+            <span class="notif-type-badge" [ngClass]="typeBadgeClass(n.type)">{{ typeLabel(n.type) }}</span>
+            <span class="notif-time">{{ formatDate(n.createdAt) }}</span>
+          </div>
+          <div class="notif-title">{{ n.title }}</div>
+          <div class="notif-msg">{{ n.message }}</div>
+        </div>
+        <div class="notif-dot" *ngIf="!n.isRead"></div>
+      </div>
+
+    </div>
+  </div>
+</div>

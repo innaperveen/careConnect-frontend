@@ -1,7 +1,9 @@
 import { AuthService } from '../../../services/auth.service';
 import { NurseService } from '../../../services/nurse.service';
 import { GeoService } from '../../../services/geo.service';
-import { Component, OnInit } from '@angular/core';
+import { NotificationService } from '../../../services/notification.service';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 
 // ── Validators ────────────────────────────────────────────────────────────────
@@ -32,14 +34,18 @@ const LICENSE_PATTERN = '^[A-Z]{2}[0-9]{10}$';
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
 
   profileForm!: FormGroup;
-  editMode    = false;
-  saveSuccess = false;
-  saveError   = '';
-  isLoading   = true;
-  isSaving    = false;
+  editMode              = false;
+  saveSuccess           = false;
+  saveError             = '';
+  isLoading             = true;
+  isSaving              = false;
+  unreadCount           = 0;
+  private notifSub!: Subscription;
+  availableForEmergency = false;
+  isTogglingEmergency   = false;
 
   specializations = [
     'General Nursing', 'ICU / Critical Care', 'Cardiology',
@@ -107,13 +113,19 @@ export class ProfileComponent implements OnInit {
     private auth:     AuthService,
     private nurseSvc: NurseService,
     private geoSvc:   GeoService,
-    private fb:       FormBuilder
+    private fb:       FormBuilder,
+    private notifSvc: NotificationService
   ) {}
 
   ngOnInit(): void {
     this.buildForm();
     this.geoSvc.getStates().subscribe(s => this.states = s);
     this.loadProfile();
+    const uid = this.auth.getUserId();
+    if (uid) {
+      this.notifSvc.initSSE(uid);
+      this.notifSub = this.notifSvc.unreadCount$.subscribe(c => this.unreadCount = c);
+    }
   }
 
   private buildForm(): void {
@@ -214,6 +226,8 @@ export class ProfileComponent implements OnInit {
           reference2Phone:  '',
         });
 
+        this.availableForEmergency = !!data.availableForEmergency;
+
         if (data.expertise) {
           this.selectedExpertise = data.expertise.split(',')
             .map((s: string) => s.trim()).filter((s: string) => !!s);
@@ -280,6 +294,17 @@ export class ProfileComponent implements OnInit {
   }
 
   // ── Expertise / Shift chips ───────────────────────────────────────────────
+
+  toggleEmergencyAvailability(): void {
+    const userId = this.auth.getUserId();
+    if (!userId) return;
+    this.isTogglingEmergency = true;
+    const next = !this.availableForEmergency;
+    this.nurseSvc.toggleEmergencyAvailability(userId, next).subscribe({
+      next: () => { this.availableForEmergency = next; this.isTogglingEmergency = false; },
+      error: () => { this.isTogglingEmergency = false; }
+    });
+  }
 
   toggleExpertise(area: string): void {
     if (!this.editMode) return;
@@ -368,6 +393,8 @@ export class ProfileComponent implements OnInit {
       }
     });
   }
+
+  ngOnDestroy(): void { this.notifSub?.unsubscribe(); }
 
   logout(): void { this.auth.logout(); }
 }

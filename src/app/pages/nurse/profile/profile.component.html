@@ -15,6 +15,7 @@
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-schedule" routerLinkActive="active"><i class="bi bi-calendar3"></i> Schedule</a></li>
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-payments" routerLinkActive="active"><i class="bi bi-cash-stack"></i> Payments</a></li>
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-training" routerLinkActive="active"><i class="bi bi-mortarboard"></i> Training</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-notifications" routerLinkActive="active"><i class="bi bi-bell-fill"></i> Notifications<span *ngIf="unreadCount>0" style="background:#ef4444;color:white;border-radius:20px;font-size:.65rem;font-weight:700;padding:1px 7px;margin-left:auto;">{{unreadCount}}</span></a></li>
       <div class="sidebar-divider mt-auto"></div>
       <li class="nav-item">
         <a class="nav-link-custom logout-link" style="cursor:pointer;" (click)="logout()">
@@ -26,6 +27,31 @@
 
   <!-- MAIN -->
   <div class="main p-4 w-100">
+
+    <!-- Emergency Availability Toggle -->
+    <div class="emergency-toggle-card mb-4">
+      <div class="d-flex align-items-center gap-3">
+        <div class="emerg-icon" [class.emerg-icon-on]="availableForEmergency">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="emerg-title">Emergency Availability</div>
+          <div class="emerg-sub">
+            <span *ngIf="availableForEmergency" class="text-success fw-semibold">
+              <i class="bi bi-check-circle-fill me-1"></i>ON — You will be notified of emergency assignments
+            </span>
+            <span *ngIf="!availableForEmergency" class="text-muted">
+              OFF — Turn on to receive emergency job alerts
+            </span>
+          </div>
+        </div>
+        <button class="emerg-toggle-btn" [class.emerg-on]="availableForEmergency"
+                [disabled]="isTogglingEmergency" (click)="toggleEmergencyAvailability()">
+          <span *ngIf="isTogglingEmergency" class="spinner-border spinner-border-sm"></span>
+          <span *ngIf="!isTogglingEmergency">{{ availableForEmergency ? 'Turn OFF' : 'Turn ON' }}</span>
+        </button>
+      </div>
+    </div>
 
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
       <div>

@@ -1,8 +1,10 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { AppointmentService } from '../../../services/appointment.service';
 import { MessageService } from '../../../services/message.service';
 import { ShiftService } from '../../../services/shift.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-my-patients',
@@ -27,6 +29,7 @@ export class MyPatientsComponent implements OnInit, OnDestroy, AfterViewChecked 
 
   // Pending count badge
   totalPending = 0;
+  unreadCount  = 0;
 
   // Confirm/reject state
   confirmingShiftId: number | null = null;
@@ -46,18 +49,22 @@ export class MyPatientsComponent implements OnInit, OnDestroy, AfterViewChecked 
 
   private myUserId!: number;
   private myName!:   string;
+  private notifSub!: Subscription;
 
   constructor(
     private auth:       AuthService,
     private apptService:AppointmentService,
     private msgSvc:     MessageService,
-    private shiftSvc:   ShiftService
+    private shiftSvc:   ShiftService,
+    private notifSvc:   NotificationService
   ) {}
 
   ngOnInit(): void {
     const user    = this.auth.getUser();
     this.myUserId = this.auth.getUserId()!;
     this.myName   = user?.fullName || user?.email || 'Nurse';
+    this.notifSvc.initSSE(this.myUserId);
+    this.notifSub = this.notifSvc.unreadCount$.subscribe(c => this.unreadCount = c);
 
     this.apptService.getByNurse(this.myUserId).subscribe({
       next: (data) => {
@@ -72,7 +79,7 @@ export class MyPatientsComponent implements OnInit, OnDestroy, AfterViewChecked 
     this.unreadTimer = setInterval(() => this.refreshUnread(), 10000);
   }
 
-  ngOnDestroy(): void { this.stopPoll(); clearInterval(this.unreadTimer); }
+  ngOnDestroy(): void { this.stopPoll(); clearInterval(this.unreadTimer); this.notifSub?.unsubscribe(); }
 
   ngAfterViewChecked(): void {
     if (this.shouldScroll) { this.scrollToBottom(); this.shouldScroll = false; }

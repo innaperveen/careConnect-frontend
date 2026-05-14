@@ -1,7 +1,9 @@
 import { AuthService } from '../../../services/auth.service';
 import { AppointmentService } from '../../../services/appointment.service';
-import { Component, OnInit } from '@angular/core';
+import { NotificationService } from '../../../services/notification.service';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 interface Shift {
   date: string;
@@ -16,12 +18,14 @@ interface Shift {
   templateUrl: './schedule.component.html',
   styleUrls: ['./schedule.component.css']
 })
-export class ScheduleComponent implements OnInit {
+export class ScheduleComponent implements OnInit, OnDestroy {
 
   blackoutForm!: FormGroup;
   blackoutAdded = false;
   isAvailable   = true;
   isLoading     = true;
+  unreadCount   = 0;
+  private notifSub!: Subscription;
 
   blackoutDates: string[] = [];
 
@@ -36,13 +40,18 @@ export class ScheduleComponent implements OnInit {
   constructor(
     private auth:        AuthService,
     private apptService: AppointmentService,
-    private fb:          FormBuilder
+    private fb:          FormBuilder,
+    private notifSvc:    NotificationService
   ) {}
 
   ngOnInit(): void {
     this.blackoutForm = this.fb.group({ blackoutDate: ['', Validators.required] });
 
     const userId = this.auth.getUserId();
+    if (userId) {
+      this.notifSvc.initSSE(userId);
+      this.notifSub = this.notifSvc.unreadCount$.subscribe(c => this.unreadCount = c);
+    }
     if (!userId) { this.isLoading = false; return; }
 
     this.apptService.getByNurse(userId).subscribe({
@@ -112,6 +121,8 @@ export class ScheduleComponent implements OnInit {
     if (s === 'Completed') return 'badge-completed';
     return 'badge-cancelled';
   }
+
+  ngOnDestroy(): void { this.notifSub?.unsubscribe(); }
 
   logout(): void { this.auth.logout(); }
 }
