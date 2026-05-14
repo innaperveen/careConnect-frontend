@@ -11,7 +11,98 @@
 .nav-link-custom.active { background: rgba(255,255,255,0.22); color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.05); backdrop-filter: blur(2px); }
 .sidebar-divider { height: 1px; background: rgba(255,255,255,0.2); margin: 20px 20px 12px 20px; }
 .main { margin-left: 280px; background: #f8fafc; min-height: 100vh; transition: margin-left 0.2s; }
-@media (max-width: 767.98px) { .fixed-sidebar { transform: translateX(-100%); width: 260px; } .main { margin-left: 0 !important; padding: 1rem !important; } }
+.main-content { margin-left: 280px; background: #f0f4f8; min-height: 100vh; }
+@media (max-width: 767.98px) { .fixed-sidebar { transform: translateX(-100%); width: 260px; } .main-content { margin-left: 0 !important; padding: 1rem !important; } }
+
+/* ── Page titles ─────────────────────────────────────────────────────────── */
+.page-title    { font-size: 1.5rem; font-weight: 700; color: #0f1c2e; margin: 0; }
+.page-subtitle { color: #5a7a9a; font-size: 0.9rem; margin: 2px 0 0; }
+
+/* ── Quick stat pills ────────────────────────────────────────────────────── */
+.stat-pill   { padding: 6px 14px; border-radius: 20px; font-size: 0.83rem; display: flex; align-items: center; gap: 4px; }
+.stat-green  { background: #d1fae5; color: #065f46; }
+.stat-orange { background: #fef3c7; color: #92400e; }
+
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+.tab-row      { display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 2px solid #e0eeea; padding-bottom: 0; }
+.pay-tab      { padding: 9px 18px; border: none; background: transparent; border-radius: 8px 8px 0 0; font-size: 0.88rem; font-weight: 500; color: #5a7a9a; cursor: pointer; transition: all 0.2s; position: relative; display: flex; align-items: center; gap: 4px; }
+.pay-tab:hover       { color: #1aa37a; background: #f0fdf8; }
+.pay-tab-active      { color: #1aa37a; background: #fff; border-bottom: 2px solid #1aa37a; margin-bottom: -2px; font-weight: 600; }
+.tab-badge    { background: #1aa37a; color: #fff; border-radius: 10px; font-size: 0.7rem; padding: 1px 7px; margin-left: 2px; }
+
+/* ── Payment cards ───────────────────────────────────────────────────────── */
+.pay-card     { background: #fff; border-radius: 10px; padding: 18px 20px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; border-left: 4px solid #e0eeea; }
+.pay-card-left  { display: flex; align-items: flex-start; gap: 14px; flex: 1; min-width: 220px; }
+.pay-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.pay-icon-wrap  { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+.patient-icon   { background: #e3f6ef; color: #1aa37a; }
+.org-icon       { background: #eff6ff; color: #3b82f6; }
+.pay-label      { font-weight: 600; color: #1a2332; font-size: 0.95rem; }
+.pay-sublabel   { color: #5a7a9a; font-size: 0.82rem; margin-top: 2px; }
+.pay-amount     { font-size: 1.15rem; font-weight: 700; color: #0f1c2e; }
+.pay-method     { font-size: 0.77rem; color: #5a7a9a; }
+.salary-card    { border-left-color: #3b82f6; }
+
+/* ── Status badges ───────────────────────────────────────────────────────── */
+.pay-badge    { padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+.badge-paid   { background: #d1fae5; color: #065f46; }
+.badge-pending{ background: #fef3c7; color: #92400e; }
+.badge-failed { background: #fee2e2; color: #991b1b; }
+
+/* ── Salary slip ─────────────────────────────────────────────────────────── */
+.slip-btn     { background: none; border: 1px solid #d0e8e0; border-radius: 6px; padding: 3px 10px; font-size: 0.78rem; color: #1aa37a; cursor: pointer; margin-top: 4px; transition: all 0.2s; }
+.slip-btn:hover { background: #f0fdf8; }
+.salary-slip  { width: 100%; border-top: 1px solid #e8f4ee; margin-top: 12px; padding-top: 12px; }
+.slip-row     { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; }
+.slip-divider { border-top: 1px dashed #d0e8e0; margin: 8px 0; }
+.slip-net     { font-weight: 700; font-size: 0.95rem; }
+
+/* ── Earnings cards ──────────────────────────────────────────────────────── */
+.earn-card    { background: #fff; border-radius: 12px; padding: 20px 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.earn-icon    { font-size: 1.8rem; margin-bottom: 8px; }
+.earn-val     { font-size: 1.4rem; font-weight: 700; color: #0f1c2e; }
+.earn-lbl     { font-size: 0.82rem; color: #5a7a9a; margin-top: 4px; }
+.earn-green .earn-icon { color: #1aa37a; }
+.earn-orange .earn-icon { color: #d68910; }
+.earn-blue .earn-icon  { color: #3b82f6; }
+.earn-purple .earn-icon { color: #8b5cf6; }
+
+/* ── Earnings table ──────────────────────────────────────────────────────── */
+.table-header { font-weight: 600; color: #0f1c2e; font-size: 0.95rem; border-bottom: 1px solid #e8f0ee; }
+.earn-table   { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.earn-table th { padding: 10px 16px; text-align: left; font-size: 0.78rem; text-transform: uppercase; color: #5a7a9a; letter-spacing: 0.5px; }
+.earn-table td { padding: 10px 16px; border-bottom: 1px solid #f0f7f4; vertical-align: middle; }
+.earn-table tr:last-child td { border-bottom: none; }
+.type-chip  { padding: 2px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+.type-shift  { background: #d1fae5; color: #065f46; }
+.type-salary { background: #dbeafe; color: #1e40af; }
+
+/* ── Bank details form ───────────────────────────────────────────────────── */
+.bank-header  { border-bottom: 1px solid #e8f4ee; padding-bottom: 14px; }
+.mode-toggle  { display: flex; gap: 10px; margin-top: 8px; }
+.mode-pill    { display: flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 8px; border: 2px solid #d0e8e0; cursor: pointer; font-size: 0.88rem; font-weight: 500; color: #5a7a9a; transition: all 0.2s; }
+.mode-pill input[type=radio] { display: none; }
+.mode-active  { border-color: #1aa37a; background: #f0fdf8; color: #1aa37a; }
+.field-label  { font-size: 0.83rem; font-weight: 600; color: #1a2332; margin-bottom: 4px; display: block; }
+.req-star     { color: #c0392b; font-weight: 700; }
+.field-input  { width: 100%; padding: 9px 12px; border: 1.5px solid #d0e8e0; border-radius: 8px; font-size: 0.88rem; outline: none; transition: border-color 0.2s; background: #fff; }
+.field-input:focus  { border-color: #1aa37a; }
+.input-error  { border-color: #e74c3c !important; }
+.err          { color: #e74c3c; font-size: 0.78rem; display: block; margin-top: 3px; }
+.info-note    { background: #f0fdf8; border: 1px solid #d0eedd; border-radius: 7px; padding: 9px 13px; font-size: 0.82rem; color: #2d7a5f; }
+.btn-save     { background: linear-gradient(135deg, #1aa37a, #0f6b51); color: #fff; border: none; padding: 11px 28px; border-radius: 9px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+.btn-save:hover { opacity: 0.88; }
+.btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-spinner  { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.alert-success { background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 8px; padding: 10px 14px; color: #065f46; font-size: 0.86rem; }
+.alert-error   { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 14px; color: #991b1b; font-size: 0.86rem; }
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.empty-state  { text-align: center; padding: 50px 20px; color: #7a9e98; }
+.empty-state i { color: #c8ddd8; }
+.empty-state h6 { color: #5a7a9a; margin-top: 12px; }
+.empty-state p  { font-size: 0.85rem; }
 
 .stat-card { background:white;border-radius:20px;padding:1.25rem;text-align:center;box-shadow:0 6px 16px -6px rgba(0,32,32,0.08); }
 .stat-icon { font-size:1.6rem;color:#1aa37a;display:block;margin-bottom:8px; }

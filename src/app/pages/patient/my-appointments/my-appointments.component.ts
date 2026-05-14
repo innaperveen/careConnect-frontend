@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../../services/auth.service';
 import { AppointmentService } from '../../../services/appointment.service';
+import { PaymentService } from '../../../services/payment.service';
 
 @Component({
   selector: 'app-my-appointments',
@@ -12,10 +13,20 @@ export class MyAppointmentsComponent implements OnInit {
   isLoading    = true;
   cancellingId: number | null = null;
   activeTab    = 'All';
-  tabs         = ['All', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
+  tabs         = ['All', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'Payments'];
   tabLabels: Record<string, string> = {
-    All: 'All', PENDING: 'Pending', CONFIRMED: 'Confirmed', COMPLETED: 'Completed', CANCELLED: 'Cancelled'
+    All: 'All', PENDING: 'Pending', CONFIRMED: 'Confirmed', COMPLETED: 'Completed', CANCELLED: 'Cancelled', Payments: '💳 Payments'
   };
+
+  // Payments
+  pendingPayments: any[]   = [];
+  isLoadingPayments        = false;
+  paymentError             = '';
+  payingAppointmentId: number | null = null;
+  payModal: any            = null;   // the pending payment group being paid
+  selectedPayMethod        = 'UPI';  // UPI or BANK_TRANSFER
+  isProcessingPayment      = false;
+  paySuccess               = '';
   appointments: any[] = [];    // stores full raw backend objects
   rawAppointments: any[] = []; // kept for reference
 
@@ -41,7 +52,11 @@ export class MyAppointmentsComponent implements OnInit {
   hours   = ['12','01','02','03','04','05','06','07','08','09','10','11'];
   minutes = ['00','15','30','45'];
 
-  constructor(private auth: AuthService, private apptService: AppointmentService) {}
+  constructor(
+    private auth: AuthService,
+    private apptService: AppointmentService,
+    private paymentSvc: PaymentService
+  ) {}
 
   ngOnInit(): void {
     const userId = this.auth.getUserId();
@@ -55,6 +70,7 @@ export class MyAppointmentsComponent implements OnInit {
       },
       error: () => { this.isLoading = false; }
     });
+    this.loadPendingPayments(userId);
   }
 
   private mapAppointment(a: any): any {
@@ -192,6 +208,77 @@ export class MyAppointmentsComponent implements OnInit {
         this.acceptingApplicationId = null;
       }
     });
+  }
+
+  // ── Payments ──────────────────────────────────────────────────────────────
+
+  loadPendingPayments(userId: number): void {
+    this.isLoadingPayments = true;
+    this.paymentSvc.getPendingByPatient(userId).subscribe({
+      next: (data) => {
+        // Group by appointmentId
+        const grouped: Record<number, any> = {};
+        (data || []).forEach((p: any) => {
+          const aid = p.appointmentId;
+          if (!grouped[aid]) {
+            grouped[aid] = {
+              appointmentId:       aid,
+              nurseName:           p.nurseName,
+              appointmentCareNeeds:p.appointmentCareNeeds || 'Home Care',
+              nurseUpiId:          p.nurseUpiId,
+              nurseBankAccount:    p.nurseBankAccount,
+              nurseIfsc:           p.nurseIfsc,
+              nurseBankName:       p.nurseBankName,
+              nursePreferredMode:  p.nursePreferredPaymentMode || 'UPI',
+              shifts:              [],
+              totalAmount:         0
+            };
+          }
+          grouped[aid].shifts.push(p);
+          grouped[aid].totalAmount += (p.amount || 0);
+        });
+        this.pendingPayments   = Object.values(grouped);
+        this.isLoadingPayments = false;
+      },
+      error: () => { this.isLoadingPayments = false; }
+    });
+  }
+
+  openPayModal(group: any): void {
+    this.payModal        = group;
+    this.selectedPayMethod = group.nursePreferredMode || 'UPI';
+    this.paySuccess      = '';
+    this.paymentError    = '';
+  }
+
+  closePayModal(): void { this.payModal = null; }
+
+  confirmPayment(): void {
+    if (!this.payModal) return;
+    this.isProcessingPayment = true;
+    this.paymentError        = '';
+    this.paymentSvc.processPatientPayment(
+      this.auth.getUserId()!,
+      this.payModal.appointmentId,
+      this.selectedPayMethod
+    ).subscribe({
+      next: () => {
+        this.isProcessingPayment = false;
+        this.paySuccess          = 'Payment successful! Nurse has been notified.';
+        setTimeout(() => {
+          this.closePayModal();
+          this.loadPendingPayments(this.auth.getUserId()!);
+        }, 2000);
+      },
+      error: (err: Error) => {
+        this.paymentError        = err.message;
+        this.isProcessingPayment = false;
+      }
+    });
+  }
+
+  formatAmount(n: number): string {
+    return '₹' + Number(n).toLocaleString('en-IN');
   }
 
   logout(): void { this.auth.logout(); }

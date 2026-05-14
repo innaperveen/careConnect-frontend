@@ -115,6 +115,55 @@
           <span class="nc-tag" *ngFor="let tag of nurse.nurseExpertise.split(',').slice(0,3)">{{ tag.trim() }}</span>
         </div>
 
+        <!-- ── Shift tracking per active appointment ── -->
+        <ng-container *ngFor="let appt of appointmentsFor(nurse.nurseId)">
+          <div class="nc-shift-block" *ngIf="appt.status === 'CONFIRMED' || appt.status === 'IN_PROGRESS'"
+               (click)="$event.stopPropagation()">
+
+            <div class="nc-shift-header">
+              <span class="nc-shift-label">
+                <i class="bi bi-bandaid me-1"></i>{{ appt.careNeeds || 'Home Care' }}
+              </span>
+              <span class="nc-appt-status" [ngClass]="statusClass(appt.status)">{{ appt.status | titlecase }}</span>
+            </div>
+
+            <div class="nc-shift-dates">
+              <i class="bi bi-calendar3 me-1"></i>
+              {{ appt.appointmentDate | date:'d MMM y' }}
+              <span *ngIf="appt.endDate"> → {{ appt.endDate | date:'d MMM y' }}</span>
+            </div>
+
+            <!-- Shift summary chips -->
+            <div class="nc-shift-chips" *ngIf="shiftsFor(appt.id).length > 0">
+              <span class="nc-shift-chip chip-confirmed">
+                ✓ {{ confirmedShiftsFor(appt.id).length }} confirmed
+              </span>
+              <span class="nc-shift-chip chip-pending" *ngIf="pendingShiftsFor(appt.id).length > 0">
+                ⏳ {{ pendingShiftsFor(appt.id).length }} awaiting
+              </span>
+              <span class="nc-shift-chip chip-amount" *ngIf="totalConfirmedAmount(appt.id) > 0">
+                {{ formatAmount(totalConfirmedAmount(appt.id)) }} due
+              </span>
+            </div>
+
+            <div class="nc-shift-empty" *ngIf="shiftsFor(appt.id).length === 0">
+              <i class="bi bi-info-circle me-1"></i>No shifts recorded yet
+            </div>
+
+            <!-- Action buttons -->
+            <div class="nc-shift-actions">
+              <button class="btn-mark-shift-sm" (click)="openShiftModal(appt)">
+                <i class="bi bi-plus-circle me-1"></i>Mark Shift Done
+              </button>
+              <button class="btn-pay-sm"
+                      *ngIf="totalConfirmedAmount(appt.id) > 0"
+                      (click)="openPayModal(appt)">
+                <i class="bi bi-credit-card me-1"></i>Pay {{ formatAmount(totalConfirmedAmount(appt.id)) }}
+              </button>
+            </div>
+          </div>
+        </ng-container>
+
         <!-- Footer -->
         <div class="nc-footer-row">
           <div class="nc-footer" (click)="openDetail(nurse); $event.stopPropagation()">
@@ -205,24 +254,227 @@
       </div>
     </div>
 
-    <!-- Appointment History -->
-    <div class="dp-section">
-      <div class="dp-section-title"><i class="bi bi-calendar3 me-2"></i>Appointment History</div>
-
-      <div class="dp-appt-row" *ngFor="let appt of appointmentsFor(selectedNurse.nurseId)">
-        <div class="dp-appt-left">
-          <p class="dp-appt-date">{{ appt.appointmentDate | date:'mediumDate' }} at {{ appt.appointmentDate | date:'shortTime' }}</p>
-          <p class="dp-appt-care">{{ appt.careNeeds || '—' }}</p>
-          <p class="dp-appt-notes" *ngIf="appt.notes">{{ appt.notes }}</p>
-        </div>
-        <span class="appt-status-badge" [ngClass]="statusClass(appt.status)">
-          {{ appt.status | titlecase }}
-        </span>
+    <!-- Appointment + Shift History -->
+    <div class="dp-section" *ngFor="let appt of appointmentsFor(selectedNurse.nurseId)">
+      <div class="dp-section-title">
+        <i class="bi bi-calendar3 me-2"></i>{{ appt.careNeeds || 'Home Care' }}
+        <span class="appt-status-badge ms-2" [ngClass]="statusClass(appt.status)">{{ appt.status | titlecase }}</span>
+      </div>
+      <div class="dp-appt-meta mb-2">
+        <i class="bi bi-calendar-range me-1"></i>
+        {{ appt.appointmentDate | date:'d MMM y' }}
+        <span *ngIf="appt.endDate"> → {{ appt.endDate | date:'d MMM y' }}</span>
       </div>
 
-      <p *ngIf="appointmentsFor(selectedNurse.nurseId).length === 0" class="text-muted small">No appointments yet.</p>
+      <!-- Shift history for this appointment -->
+      <div class="shift-history-box">
+        <div *ngFor="let s of shiftsFor(appt.id)" class="shift-row">
+          <div class="shift-row-left">
+            <i class="bi bi-clock-history me-2" style="color:#1aa37a;"></i>
+            <span class="shift-date">{{ s.shiftDate | date:'d MMM y' }}</span>
+            <span class="shift-rate ms-2">{{ formatAmount(s.ratePerShift) }}</span>
+            <span class="shift-notes ms-1 text-muted" *ngIf="s.notes">· {{ s.notes }}</span>
+          </div>
+          <span class="shift-status-badge" [ngClass]="shiftStatusClass(s.status)">{{ shiftStatusLabel(s.status) }}</span>
+        </div>
+        <div *ngIf="shiftsFor(appt.id).length === 0" class="text-muted small py-2">
+          No shifts recorded yet for this appointment.
+        </div>
+      </div>
+
+      <!-- Total + actions for active appointments -->
+      <div class="dp-appt-actions mt-2"
+           *ngIf="appt.status === 'CONFIRMED' || appt.status === 'IN_PROGRESS'">
+        <div *ngIf="totalConfirmedAmount(appt.id) > 0" class="dp-amount-due">
+          <i class="bi bi-cash me-1"></i>
+          Total due: <strong>{{ formatAmount(totalConfirmedAmount(appt.id)) }}</strong>
+        </div>
+        <div class="d-flex gap-2 mt-2">
+          <button class="btn-mark-shift-sm" (click)="openShiftModal(appt)">
+            <i class="bi bi-plus-circle me-1"></i>Mark Shift Done
+          </button>
+          <button class="btn-pay-sm" *ngIf="totalConfirmedAmount(appt.id) > 0"
+                  (click)="openPayModal(appt)">
+            <i class="bi bi-credit-card me-1"></i>Pay Now
+          </button>
+        </div>
+      </div>
     </div>
 
+    <p *ngIf="appointmentsFor(selectedNurse.nurseId).length === 0" class="text-muted small px-4">No appointments yet.</p>
+
+  </div>
+</div>
+
+<!-- ── MARK SHIFT MODAL ───────────────────────────────────────── -->
+<div class="modal-backdrop-blur" *ngIf="shiftModal" (click)="closeShiftModal()"></div>
+<div class="shift-modal" *ngIf="shiftModal" (click)="$event.stopPropagation()">
+  <div class="shift-modal-hdr">
+    <h6><i class="bi bi-check2-circle me-2 text-success"></i>Mark Shift Done</h6>
+    <button class="dp-close" (click)="closeShiftModal()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="shift-modal-body">
+    <div class="shift-appt-info mb-3">
+      <div class="text-muted" style="font-size:0.8rem;">Appointment</div>
+      <div class="fw-600">{{ shiftModal.careNeeds || 'Home Care' }}</div>
+      <div class="text-muted" style="font-size:0.78rem;">
+        <i class="bi bi-calendar3 me-1"></i>
+        {{ shiftModal.appointmentDate | date:'d MMM y' }}
+        <span *ngIf="shiftModal.endDate"> → {{ shiftModal.endDate | date:'d MMM y' }}</span>
+      </div>
+    </div>
+
+    <!-- Case 1: agreedRatePerShift exists (bid-based appointment) -->
+    <ng-container *ngIf="agreedRate > 0">
+      <div class="agreed-rate-box mb-3">
+        <div class="agreed-rate-label">Agreed rate per shift</div>
+        <div class="agreed-rate-value">{{ formatAmount(agreedRate) }}</div>
+        <div class="agreed-rate-note">
+          <i class="bi bi-info-circle me-1"></i>
+          Nurse's salary expectation when they applied for your request.
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Case 2: no agreedRatePerShift (direct booking) — patient enters rate -->
+    <ng-container *ngIf="agreedRate <= 0">
+      <div class="direct-rate-box mb-3">
+        <label class="sm-label">Rate for this shift (₹) <span class="req-star">*</span></label>
+        <input type="number" class="sm-input" [(ngModel)]="negotiatedRate"
+               min="1" placeholder="e.g. 500" [class.sm-error]="negotiateError">
+        <small class="err-txt" *ngIf="negotiateError">{{ negotiateError }}</small>
+        <div class="direct-rate-note mt-1">
+          <i class="bi bi-info-circle me-1"></i>
+          Enter the rate you agreed on with the nurse.
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="mb-3">
+      <label class="sm-label">Shift Date <span class="req-star">*</span></label>
+      <input type="date" class="sm-input" [(ngModel)]="shiftDate"
+             [min]="minDate(shiftModal)" [max]="today"
+             [class.sm-error]="shiftDateError">
+      <small class="err-txt" *ngIf="shiftDateError">{{ shiftDateError }}</small>
+    </div>
+
+    <div class="mb-3">
+      <label class="sm-label">Notes (optional)</label>
+      <textarea class="sm-input" rows="2" [(ngModel)]="shiftNotes"
+                placeholder="e.g. 2-hour visit, medication given…"></textarea>
+    </div>
+
+    <!-- Negotiate toggle — only for bid-based (agreed rate exists) -->
+    <ng-container *ngIf="agreedRate > 0">
+      <div class="negotiate-toggle mb-3" (click)="wantsToNegotiate = !wantsToNegotiate">
+        <span class="neg-toggle-icon">{{ wantsToNegotiate ? '▼' : '▶' }}</span>
+        <span class="neg-toggle-label">Propose a different rate (negotiate)</span>
+      </div>
+
+      <div class="negotiate-section mb-3" *ngIf="wantsToNegotiate">
+        <div class="neg-info mb-2">
+          <i class="bi bi-chat-left-text me-1"></i>
+          Enter your proposed rate. Nurse can accept it or keep
+          <strong>{{ formatAmount(agreedRate) }}</strong>.
+        </div>
+        <label class="sm-label">Your Proposed Rate (₹) <span class="req-star">*</span></label>
+        <input type="number" class="sm-input" [(ngModel)]="negotiatedRate"
+               min="1" placeholder="e.g. 400"
+               [class.sm-error]="negotiateError">
+        <small class="err-txt" *ngIf="negotiateError">{{ negotiateError }}</small>
+      </div>
+    </ng-container>
+
+    <div class="shift-success-msg" *ngIf="shiftSuccess">
+      <i class="bi bi-check-circle-fill me-2"></i>{{ shiftSuccess }}
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn-sm-confirm" (click)="submitShift()" [disabled]="isMarkingShift">
+        <span *ngIf="!isMarkingShift"><i class="bi bi-send me-1"></i>Submit for Nurse Confirmation</span>
+        <span *ngIf="isMarkingShift"><span class="sm-spinner me-1"></span>Submitting…</span>
+      </button>
+      <button class="btn-sm-cancel" (click)="closeShiftModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAY MODAL ──────────────────────────────────────────────── -->
+<div class="modal-backdrop-blur" *ngIf="payModal" (click)="closePayModal()"></div>
+<div class="pay-modal-box" *ngIf="payModal" (click)="$event.stopPropagation()">
+  <div class="shift-modal-hdr">
+    <h6><i class="bi bi-credit-card-2-front me-2 text-success"></i>Confirm Payment</h6>
+    <button class="dp-close" (click)="closePayModal()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="shift-modal-body">
+    <div class="shift-appt-info mb-3">
+      <div class="d-flex justify-content-between">
+        <span class="text-muted">Nurse</span>
+        <strong>{{ payModal.nurse?.nurseName || '—' }}</strong>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span class="text-muted">Confirmed shifts</span>
+        <span>{{ confirmedShiftsFor(payModal.appt.id).length }}</span>
+      </div>
+      <div class="d-flex justify-content-between mt-1">
+        <span class="text-muted">Total</span>
+        <strong class="text-success" style="font-size:1.1rem;">
+          {{ formatAmount(totalConfirmedAmount(payModal.appt.id)) }}
+        </strong>
+      </div>
+    </div>
+
+    <!-- Payment method -->
+    <div class="mb-3">
+      <label class="sm-label">Payment Method</label>
+      <div class="d-flex gap-2 mt-2">
+        <label class="pay-mode-pill" [class.pay-mode-active]="selectedPayMethod === 'UPI'"
+               *ngIf="payModal.nurse?.nurseUpiId">
+          <input type="radio" [(ngModel)]="selectedPayMethod" value="UPI" style="display:none;">
+          <i class="bi bi-phone me-1"></i>UPI
+        </label>
+        <label class="pay-mode-pill" [class.pay-mode-active]="selectedPayMethod === 'BANK_TRANSFER'"
+               *ngIf="payModal.nurse?.nurseBankAccount">
+          <input type="radio" [(ngModel)]="selectedPayMethod" value="BANK_TRANSFER" style="display:none;">
+          <i class="bi bi-bank me-1"></i>Bank Transfer
+        </label>
+      </div>
+    </div>
+
+    <!-- Transfer details -->
+    <div class="transfer-info mb-3">
+      <div class="text-muted mb-1" style="font-size:0.78rem;">Transfer to:</div>
+      <div *ngIf="selectedPayMethod === 'UPI' && payModal.nurse?.nurseUpiId">
+        <i class="bi bi-phone me-2 text-success"></i><strong>{{ payModal.nurse.nurseUpiId }}</strong>
+      </div>
+      <div *ngIf="selectedPayMethod === 'BANK_TRANSFER' && payModal.nurse?.nurseBankAccount">
+        <i class="bi bi-bank me-2" style="color:#3b82f6;"></i>
+        <strong>{{ payModal.nurse.nurseBankAccount }}</strong>
+        <span *ngIf="payModal.nurse.nurseIfsc"> · {{ payModal.nurse.nurseIfsc }}</span>
+        <span *ngIf="payModal.nurse.nurseBankName"> · {{ payModal.nurse.nurseBankName }}</span>
+      </div>
+      <div class="pay-info-note mt-2" *ngIf="!payModal.nurse?.nurseUpiId && !payModal.nurse?.nurseBankAccount">
+        <i class="bi bi-exclamation-circle me-1"></i>
+        Nurse hasn't added bank details yet. Ask them to add from their Payments page.
+      </div>
+      <div class="pay-info-note mt-2" *ngIf="payModal.nurse?.nurseUpiId || payModal.nurse?.nurseBankAccount">
+        <i class="bi bi-info-circle me-1"></i>
+        Transfer manually, then click Confirm to mark as paid.
+      </div>
+    </div>
+
+    <div class="shift-success-msg" *ngIf="paySuccess">
+      <i class="bi bi-check-circle-fill me-2"></i>{{ paySuccess }}
+    </div>
+    <div class="err-txt mb-2" *ngIf="payError">{{ payError }}</div>
+
+    <div class="d-flex gap-2">
+      <button class="btn-sm-confirm" (click)="confirmPayment()" [disabled]="isProcessingPayment">
+        <span *ngIf="!isProcessingPayment"><i class="bi bi-check2-circle me-1"></i>Confirm Payment</span>
+        <span *ngIf="isProcessingPayment"><span class="sm-spinner me-1"></span>Processing…</span>
+      </button>
+      <button class="btn-sm-cancel" (click)="closePayModal()">Cancel</button>
+    </div>
   </div>
 </div>
 

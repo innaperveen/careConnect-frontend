@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
+import { PaymentService } from '../../../services/payment.service';
 
 function salaryRangeValidator(): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
@@ -19,7 +20,7 @@ function salaryRangeValidator(): ValidatorFn {
 })
 export class PostJobComponent implements OnInit {
 
-  activeTab: 'post' | 'jobs' = 'post';
+  activeTab: 'post' | 'jobs' | 'salary' = 'post';
 
   jobForm: FormGroup;
   isPosting   = false;
@@ -35,6 +36,26 @@ export class PostJobComponent implements OnInit {
   selectedBenefits = new Set<string>();
 
   private userId!: number;
+
+  // ── Salary tab ──────────────────────────────────────────────────
+  hiredNurses:        any[] = [];
+  salaryHistory:      any[] = [];
+  isLoadingSalary     = false;
+  selectedNurse:      any   = null;
+  salaryMonth         = '';
+  baseSalary          = '';
+  hra                 = '';
+  travelAllowance     = '';
+  otherAllowances     = '';
+  salarySuccessMsg    = '';
+  salaryErrorMsg      = '';
+  isProcessingSalary  = false;
+
+  readonly MONTH_OPTIONS = [
+    'January 2026','February 2026','March 2026','April 2026',
+    'May 2026','June 2026','July 2026','August 2026',
+    'September 2026','October 2026','November 2026','December 2026'
+  ];
 
   readonly today       = new Date().toISOString().split('T')[0];
   readonly minDeadline = new Date(Date.now() + 86400000).toISOString().split('T')[0];
@@ -93,7 +114,8 @@ export class PostJobComponent implements OnInit {
   constructor(
     private fb:           FormBuilder,
     private adminService: AdminService,
-    private auth:         AuthService
+    private auth:         AuthService,
+    private paymentSvc:   PaymentService
   ) {
     this.jobForm = this.fb.group({
       department:      ['', Validators.required],
@@ -120,6 +142,7 @@ export class PostJobComponent implements OnInit {
     this.userId = this.auth.getUserId()!;
     this.loadOrgLocation();
     this.loadJobs();
+    this.loadSalaryData();
   }
 
   private loadOrgLocation(): void {
@@ -248,6 +271,83 @@ export class PostJobComponent implements OnInit {
   getStatusClass(status: string): string {
     const s = (status ?? '').toUpperCase();
     return s === 'ACTIVE' ? 'badge-active' : s === 'CLOSED' ? 'badge-closed' : 'badge-draft';
+  }
+
+  // ── Salary Methods ────────────────────────────────────────────────────────
+
+  loadSalaryData(): void {
+    this.isLoadingSalary = true;
+    this.adminService.getApprovedNurses(this.userId).subscribe({
+      next: (data) => { this.hiredNurses = data || []; this.isLoadingSalary = false; },
+      error: () => { this.isLoadingSalary = false; }
+    });
+    this.paymentSvc.getOrgSalaryHistory(this.userId).subscribe({
+      next: (data) => { this.salaryHistory = data || []; },
+      error: () => {}
+    });
+  }
+
+  selectNurseForSalary(nurse: any): void {
+    this.selectedNurse    = nurse;
+    this.salaryMonth      = '';
+    this.baseSalary       = '';
+    this.hra              = '';
+    this.travelAllowance  = '';
+    this.otherAllowances  = '';
+    this.salarySuccessMsg = '';
+    this.salaryErrorMsg   = '';
+  }
+
+  get grossPreview(): number {
+    return (parseFloat(this.baseSalary)   || 0)
+         + (parseFloat(this.hra)          || 0)
+         + (parseFloat(this.travelAllowance) || 0)
+         + (parseFloat(this.otherAllowances) || 0);
+  }
+  get tdsPreview():  number { return Math.round(this.grossPreview * 0.10); }
+  get pfPreview():   number { return Math.round((parseFloat(this.baseSalary) || 0) * 0.12); }
+  get esiPreview():  number { return Math.round(this.grossPreview * 0.0075); }
+  get netPreview():  number { return this.grossPreview - this.tdsPreview - this.pfPreview - this.esiPreview; }
+
+  processSalary(): void {
+    if (!this.selectedNurse || !this.salaryMonth || !this.baseSalary) {
+      this.salaryErrorMsg = 'Please select a nurse, month, and enter the base salary.';
+      return;
+    }
+    this.isProcessingSalary = true;
+    this.salaryErrorMsg     = '';
+    this.salarySuccessMsg   = '';
+    this.paymentSvc.processMonthlySalary(this.userId, {
+      nurseUserId:      this.selectedNurse.nurseId,
+      salaryMonth:      this.salaryMonth,
+      baseSalary:       parseFloat(this.baseSalary),
+      hra:              parseFloat(this.hra)             || 0,
+      travelAllowance:  parseFloat(this.travelAllowance) || 0,
+      otherAllowances:  parseFloat(this.otherAllowances) || 0,
+    }).subscribe({
+      next: (result) => {
+        this.isProcessingSalary = false;
+        this.salarySuccessMsg   = `Salary of ₹${Number(result.amount).toLocaleString('en-IN')} processed for ${this.selectedNurse.nurseName}!`;
+        this.salaryHistory.unshift(result);
+        this.selectedNurse = null;
+        setTimeout(() => this.salarySuccessMsg = '', 4000);
+      },
+      error: (err: Error) => {
+        this.isProcessingSalary = false;
+        this.salaryErrorMsg     = err.message;
+      }
+    });
+  }
+
+  formatSalary(n: number | null): string {
+    if (n == null) return '—';
+    return '₹' + Number(n).toLocaleString('en-IN');
+  }
+
+  parseSalaryField(description: string, key: string): string {
+    if (!description) return '0';
+    const part = (description || '').split('|').find((p: string) => p.startsWith(key + '='));
+    return part ? part.split('=')[1] : '0';
   }
 
   logout(): void { this.auth.logout(); }

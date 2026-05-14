@@ -1,6 +1,7 @@
 import { AuthService } from '../../../services/auth.service';
 import { NurseService } from '../../../services/nurse.service';
 import { AppointmentService } from '../../../services/appointment.service';
+import { PaymentService } from '../../../services/payment.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { forkJoin } from 'rxjs';
 
@@ -62,10 +63,19 @@ export class NurseDashboardComponent implements OnInit, OnDestroy {
 
   private readonly SSE_URL = 'http://localhost:8080/api/notifications/stream';
 
+  // Mark Shift Done modal
+  shiftModal: any = null;      // the appointment being marked
+  shiftRate         = '';
+  shiftNotes        = '';
+  shiftRateError    = '';
+  isMarkingShift    = false;
+  shiftSuccessMsg   = '';
+
   constructor(
     private auth:        AuthService,
     private nurseSvc:    NurseService,
-    private apptService: AppointmentService
+    private apptService: AppointmentService,
+    private paymentSvc:  PaymentService
   ) {}
 
   ngOnInit(): void {
@@ -258,6 +268,40 @@ export class NurseDashboardComponent implements OnInit, OnDestroy {
   displayStatus(s: string): string {
     const m: Record<string,string> = { PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected' };
     return m[(s||'').toUpperCase()] || s;
+  }
+
+  // ── Mark Shift Done ──────────────────────────────────────────────────────
+
+  openShiftModal(appt: any): void {
+    this.shiftModal    = appt;
+    this.shiftRate     = '';
+    this.shiftNotes    = '';
+    this.shiftRateError = '';
+    this.shiftSuccessMsg = '';
+  }
+
+  closeShiftModal(): void { this.shiftModal = null; }
+
+  submitShiftDone(): void {
+    const rate = parseFloat(this.shiftRate);
+    if (!this.shiftRate || isNaN(rate) || rate < 1) {
+      this.shiftRateError = 'Please enter a valid rate (min ₹1).';
+      return;
+    }
+    this.shiftRateError  = '';
+    this.isMarkingShift  = true;
+    const apptId = this.shiftModal.id ?? this.shiftModal.raw?.id;
+    this.paymentSvc.markShiftComplete(this.auth.getUserId()!, apptId, rate, this.shiftNotes).subscribe({
+      next: () => {
+        this.isMarkingShift  = false;
+        this.shiftSuccessMsg = 'Shift marked complete! Patient will be notified.';
+        setTimeout(() => { this.closeShiftModal(); }, 2000);
+      },
+      error: (err: Error) => {
+        this.shiftRateError = err.message;
+        this.isMarkingShift = false;
+      }
+    });
   }
 
   logout(): void { this.auth.logout(); }

@@ -249,7 +249,78 @@
       </div>
     </div>
 
+    <!-- ── MY PATIENT ASSIGNMENTS (mark shift done) ── -->
+    <div class="mt-4" *ngIf="recentAppointments.length > 0">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="sec-title">
+          <i class="bi bi-person-heart me-2" style="color:#e84393;"></i>Active Patient Assignments
+        </h5>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-4" *ngFor="let appt of recentAppointments">
+          <div class="appt-shift-card">
+            <div class="appt-shift-top">
+              <span class="appt-care">{{ appt.careNeeds || appt.raw?.careNeeds || 'Home Care' }}</span>
+              <span class="appt-status-pill">{{ appt.status || 'CONFIRMED' }}</span>
+            </div>
+            <div class="appt-shift-date">
+              <i class="bi bi-calendar3 me-1"></i>
+              {{ appt.appointmentDate | date:'d MMM y, h:mm a' }}
+            </div>
+            <div class="appt-shift-city" *ngIf="appt.patientCity || appt.raw?.patientCity">
+              <i class="bi bi-geo-alt me-1"></i>{{ appt.patientCity || appt.raw?.patientCity }}
+            </div>
+            <button class="btn-mark-shift mt-2" (click)="openShiftModal(appt)">
+              <i class="bi bi-check2-circle me-1"></i>Mark Shift Done
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
+  </div>
+</div>
+
+<!-- ── MARK SHIFT DONE MODAL ── -->
+<div class="shift-modal-backdrop" *ngIf="shiftModal" (click)="closeShiftModal()"></div>
+<div class="shift-modal-box" *ngIf="shiftModal">
+  <div class="shift-modal-header">
+    <h6><i class="bi bi-check2-circle me-2 text-success"></i>Mark Shift Complete</h6>
+    <button class="djd-close" (click)="closeShiftModal()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="shift-modal-body">
+    <div class="shift-appt-info mb-3">
+      <div class="text-muted" style="font-size:0.82rem;">Appointment</div>
+      <div class="fw-600">{{ shiftModal.careNeeds || shiftModal.raw?.careNeeds || 'Home Care' }}</div>
+      <div class="text-muted" style="font-size:0.8rem;">
+        <i class="bi bi-calendar3 me-1"></i>
+        {{ shiftModal.appointmentDate | date:'d MMM y, h:mm a' }}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="field-label-sm">Rate for this shift (₹) <span class="req-star">*</span></label>
+      <input type="number" class="shift-input" [(ngModel)]="shiftRate" min="1" placeholder="e.g. 500"
+             [class.input-error]="shiftRateError">
+      <small class="err" *ngIf="shiftRateError">{{ shiftRateError }}</small>
+    </div>
+    <div class="mb-3">
+      <label class="field-label-sm">Notes (optional)</label>
+      <textarea class="shift-input" rows="2" [(ngModel)]="shiftNotes" placeholder="Any notes for the patient…"></textarea>
+    </div>
+
+    <div class="shift-success" *ngIf="shiftSuccessMsg">
+      <i class="bi bi-check-circle-fill me-2"></i>{{ shiftSuccessMsg }}
+    </div>
+    <div class="err mb-2" *ngIf="shiftRateError && isMarkingShift === false && shiftSuccessMsg === ''">{{ shiftRateError }}</div>
+
+    <div class="d-flex gap-2 mt-2">
+      <button class="btn-shift-submit" (click)="submitShiftDone()" [disabled]="isMarkingShift">
+        <span *ngIf="!isMarkingShift"><i class="bi bi-check2-circle me-1"></i>Confirm Shift Done</span>
+        <span *ngIf="isMarkingShift"><span class="btn-spinner me-1"></span>Submitting…</span>
+      </button>
+      <button class="btn-shift-cancel" (click)="closeShiftModal()">Cancel</button>
+    </div>
   </div>
 </div>
 

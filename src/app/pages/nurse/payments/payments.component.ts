@@ -1,6 +1,7 @@
-﻿import { AuthService } from '../../../services/auth.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AuthService } from '../../../services/auth.service';
+import { PaymentService } from '../../../services/payment.service';
 
 @Component({
   selector: 'app-payments',
@@ -9,42 +10,150 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 })
 export class PaymentsComponent implements OnInit {
 
-  timesheetForm!: FormGroup;
-  submitSuccess = false;
-  activeTab: 'timesheet' | 'history' = 'history';
+  activeTab: 'bank' | 'shifts' | 'salary' | 'earnings' = 'shifts';
+  isLoading = true;
+  userId!: number;
 
-  paymentHistory = [
-    { period: 'Apr 1–15, 2026', facility: 'Apollo Hospital', hours: 72, rate: '₹687/hr', gross: '₹49,464', deductions: '₹4,946', net: '₹44,518', status: 'Paid', paidOn: '2026-04-18' },
-    { period: 'Mar 16–31, 2026', facility: 'Apollo Hospital', hours: 80, rate: '₹687/hr', gross: '₹54,960', deductions: '₹5,496', net: '₹49,464', status: 'Paid', paidOn: '2026-04-03' },
-    { period: 'Mar 1–15, 2026', facility: 'Fortis Healthcare', hours: 64, rate: '₹625/hr', gross: '₹40,000', deductions: '₹4,000', net: '₹36,000', status: 'Paid', paidOn: '2026-03-18' },
-    { period: 'Feb 16–28, 2026', facility: 'Apollo Hospital', hours: 70, rate: '₹687/hr', gross: '₹48,090', deductions: '₹4,809', net: '₹43,281', status: 'Paid', paidOn: '2026-03-04' }
-  ];
+  // ── Bank details ───────────────────────────────────────────────────────────
+  bankForm!: FormGroup;
+  isSavingBank = false;
+  bankSuccess  = '';
+  bankError    = '';
+  preferredMode: 'UPI' | 'BANK_TRANSFER' = 'UPI';
 
-  paymentMethods = ['Direct Deposit (HDFC ****4321)', 'UPI (sarah@upi)', 'Bank Transfer'];
+  // ── Shift payments (from patients) ────────────────────────────────────────
+  shiftPayments: any[] = [];
 
-  get totalEarningsThisMonth() { return '₹44,518'; }
-  get pendingAmount()          { return '₹0'; }
+  // ── Salary payments (from orgs) ───────────────────────────────────────────
+  salaryPayments: any[] = [];
 
-  constructor(private auth: AuthService, private fb: FormBuilder) {}
+  // ── Earnings summary ──────────────────────────────────────────────────────
+  totalEarned    = 0;
+  pendingAmount  = 0;
+
+  constructor(private auth: AuthService, private fb: FormBuilder, private paymentSvc: PaymentService) {}
 
   ngOnInit(): void {
-    this.timesheetForm = this.fb.group({
-      facility:    ['', Validators.required],
-      periodStart: ['', Validators.required],
-      periodEnd:   ['', Validators.required],
-      hoursWorked: ['', [Validators.required, Validators.pattern('^[0-9]+$'), Validators.min(1), Validators.max(300)]],
-      overtime:    ['0', [Validators.pattern('^[0-9]+$')]],
-      notes:       ['']
+    this.userId = this.auth.getUserId()!;
+    this.buildBankForm();
+    this.loadAll();
+  }
+
+  private buildBankForm(): void {
+    this.bankForm = this.fb.group({
+      preferredPaymentMode: ['UPI', Validators.required],
+      upiId:                [''],
+      bankAccountNumber:    [''],
+      bankIfscCode:         [''],
+      bankName:             ['']
+    });
+    this.bankForm.get('preferredPaymentMode')!.valueChanges.subscribe(v => {
+      this.preferredMode = v;
+      this.updateBankValidators();
     });
   }
 
-  get f() { return this.timesheetForm.controls; }
-
-  submitTimesheet() {
-    if (this.timesheetForm.invalid) { this.timesheetForm.markAllAsTouched(); return; }
-    this.submitSuccess = true;
-    this.timesheetForm.reset();
-    setTimeout(() => { this.submitSuccess = false; this.activeTab = 'history'; }, 2000);
+  private updateBankValidators(): void {
+    const upi  = this.bankForm.get('upiId')!;
+    const acc  = this.bankForm.get('bankAccountNumber')!;
+    const ifsc = this.bankForm.get('bankIfscCode')!;
+    const name = this.bankForm.get('bankName')!;
+    if (this.preferredMode === 'UPI') {
+      upi.setValidators([Validators.required]);
+      acc.clearValidators(); ifsc.clearValidators(); name.clearValidators();
+    } else {
+      upi.clearValidators();
+      acc.setValidators([Validators.required]);
+      ifsc.setValidators([Validators.required, Validators.pattern('^[A-Z]{4}0[A-Z0-9]{6}$')]);
+      name.setValidators([Validators.required]);
+    }
+    [upi, acc, ifsc, name].forEach(c => c.updateValueAndValidity({ emitEvent: false }));
   }
+
+  private loadAll(): void {
+    this.isLoading = true;
+    this.paymentSvc.getByNurse(this.userId).subscribe({
+      next: (payments: any[]) => {
+        this.shiftPayments  = (payments || []).filter((p: any) => p.paymentStructure === 'SHIFT');
+        this.salaryPayments = (payments || []).filter((p: any) => p.paymentStructure === 'MONTHLY_SALARY');
+        this.calcSummary(payments || []);
+        this.isLoading = false;
+      },
+      error: () => { this.isLoading = false; }
+    });
+  }
+
+  private calcSummary(payments: any[]): void {
+    this.totalEarned = payments
+      .filter((p: any) => p.status === 'PROCESSED')
+      .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+    this.pendingAmount = payments
+      .filter((p: any) => p.status === 'PENDING')
+      .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+  }
+
+  get f() { return this.bankForm.controls; }
+
+  saveBankDetails(): void {
+    this.updateBankValidators();
+    if (this.bankForm.invalid) { this.bankForm.markAllAsTouched(); return; }
+    this.isSavingBank = true;
+    this.bankSuccess  = '';
+    this.bankError    = '';
+    this.paymentSvc.saveBankDetails(this.userId, this.bankForm.value).subscribe({
+      next: () => {
+        this.isSavingBank = false;
+        this.bankSuccess  = 'Bank details saved successfully!';
+        setTimeout(() => this.bankSuccess = '', 3000);
+      },
+      error: (err: Error) => { this.isSavingBank = false; this.bankError = err.message; }
+    });
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  statusClass(status: string): string {
+    switch ((status || '').toUpperCase()) {
+      case 'PROCESSED': return 'badge-paid';
+      case 'PENDING':   return 'badge-pending';
+      case 'FAILED':    return 'badge-failed';
+      default:          return 'badge-pending';
+    }
+  }
+
+  statusLabel(status: string): string {
+    switch ((status || '').toUpperCase()) {
+      case 'PROCESSED': return 'Paid';
+      case 'PENDING':   return 'Pending';
+      case 'FAILED':    return 'Failed';
+      default:          return status;
+    }
+  }
+
+  formatDate(d: string): string {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  formatAmount(n: number | null): string {
+    if (n == null) return '—';
+    return '₹' + Number(n).toLocaleString('en-IN');
+  }
+
+  parseSalaryField(description: string, key: string): string {
+    if (!description) return '0';
+    const part = description.split('|').find((p: string) => p.startsWith(key + '='));
+    return part ? part.split('=')[1] : '0';
+  }
+
+  get netThisMonth(): string {
+    const now   = new Date();
+    const month = now.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+    const total = [...this.shiftPayments, ...this.salaryPayments]
+      .filter((p: any) => p.status === 'PROCESSED' && this.formatDate(p.paymentDate).includes(now.getFullYear().toString()))
+      .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+    return this.formatAmount(total);
+  }
+
   logout(): void { this.auth.logout(); }
 }

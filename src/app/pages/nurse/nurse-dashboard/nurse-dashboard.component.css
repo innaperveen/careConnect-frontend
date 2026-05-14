@@ -271,3 +271,31 @@
 .djd-btn-full:hover { opacity: 0.9; color: white; }
 .djd-btn-cancel { background: white; border: 1.5px solid #d8ede6; border-radius: 20px; padding: 10px 20px; font-size: 0.87rem; font-weight: 600; color: #6a8c80; cursor: pointer; }
 .djd-btn-cancel:hover { background: #f4faf5; }
+
+/* ── PATIENT ASSIGNMENT CARDS ─────────────────────────────── */
+.appt-shift-card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #e84393; }
+.appt-shift-top  { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.appt-care       { font-weight: 600; color: #1a2332; font-size: 0.9rem; }
+.appt-status-pill{ background: #d1fae5; color: #065f46; padding: 2px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+.appt-shift-date { font-size: 0.8rem; color: #5a7a9a; margin-bottom: 3px; }
+.appt-shift-city { font-size: 0.8rem; color: #5a7a9a; }
+.btn-mark-shift  { background: linear-gradient(135deg, #1aa37a, #0f6b51); color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer; width: 100%; transition: opacity 0.2s; }
+.btn-mark-shift:hover { opacity: 0.88; }
+
+/* ── SHIFT DONE MODAL ─────────────────────────────────────── */
+.shift-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 3000; }
+.shift-modal-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 420px; max-width: 94vw; background: #fff; border-radius: 14px; z-index: 3010; box-shadow: 0 20px 50px rgba(0,0,0,0.18); }
+.shift-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e8f4ee; }
+.shift-modal-header h6 { margin: 0; font-size: 1rem; font-weight: 700; color: #0f1c2e; }
+.shift-modal-body { padding: 20px; }
+.shift-appt-info { background: #f4faf7; border-radius: 8px; padding: 12px 14px; }
+.field-label-sm  { font-size: 0.82rem; font-weight: 600; color: #1a2332; margin-bottom: 4px; display: block; }
+.req-star        { color: #c0392b; }
+.shift-input     { width: 100%; padding: 9px 12px; border: 1.5px solid #d0e8e0; border-radius: 8px; font-size: 0.88rem; outline: none; transition: border-color 0.2s; }
+.shift-input:focus { border-color: #1aa37a; }
+.shift-success   { background: #d1fae5; border-radius: 8px; padding: 10px 14px; color: #065f46; font-size: 0.85rem; margin-top: 10px; }
+.btn-shift-submit{ background: linear-gradient(135deg, #1aa37a, #0f6b51); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.86rem; font-weight: 600; cursor: pointer; flex: 1; }
+.btn-shift-cancel{ background: #f4f6f8; color: #5a7a9a; border: none; border-radius: 8px; padding: 10px 16px; font-size: 0.86rem; cursor: pointer; }
+.btn-spinner     { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin2 0.7s linear infinite; }
+@keyframes spin2 { to { transform: rotate(360deg); } }
+.fw-600 { font-weight: 600; }

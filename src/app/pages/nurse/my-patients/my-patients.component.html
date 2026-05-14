@@ -59,9 +59,14 @@
   <!-- MAIN CONTENT -->
   <div class="main p-4">
 
-    <div class="mb-4">
-      <h4 class="page-title">My Patients</h4>
-      <p class="page-subtitle">Patients assigned to your care</p>
+    <div class="mb-4 d-flex align-items-center gap-3">
+      <div>
+        <h4 class="page-title">My Patients</h4>
+        <p class="page-subtitle">Patients assigned to your care</p>
+      </div>
+      <span class="pending-badge-main" *ngIf="totalPending > 0">
+        <i class="bi bi-exclamation-circle me-1"></i>{{ totalPending }} shift{{ totalPending !== 1 ? 's' : '' }} need confirmation
+      </span>
     </div>
 
     <!-- Filter tabs -->
@@ -102,28 +107,108 @@
         </div>
       </div>
 
-      <!-- Appointments list -->
-      <div class="appt-list">
-        <div *ngFor="let appt of appointmentsFor(patient.patientId)" class="appt-row">
-          <div class="appt-date">
-            <i class="bi bi-calendar3 me-1"></i>
-            {{ appt.appointmentDate | date:'mediumDate' }}
+      <!-- Appointments with shift tracking -->
+      <div *ngFor="let appt of appointmentsFor(patient.patientId)" class="appt-shift-card">
+
+        <!-- Appointment summary row -->
+        <div class="asc-header">
+          <div class="asc-left">
+            <span class="asc-care">{{ appt.careNeeds || 'Home Care' }}</span>
+            <span class="asc-dates">
+              <i class="bi bi-calendar-range me-1"></i>
+              {{ appt.appointmentDate | date:'d MMM y' }}
+              <span *ngIf="appt.endDate"> → {{ appt.endDate | date:'d MMM y' }}</span>
+            </span>
           </div>
-          <div class="appt-time">{{ appt.appointmentDate | date:'shortTime' }}</div>
-          <div class="appt-care">{{ appt.careNeeds || '—' }}</div>
-          <div class="appt-duration">
-            <i class="bi bi-clock me-1"></i>{{ appt.duration || '—' }}
-          </div>
-          <span class="appt-status" [ngClass]="getStatusClass(appt.status)">
-            {{ appt.status | titlecase }}
+          <span class="appt-status" [ngClass]="getStatusClass(appt.status)">{{ appt.status | titlecase }}</span>
+        </div>
+
+        <!-- Shift summary chips -->
+        <div class="asc-chips" *ngIf="shiftsFor(appt.id).length > 0">
+          <span class="nc-shift-chip chip-confirmed">✓ {{ confirmedShiftsFor(appt.id).length }} confirmed</span>
+          <span class="nc-shift-chip chip-pending" *ngIf="pendingShiftsFor(appt.id).length > 0">
+            ❗ {{ pendingShiftsFor(appt.id).length }} need your confirmation
+          </span>
+          <span class="nc-shift-chip chip-amount" *ngIf="totalConfirmedAmount(appt.id) > 0">
+            {{ formatAmount(totalConfirmedAmount(appt.id)) }} total
           </span>
         </div>
-      </div>
 
-      <!-- Notes if any -->
-      <div class="appt-notes" *ngIf="appointmentsFor(patient.patientId)[0]?.notes">
-        <i class="bi bi-sticky-fill me-1"></i>
-        {{ appointmentsFor(patient.patientId)[0].notes }}
+        <!-- Shift list -->
+        <div class="shift-history-box" *ngIf="shiftsFor(appt.id).length > 0">
+          <div *ngFor="let s of shiftsFor(appt.id)" class="shift-row">
+            <div class="shift-row-left">
+              <i class="bi bi-clock-history me-2" style="color:#1aa37a;"></i>
+              <span class="shift-date">{{ s.shiftDate | date:'d MMM y' }}</span>
+              <span class="shift-notes ms-1 text-muted" *ngIf="s.notes">· {{ s.notes }}</span>
+            </div>
+            <div class="shift-right-actions">
+
+              <!-- Already confirmed/rejected — show status -->
+              <ng-container *ngIf="s.status !== 'PENDING_CONFIRMATION'">
+                <span class="shift-status-badge" [ngClass]="shiftStatusClass(s.status)">
+                  {{ shiftStatusLabel(s.status) }}
+                </span>
+                <span class="final-rate-chip" *ngIf="s.status === 'CONFIRMED'">
+                  {{ formatAmount(s.finalRate) }}
+                </span>
+              </ng-container>
+
+              <!-- Pending: with or without negotiation -->
+              <ng-container *ngIf="s.status === 'PENDING_CONFIRMATION'">
+
+                <!-- No negotiation — simple Confirm / Reject -->
+                <ng-container *ngIf="s.negotiationStatus === 'NONE'">
+                  <span class="original-rate-tag">{{ formatAmount(s.originalRate) }}</span>
+                  <button class="btn-confirm-shift" [disabled]="confirmingShiftId === s.id"
+                          (click)="confirmShift(s, false)">
+                    <span *ngIf="confirmingShiftId !== s.id"><i class="bi bi-check2 me-1"></i>Confirm</span>
+                    <span *ngIf="confirmingShiftId === s.id"><span class="sm-spinner"></span></span>
+                  </button>
+                  <button class="btn-reject-shift" [disabled]="rejectingShiftId === s.id"
+                          (click)="rejectShift(s)">
+                    <span *ngIf="rejectingShiftId !== s.id"><i class="bi bi-x me-1"></i>Reject Shift</span>
+                    <span *ngIf="rejectingShiftId === s.id"><span class="sm-spinner"></span></span>
+                  </button>
+                </ng-container>
+
+                <!-- Patient negotiated — two confirm options -->
+                <ng-container *ngIf="s.negotiationStatus === 'PENDING'">
+                  <div class="negotiation-block">
+                    <div class="neg-rates-row">
+                      <span class="neg-label">Original:</span>
+                      <span class="original-rate-tag">{{ formatAmount(s.originalRate) }}</span>
+                      <span class="neg-label ms-2">Patient proposes:</span>
+                      <span class="proposed-rate-tag">{{ formatAmount(s.negotiatedRate) }}</span>
+                    </div>
+                    <div class="neg-action-row mt-2">
+                      <button class="btn-accept-neg" [disabled]="confirmingShiftId === s.id"
+                              (click)="confirmShift(s, true)">
+                        <i class="bi bi-check-circle me-1"></i>Accept {{ formatAmount(s.negotiatedRate) }}
+                      </button>
+                      <button class="btn-keep-orig" [disabled]="confirmingShiftId === s.id"
+                              (click)="confirmShift(s, false)">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Keep {{ formatAmount(s.originalRate) }}
+                      </button>
+                      <button class="btn-reject-shift" [disabled]="rejectingShiftId === s.id"
+                              (click)="rejectShift(s)">
+                        <i class="bi bi-x me-1"></i>Reject Shift
+                      </button>
+                    </div>
+                  </div>
+                </ng-container>
+
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
+        <div class="no-shifts-note" *ngIf="shiftsFor(appt.id).length === 0 &&
+             (appt.status === 'CONFIRMED' || appt.status === 'IN_PROGRESS')">
+          <i class="bi bi-info-circle me-1"></i>No shifts marked yet. Patient will mark shifts when done.
+        </div>
+
+        <div class="shift-action-err" *ngIf="shiftActionError">{{ shiftActionError }}</div>
       </div>
 
       <!-- Message button -->

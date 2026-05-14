@@ -99,7 +99,64 @@
       </button>
     </div>
 
+    <!-- ─── PAYMENTS TAB ─────────────────────────────────────── -->
+    <ng-container *ngIf="activeTab === 'Payments'">
+
+      <div *ngIf="isLoadingPayments" class="text-center py-5">
+        <div class="spinner-border text-success" role="status"></div>
+        <p class="mt-2 text-muted">Loading payments…</p>
+      </div>
+
+      <div *ngIf="!isLoadingPayments && pendingPayments.length === 0" class="empty-state">
+        <i class="bi bi-check2-circle fs-2 d-block mb-2 text-success"></i>
+        No pending payments. You're all clear!
+      </div>
+
+      <div *ngFor="let group of pendingPayments" class="pay-group-card mb-3">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <div class="pay-nurse-name">
+              <i class="bi bi-person-badge me-2" style="color:#1aa37a;"></i>{{ group.nurseName }}
+            </div>
+            <div class="pay-care">{{ group.appointmentCareNeeds }}</div>
+            <div class="pay-shift-count text-muted">
+              {{ group.shifts.length }} shift{{ group.shifts.length !== 1 ? 's' : '' }} completed
+            </div>
+          </div>
+          <div class="text-end">
+            <div class="pay-total">{{ formatAmount(group.totalAmount) }}</div>
+            <div class="text-muted" style="font-size:0.78rem;">Total due</div>
+          </div>
+        </div>
+
+        <!-- Nurse payment details -->
+        <div class="nurse-pay-details mt-3">
+          <div class="pay-detail-row" *ngIf="group.nursePreferredMode === 'UPI' && group.nurseUpiId">
+            <i class="bi bi-phone me-2 text-success"></i>
+            <strong>UPI:</strong>&nbsp; {{ group.nurseUpiId }}
+            <span class="preferred-tag ms-2">Preferred</span>
+          </div>
+          <div class="pay-detail-row" *ngIf="group.nurseBankAccount">
+            <i class="bi bi-bank me-2" style="color:#3b82f6;"></i>
+            <strong>Bank:</strong>&nbsp; {{ group.nurseBankAccount }}
+            <span *ngIf="group.nurseIfsc">&nbsp;· {{ group.nurseIfsc }}</span>
+            <span *ngIf="group.nurseBankName">&nbsp;· {{ group.nurseBankName }}</span>
+          </div>
+          <div class="pay-no-details" *ngIf="!group.nurseUpiId && !group.nurseBankAccount">
+            <i class="bi bi-exclamation-circle me-1"></i>Nurse hasn't added payment details yet. Contact them directly.
+          </div>
+        </div>
+
+        <button class="btn-pay-now mt-3" (click)="openPayModal(group)"
+                [disabled]="!group.nurseUpiId && !group.nurseBankAccount">
+          <i class="bi bi-credit-card-2-front me-2"></i>Mark as Paid — {{ formatAmount(group.totalAmount) }}
+        </button>
+      </div>
+
+    </ng-container>
+
     <!-- APPOINTMENTS LIST -->
+    <ng-container *ngIf="activeTab !== 'Payments'">
     <div *ngFor="let appt of filteredAppointments" class="appt-card mb-3">
       <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div class="d-flex align-items-start gap-3">
@@ -143,7 +200,80 @@
       <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
       No {{ activeTab === 'All' ? '' : activeTab.toLowerCase() }} appointments found.
     </div>
+    </ng-container>
 
+  </div>
+</div>
+
+<!-- PAY MODAL -->
+<div class="pay-modal-backdrop" *ngIf="payModal" (click)="closePayModal()"></div>
+<div class="pay-modal-box" *ngIf="payModal">
+  <div class="pay-modal-header">
+    <h6><i class="bi bi-credit-card-2-front me-2 text-success"></i>Confirm Payment</h6>
+    <button class="rs-close" (click)="closePayModal()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="pay-modal-body">
+    <div class="pay-summary-box mb-3">
+      <div class="d-flex justify-content-between">
+        <span class="text-muted">Nurse</span>
+        <strong>{{ payModal.nurseName }}</strong>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span class="text-muted">Shifts</span>
+        <span>{{ payModal.shifts.length }}</span>
+      </div>
+      <div class="d-flex justify-content-between mt-1">
+        <span class="text-muted">Total Amount</span>
+        <strong class="text-success" style="font-size:1.1rem;">{{ formatAmount(payModal.totalAmount) }}</strong>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="pay-mode-label">Select Payment Method</label>
+      <div class="d-flex gap-2 mt-2">
+        <label class="pay-mode-pill" [class.pay-mode-active]="selectedPayMethod === 'UPI'"
+               *ngIf="payModal.nurseUpiId">
+          <input type="radio" [(ngModel)]="selectedPayMethod" value="UPI" style="display:none;">
+          <i class="bi bi-phone me-1"></i> UPI
+        </label>
+        <label class="pay-mode-pill" [class.pay-mode-active]="selectedPayMethod === 'BANK_TRANSFER'"
+               *ngIf="payModal.nurseBankAccount">
+          <input type="radio" [(ngModel)]="selectedPayMethod" value="BANK_TRANSFER" style="display:none;">
+          <i class="bi bi-bank me-1"></i> Bank Transfer
+        </label>
+      </div>
+    </div>
+
+    <!-- Transfer details -->
+    <div class="transfer-info mb-3">
+      <div class="text-muted mb-1" style="font-size:0.8rem;">Transfer to:</div>
+      <div *ngIf="selectedPayMethod === 'UPI' && payModal.nurseUpiId">
+        <i class="bi bi-phone me-2 text-success"></i><strong>{{ payModal.nurseUpiId }}</strong>
+      </div>
+      <div *ngIf="selectedPayMethod === 'BANK_TRANSFER' && payModal.nurseBankAccount">
+        <i class="bi bi-bank me-2" style="color:#3b82f6;"></i>
+        <strong>{{ payModal.nurseBankAccount }}</strong>
+        <span *ngIf="payModal.nurseIfsc"> · {{ payModal.nurseIfsc }}</span>
+        <span *ngIf="payModal.nurseBankName"> · {{ payModal.nurseBankName }}</span>
+      </div>
+      <div class="info-note mt-2" style="font-size:0.78rem;">
+        <i class="bi bi-info-circle me-1"></i>
+        Transfer manually using the above details, then click Confirm.
+      </div>
+    </div>
+
+    <div class="pay-modal-success" *ngIf="paySuccess">
+      <i class="bi bi-check-circle-fill me-2"></i>{{ paySuccess }}
+    </div>
+    <div class="text-danger small mb-2" *ngIf="paymentError">{{ paymentError }}</div>
+
+    <div class="d-flex gap-2">
+      <button class="btn-confirm-pay" (click)="confirmPayment()" [disabled]="isProcessingPayment">
+        <span *ngIf="!isProcessingPayment"><i class="bi bi-check2-circle me-1"></i>Confirm Payment</span>
+        <span *ngIf="isProcessingPayment"><span class="spinner-border spinner-border-sm me-1"></span>Processing…</span>
+      </button>
+      <button class="btn-cancel-pay" (click)="closePayModal()">Cancel</button>
+    </div>
   </div>
 </div>
 

@@ -1,133 +1,312 @@
-﻿<div class="d-flex">
+<div class="d-flex">
+  <!-- SIDEBAR -->
   <nav class="fixed-sidebar text-white p-3 d-none d-md-block">
     <div class="sidebar-brand"><i class="bi bi-heart-pulse-fill"></i><span>CareConnect</span></div>
     <ul class="nav flex-column">
-      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-dashboard" routerLinkActive="active"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-profile" routerLinkActive="active"><i class="bi bi-person-badge"></i> My Profile</a></li>
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-available-jobs" routerLinkActive="active"><i class="bi bi-briefcase"></i> Jobs</a></li>
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-applications" routerLinkActive="active"><i class="bi bi-journal-bookmark-fill"></i> Applications</a></li>
-      <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-my-patients" routerLinkActive="active"><i class="bi bi-people-fill"></i> My Patients</a></li>
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-schedule" routerLinkActive="active"><i class="bi bi-calendar3"></i> Schedule</a></li>
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-payments" routerLinkActive="active"><i class="bi bi-cash-stack"></i> Payments</a></li>
       <li class="nav-item mb-1"><a class="nav-link-custom" routerLink="/nurse-training" routerLinkActive="active"><i class="bi bi-mortarboard"></i> Training</a></li>
       <div class="sidebar-divider mt-auto"></div>
-      <li class="nav-item">
-        <a class="nav-link-custom logout-link" style="cursor:pointer;" (click)="logout()">
-          <i class="bi bi-box-arrow-right"></i> Logout
-        </a>
-      </li>
+      <li class="nav-item"><a class="nav-link-custom logout-link" style="cursor:pointer;" (click)="logout()"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
     </ul>
   </nav>
 
-  <div class="main p-4 w-100">
-    <div class="mb-4">
-      <h4 class="fw-semibold mb-0" style="color:#1a3b3a;">Payments & Earnings</h4>
-      <small class="text-muted">Track your earnings, submit timesheets, and manage payment methods</small>
+  <!-- MAIN -->
+  <div class="main-content p-4 w-100">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="page-title">Payments</h4>
+        <p class="page-subtitle">Track your earnings, shifts, and salary payments</p>
+      </div>
+      <!-- Quick stats -->
+      <div class="d-flex gap-3 flex-wrap">
+        <div class="stat-pill stat-green">
+          <i class="bi bi-check-circle-fill me-1"></i>
+          Earned: <strong>{{ formatAmount(totalEarned) }}</strong>
+        </div>
+        <div class="stat-pill stat-orange" *ngIf="pendingAmount > 0">
+          <i class="bi bi-hourglass-split me-1"></i>
+          Pending: <strong>{{ formatAmount(pendingAmount) }}</strong>
+        </div>
+      </div>
     </div>
 
-    <!-- Earnings summary -->
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-md-3">
-        <div class="stat-card"><i class="bi bi-wallet2 stat-icon"></i><p class="stat-num">₹44,518</p><p class="stat-lbl">This Month</p></div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-card"><i class="bi bi-graph-up-arrow stat-icon"></i><p class="stat-num">₹1,93,245</p><p class="stat-lbl">This Year</p></div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-card"><i class="bi bi-hourglass-split stat-icon" style="color:#d68910;"></i><p class="stat-num" style="color:#d68910;">₹0</p><p class="stat-lbl">Pending</p></div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-card"><i class="bi bi-credit-card stat-icon"></i><p class="stat-num" style="font-size:1rem;padding-top:4px;">HDFC ****4321</p><p class="stat-lbl">Payment Method</p></div>
-      </div>
+    <!-- TABS -->
+    <div class="tab-row mb-4">
+      <button class="pay-tab" [class.pay-tab-active]="activeTab==='shifts'" (click)="activeTab='shifts'">
+        <i class="bi bi-people-fill me-1"></i> Patient Payments
+        <span class="tab-badge" *ngIf="shiftPayments.length">{{ shiftPayments.length }}</span>
+      </button>
+      <button class="pay-tab" [class.pay-tab-active]="activeTab==='salary'" (click)="activeTab='salary'">
+        <i class="bi bi-building me-1"></i> Salary Payments
+        <span class="tab-badge" *ngIf="salaryPayments.length">{{ salaryPayments.length }}</span>
+      </button>
+      <button class="pay-tab" [class.pay-tab-active]="activeTab==='earnings'" (click)="activeTab='earnings'">
+        <i class="bi bi-bar-chart-fill me-1"></i> Earnings
+      </button>
+      <button class="pay-tab" [class.pay-tab-active]="activeTab==='bank'" (click)="activeTab='bank'">
+        <i class="bi bi-bank me-1"></i> Bank Details
+      </button>
     </div>
 
-    <!-- Tabs -->
-    <div class="tab-bar mb-4">
-      <button class="tab-btn" [class.tab-active]="activeTab === 'history'" (click)="activeTab = 'history'"><i class="bi bi-receipt me-1"></i>Payment History</button>
-      <button class="tab-btn" [class.tab-active]="activeTab === 'timesheet'" (click)="activeTab = 'timesheet'"><i class="bi bi-clock me-1"></i>Submit Timesheet</button>
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-success" role="status"></div>
+      <p class="mt-2 text-muted">Loading payments…</p>
     </div>
 
-    <!-- Payment History -->
-    <div *ngIf="activeTab === 'history'">
-      <div class="section-card">
-        <h6 class="section-title"><i class="bi bi-receipt me-2"></i>Payment History</h6>
-        <div class="table-responsive">
-          <table class="pay-table w-100">
+    <ng-container *ngIf="!isLoading">
+
+      <!-- ═══════════════════ PATIENT SHIFT PAYMENTS ═══════════════════ -->
+      <div *ngIf="activeTab==='shifts'">
+        <div *ngIf="shiftPayments.length === 0" class="empty-state">
+          <i class="bi bi-people fs-1 d-block mb-3"></i>
+          <h6>No patient shift payments yet</h6>
+          <p>When you mark a shift complete for a patient appointment, it will appear here.</p>
+        </div>
+
+        <div *ngFor="let p of shiftPayments" class="pay-card">
+          <div class="pay-card-left">
+            <div class="pay-icon-wrap patient-icon"><i class="bi bi-person-heart"></i></div>
+            <div>
+              <div class="pay-label">{{ p.patientName || 'Patient' }}</div>
+              <div class="pay-sublabel">
+                <i class="bi bi-bandaid me-1"></i>{{ p.appointmentCareNeeds || 'Home Care' }}
+                &nbsp;·&nbsp;
+                <i class="bi bi-calendar3 me-1"></i>{{ formatDate(p.paymentDate) }}
+              </div>
+              <div class="pay-sublabel text-muted" style="font-size:0.75rem;">
+                Appointment #{{ p.appointmentId }} &nbsp;|&nbsp; Shift Payment
+              </div>
+            </div>
+          </div>
+          <div class="pay-card-right">
+            <div class="pay-amount">{{ formatAmount(p.amount) }}</div>
+            <span class="pay-badge" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span>
+            <div class="pay-method" *ngIf="p.status === 'PROCESSED'">
+              <i class="bi bi-check2-circle me-1 text-success"></i>
+              {{ p.paymentMethod === 'UPI' ? 'via UPI' : 'via Bank Transfer' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ ORG SALARY PAYMENTS ═══════════════════════ -->
+      <div *ngIf="activeTab==='salary'">
+        <div *ngIf="salaryPayments.length === 0" class="empty-state">
+          <i class="bi bi-building fs-1 d-block mb-3"></i>
+          <h6>No salary payments yet</h6>
+          <p>When an organization processes your monthly salary, it will appear here.</p>
+        </div>
+
+        <div *ngFor="let p of salaryPayments" class="pay-card salary-card">
+          <div class="pay-card-left">
+            <div class="pay-icon-wrap org-icon"><i class="bi bi-building"></i></div>
+            <div>
+              <div class="pay-label">{{ p.orgName || 'Organization' }}</div>
+              <div class="pay-sublabel">
+                <i class="bi bi-calendar2-month me-1"></i>{{ p.salaryMonth }}
+                &nbsp;·&nbsp; via Bank Transfer
+              </div>
+            </div>
+          </div>
+          <div class="pay-card-right">
+            <div class="pay-amount text-success">{{ formatAmount(p.amount) }}</div>
+            <span class="pay-badge badge-paid">Paid</span>
+            <!-- Salary slip expand -->
+            <button class="slip-btn" (click)="p._open = !p._open">
+              <i class="bi" [class.bi-chevron-down]="!p._open" [class.bi-chevron-up]="p._open"></i>
+              Salary Slip
+            </button>
+          </div>
+
+          <!-- Salary Slip Breakdown -->
+          <div class="salary-slip" *ngIf="p._open">
+            <div class="slip-row">
+              <span>Gross Salary</span>
+              <span>{{ formatAmount(p.grossAmount) }}</span>
+            </div>
+            <div class="slip-row text-muted" *ngIf="+parseSalaryField(p.description,'HRA') > 0">
+              <span>&nbsp;&nbsp;HRA</span><span>{{ formatAmount(+parseSalaryField(p.description,'HRA')) }}</span>
+            </div>
+            <div class="slip-row text-muted" *ngIf="+parseSalaryField(p.description,'TA') > 0">
+              <span>&nbsp;&nbsp;Travel Allowance</span><span>{{ formatAmount(+parseSalaryField(p.description,'TA')) }}</span>
+            </div>
+            <div class="slip-divider"></div>
+            <div class="slip-row text-danger">
+              <span>TDS (10%)</span><span>- {{ formatAmount(p.taxDeduction) }}</span>
+            </div>
+            <div class="slip-row text-danger">
+              <span>PF (12%)</span><span>- {{ formatAmount(p.pfDeduction) }}</span>
+            </div>
+            <div class="slip-row text-danger">
+              <span>ESI (0.75%)</span><span>- {{ formatAmount(p.esiDeduction) }}</span>
+            </div>
+            <div class="slip-divider"></div>
+            <div class="slip-row slip-net">
+              <span>Net Pay</span><span class="text-success">{{ formatAmount(p.amount) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ EARNINGS SUMMARY ══════════════════════════ -->
+      <div *ngIf="activeTab==='earnings'">
+        <div class="row g-3 mb-4">
+          <div class="col-md-3 col-6">
+            <div class="earn-card earn-green">
+              <div class="earn-icon"><i class="bi bi-currency-rupee"></i></div>
+              <div class="earn-val">{{ formatAmount(totalEarned) }}</div>
+              <div class="earn-lbl">Total Earned</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="earn-card earn-orange">
+              <div class="earn-icon"><i class="bi bi-hourglass-split"></i></div>
+              <div class="earn-val">{{ formatAmount(pendingAmount) }}</div>
+              <div class="earn-lbl">Pending</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="earn-card earn-blue">
+              <div class="earn-icon"><i class="bi bi-people-fill"></i></div>
+              <div class="earn-val">{{ shiftPayments.length }}</div>
+              <div class="earn-lbl">Shift Records</div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="earn-card earn-purple">
+              <div class="earn-icon"><i class="bi bi-building"></i></div>
+              <div class="earn-val">{{ salaryPayments.length }}</div>
+              <div class="earn-lbl">Salary Records</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment breakdown table -->
+        <div class="pay-card p-0">
+          <div class="table-header px-4 py-3">All Payment Records</div>
+          <div *ngIf="shiftPayments.length + salaryPayments.length === 0" class="text-center py-4 text-muted">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>No payment records yet.
+          </div>
+          <table class="earn-table" *ngIf="shiftPayments.length + salaryPayments.length > 0">
             <thead>
-              <tr><th>Period</th><th>Facility</th><th>Hours</th><th>Rate</th><th>Gross</th><th>Deductions</th><th>Net Pay</th><th>Status</th><th>Paid On</th></tr>
+              <tr>
+                <th>Date</th><th>Type</th><th>From</th><th>Amount</th><th>Status</th>
+              </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let p of paymentHistory">
-                <td>{{ p.period }}</td>
-                <td>{{ p.facility }}</td>
-                <td>{{ p.hours }}h</td>
-                <td>{{ p.rate }}</td>
-                <td>{{ p.gross }}</td>
-                <td class="text-danger">-{{ p.deductions }}</td>
-                <td class="fw-bold" style="color:#0f6b51;">{{ p.net }}</td>
-                <td><span class="paid-badge">{{ p.status }}</span></td>
-                <td class="text-muted small">{{ p.paidOn }}</td>
+              <tr *ngFor="let p of shiftPayments">
+                <td>{{ formatDate(p.paymentDate) }}</td>
+                <td><span class="type-chip type-shift">Shift</span></td>
+                <td>{{ p.patientName || 'Patient' }}</td>
+                <td>{{ formatAmount(p.amount) }}</td>
+                <td><span class="pay-badge" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
+              </tr>
+              <tr *ngFor="let p of salaryPayments">
+                <td>{{ formatDate(p.paymentDate) }}</td>
+                <td><span class="type-chip type-salary">Salary</span></td>
+                <td>{{ p.orgName || 'Organization' }} · {{ p.salaryMonth }}</td>
+                <td>{{ formatAmount(p.amount) }}</td>
+                <td><span class="pay-badge badge-paid">Paid</span></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-    </div>
 
-    <!-- Timesheet Form -->
-    <div *ngIf="activeTab === 'timesheet'">
-      <div class="section-card">
-        <h6 class="section-title"><i class="bi bi-clock me-2"></i>Submit Timesheet</h6>
-        <div *ngIf="submitSuccess" class="alert-toast mb-4"><i class="bi bi-check-circle-fill me-2"></i>Timesheet submitted successfully! Payment will be processed within 3 business days.</div>
+      <!-- ═══════════════════ BANK DETAILS ══════════════════════════════ -->
+      <div *ngIf="activeTab==='bank'">
+        <div class="pay-card">
+          <div class="bank-header mb-4">
+            <i class="bi bi-shield-lock-fill me-2 text-success"></i>
+            <strong>Payment Details</strong>
+            <p class="text-muted mb-0" style="font-size:0.85rem;margin-top:4px;">
+              Patients and organizations will use these details to transfer your payment.
+            </p>
+          </div>
 
-        <form [formGroup]="timesheetForm" (ngSubmit)="submitTimesheet()">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="field-label">Facility / Assignment</label>
-              <select formControlName="facility" class="field-input" [class.input-error]="f['facility'].invalid && f['facility'].touched">
-                <option value="" disabled>Select facility</option>
-                <option value="Apollo Hospital">Apollo Hospital</option>
-                <option value="Fortis Healthcare">Fortis Healthcare</option>
-                <option value="CareConnect Home Care">CareConnect Home Care</option>
-                <option value="AIIMS">AIIMS</option>
-              </select>
-              <small class="err" *ngIf="f['facility'].touched && f['facility'].hasError('required')">Please select a facility.</small>
+          <form [formGroup]="bankForm" (ngSubmit)="saveBankDetails()">
+
+            <!-- Mode toggle -->
+            <div class="mb-4">
+              <label class="field-label">Preferred Payment Mode <span class="req-star">*</span></label>
+              <div class="mode-toggle">
+                <label class="mode-pill" [class.mode-active]="preferredMode==='UPI'">
+                  <input type="radio" formControlName="preferredPaymentMode" value="UPI">
+                  <i class="bi bi-phone me-1"></i> UPI
+                </label>
+                <label class="mode-pill" [class.mode-active]="preferredMode==='BANK_TRANSFER'">
+                  <input type="radio" formControlName="preferredPaymentMode" value="BANK_TRANSFER">
+                  <i class="bi bi-bank me-1"></i> Bank Transfer
+                </label>
+              </div>
             </div>
-            <div class="col-md-3">
-              <label class="field-label">Period Start</label>
-              <input type="date" formControlName="periodStart" class="field-input" [class.input-error]="f['periodStart'].invalid && f['periodStart'].touched">
-              <small class="err" *ngIf="f['periodStart'].touched && f['periodStart'].hasError('required')">Start date is required.</small>
+
+            <!-- UPI section -->
+            <div *ngIf="preferredMode==='UPI'" class="upi-section mb-3">
+              <label class="field-label">UPI ID <span class="req-star">*</span></label>
+              <input class="field-input" formControlName="upiId" placeholder="yourname@upi"
+                     [class.input-error]="f['upiId'].invalid && f['upiId'].touched">
+              <small class="err" *ngIf="f['upiId'].touched && f['upiId'].hasError('required')">UPI ID is required.</small>
+              <div class="info-note mt-2">
+                <i class="bi bi-info-circle me-1"></i>
+                Patients will see this UPI ID when paying you for home visits.
+              </div>
             </div>
-            <div class="col-md-3">
-              <label class="field-label">Period End</label>
-              <input type="date" formControlName="periodEnd" class="field-input" [class.input-error]="f['periodEnd'].invalid && f['periodEnd'].touched">
-              <small class="err" *ngIf="f['periodEnd'].touched && f['periodEnd'].hasError('required')">End date is required.</small>
+
+            <!-- Bank Transfer section -->
+            <div *ngIf="preferredMode==='BANK_TRANSFER'" class="bank-section">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="field-label">Bank Account Number <span class="req-star">*</span></label>
+                  <input class="field-input" formControlName="bankAccountNumber" placeholder="Enter account number"
+                         [class.input-error]="f['bankAccountNumber'].invalid && f['bankAccountNumber'].touched">
+                  <small class="err" *ngIf="f['bankAccountNumber'].touched && f['bankAccountNumber'].hasError('required')">Account number is required.</small>
+                </div>
+                <div class="col-md-6">
+                  <label class="field-label">IFSC Code <span class="req-star">*</span></label>
+                  <input class="field-input" formControlName="bankIfscCode" placeholder="e.g. HDFC0001234"
+                         style="text-transform:uppercase"
+                         [class.input-error]="f['bankIfscCode'].invalid && f['bankIfscCode'].touched">
+                  <small class="err" *ngIf="f['bankIfscCode'].touched && f['bankIfscCode'].hasError('required')">IFSC code is required.</small>
+                  <small class="err" *ngIf="f['bankIfscCode'].touched && f['bankIfscCode'].hasError('pattern')">Enter a valid IFSC code (e.g. HDFC0001234).</small>
+                </div>
+                <div class="col-12">
+                  <label class="field-label">Bank Name <span class="req-star">*</span></label>
+                  <input class="field-input" formControlName="bankName" placeholder="e.g. HDFC Bank"
+                         [class.input-error]="f['bankName'].invalid && f['bankName'].touched">
+                  <small class="err" *ngIf="f['bankName'].touched && f['bankName'].hasError('required')">Bank name is required.</small>
+                </div>
+              </div>
+              <div class="info-note mt-3">
+                <i class="bi bi-info-circle me-1"></i>
+                Organizations will transfer your monthly salary to this account. Patients can also use bank transfer.
+              </div>
             </div>
-            <div class="col-md-3">
-              <label class="field-label">Hours Worked</label>
-              <input type="text" formControlName="hoursWorked" class="field-input" placeholder="e.g. 80" [class.input-error]="f['hoursWorked'].invalid && f['hoursWorked'].touched">
-              <small class="err" *ngIf="f['hoursWorked'].touched && f['hoursWorked'].hasError('required')">Hours worked is required.</small>
-              <small class="err" *ngIf="f['hoursWorked'].touched && f['hoursWorked'].hasError('pattern')">Enter a valid number.</small>
-              <small class="err" *ngIf="f['hoursWorked'].touched && f['hoursWorked'].hasError('min')">Must be at least 1 hour.</small>
-              <small class="err" *ngIf="f['hoursWorked'].touched && f['hoursWorked'].hasError('max')">Cannot exceed 300 hours.</small>
+
+            <!-- Success / Error -->
+            <div class="alert-success mt-3" *ngIf="bankSuccess">
+              <i class="bi bi-check-circle-fill me-2"></i>{{ bankSuccess }}
             </div>
-            <div class="col-md-3">
-              <label class="field-label">Overtime Hours</label>
-              <input type="text" formControlName="overtime" class="field-input" placeholder="e.g. 0" [class.input-error]="f['overtime'].invalid && f['overtime'].touched">
-              <small class="err" *ngIf="f['overtime'].touched && f['overtime'].hasError('pattern')">Enter a valid number.</small>
+            <div class="alert-error mt-3" *ngIf="bankError">
+              <i class="bi bi-x-circle-fill me-2"></i>{{ bankError }}
             </div>
-            <div class="col-12">
-              <label class="field-label">Notes (optional)</label>
-              <textarea formControlName="notes" class="field-input" rows="3" placeholder="Any additional notes for this pay period..."></textarea>
-            </div>
-          </div>
-          <div class="mt-4 d-flex gap-2">
-            <button type="submit" class="btn btn-green px-4"><i class="bi bi-send me-1"></i>Submit Timesheet</button>
-            <button type="button" class="btn btn-outline px-4" (click)="timesheetForm.reset()">Clear</button>
-          </div>
-        </form>
+
+            <button type="submit" class="btn-save mt-4" [disabled]="isSavingBank">
+              <span *ngIf="!isSavingBank"><i class="bi bi-floppy-fill me-2"></i>Save Details</span>
+              <span *ngIf="isSavingBank"><span class="btn-spinner me-2"></span>Saving…</span>
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
 
+    </ng-container>
   </div>
 </div>

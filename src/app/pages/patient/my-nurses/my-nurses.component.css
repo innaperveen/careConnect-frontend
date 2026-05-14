@@ -140,3 +140,75 @@
 .chat-send { width: 40px; height: 40px; border-radius: 50%; background: #1aa37a; border: none; color: white; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s; }
 .chat-send:hover:not(:disabled) { background: #0f6b51; }
 .chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── SHIFT TRACKING BLOCK ON NURSE CARD ────────────────────── */
+.nc-shift-block    { background: #f4faf7; border-radius: 10px; padding: 12px 14px; margin: 12px 0 0; border: 1px solid #d0eedf; }
+.nc-shift-header   { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.nc-shift-label    { font-size: 0.84rem; font-weight: 600; color: #1a2332; }
+.nc-appt-status    { padding: 2px 9px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
+.nc-shift-dates    { font-size: 0.78rem; color: #5a7a9a; margin-bottom: 8px; }
+.nc-shift-chips    { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.nc-shift-chip     { padding: 2px 10px; border-radius: 20px; font-size: 0.73rem; font-weight: 600; }
+.chip-confirmed    { background: #d1fae5; color: #065f46; }
+.chip-pending      { background: #fef3c7; color: #92400e; }
+.chip-amount       { background: #ede9fe; color: #5b21b6; }
+.nc-shift-empty    { font-size: 0.78rem; color: #9ab8b0; margin-bottom: 8px; }
+.nc-shift-actions  { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-mark-shift-sm { background: linear-gradient(135deg,#1aa37a,#0f6b51); color:#fff; border:none; border-radius:8px; padding:6px 12px; font-size:0.78rem; font-weight:600; cursor:pointer; transition:opacity 0.2s; }
+.btn-mark-shift-sm:hover { opacity: 0.88; }
+.btn-pay-sm        { background: linear-gradient(135deg,#3b82f6,#1d4ed8); color:#fff; border:none; border-radius:8px; padding:6px 12px; font-size:0.78rem; font-weight:600; cursor:pointer; transition:opacity 0.2s; }
+.btn-pay-sm:hover  { opacity: 0.88; }
+
+/* ── SHIFT HISTORY IN DETAIL PANEL ─────────────────────────── */
+.shift-history-box { background: #f8fdf9; border-radius: 9px; padding: 10px 12px; border: 1px solid #ddf0e6; margin-bottom: 8px; }
+.shift-row         { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #e8f4ee; font-size: 0.83rem; }
+.shift-row:last-child { border-bottom: none; }
+.shift-row-left    { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.shift-date        { font-weight: 600; color: #1a2332; }
+.shift-rate        { color: #1aa37a; font-weight: 700; }
+.shift-notes       { font-size: 0.75rem; }
+.shift-status-badge { padding: 2px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+.sc-confirmed      { background: #d1fae5; color: #065f46; }
+.sc-pending        { background: #fef3c7; color: #92400e; }
+.sc-rejected       { background: #fee2e2; color: #991b1b; }
+
+.dp-appt-meta      { font-size: 0.8rem; color: #5a7a9a; }
+.dp-appt-actions   { }
+.dp-amount-due     { font-size: 0.85rem; color: #1a2332; background: #f0fdf8; border-radius: 7px; padding: 6px 10px; }
+
+/* ── SHIFT + PAY MODAL ──────────────────────────────────────── */
+.modal-backdrop-blur { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:3000; backdrop-filter:blur(2px); }
+.shift-modal, .pay-modal-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:430px; max-width:94vw; background:#fff; border-radius:14px; z-index:3010; box-shadow:0 20px 50px rgba(0,0,0,0.18); }
+.shift-modal-hdr   { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid #e8f4ee; }
+.shift-modal-hdr h6 { margin:0; font-size:1rem; font-weight:700; color:#0f1c2e; }
+.shift-modal-body  { padding:20px; max-height:80vh; overflow-y:auto; }
+.shift-appt-info   { background:#f4faf7; border-radius:9px; padding:12px 14px; }
+.fw-600            { font-weight:600; }
+.sm-label          { font-size:0.82rem; font-weight:600; color:#1a2332; margin-bottom:4px; display:block; }
+.req-star          { color:#c0392b; }
+.sm-input          { width:100%; padding:9px 12px; border:1.5px solid #d0e8e0; border-radius:8px; font-size:0.88rem; outline:none; transition:border-color 0.2s; background:#fff; }
+.sm-input:focus    { border-color:#1aa37a; }
+.sm-error          { border-color:#e74c3c !important; }
+.err-txt           { color:#e74c3c; font-size:0.78rem; display:block; margin-top:3px; }
+.shift-success-msg { background:#d1fae5; border-radius:8px; padding:10px 14px; color:#065f46; font-size:0.84rem; margin-bottom:10px; }
+.sm-spinner        { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation:spinSm 0.7s linear infinite; }
+@keyframes spinSm  { to { transform:rotate(360deg); } }
+.btn-sm-confirm    { background:linear-gradient(135deg,#1aa37a,#0f6b51); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:0.86rem; font-weight:600; cursor:pointer; flex:1; }
+.btn-sm-cancel     { background:#f4f6f8; color:#5a7a9a; border:none; border-radius:8px; padding:10px 14px; font-size:0.86rem; cursor:pointer; }
+.pay-mode-pill     { display:flex; align-items:center; gap:5px; padding:7px 16px; border-radius:8px; border:2px solid #d0e8e0; cursor:pointer; font-size:0.84rem; font-weight:500; color:#5a7a9a; transition:all 0.2s; }
+.pay-mode-active   { border-color:#1aa37a; background:#f0fdf8; color:#1aa37a; font-weight:700; }
+.transfer-info     { background:#eff6ff; border:1px solid #bfdbfe; border-radius:9px; padding:12px 14px; font-size:0.84rem; }
+.pay-info-note     { background:#f0fdf8; border:1px solid #d0eedd; border-radius:7px; padding:7px 12px; font-size:0.78rem; color:#2d7a5f; }
+
+/* ── AGREED RATE BOX ─────────────────────────────────────────── */
+.agreed-rate-box   { background:linear-gradient(135deg,#f0fdf8,#e8f9f1); border:1.5px solid #a7f3d0; border-radius:10px; padding:12px 16px; }
+.agreed-rate-label { font-size:0.75rem; color:#5a7a9a; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
+.agreed-rate-value { font-size:1.5rem; font-weight:800; color:#0f6b51; margin:4px 0; }
+.agreed-rate-note  { font-size:0.76rem; color:#6a9c8a; }
+
+/* ── NEGOTIATE TOGGLE ────────────────────────────────────────── */
+.negotiate-toggle  { display:flex; align-items:center; gap:8px; cursor:pointer; padding:8px 12px; background:#f8fdf9; border:1.5px dashed #b0d8c6; border-radius:8px; user-select:none; }
+.neg-toggle-icon   { font-size:0.7rem; color:#1aa37a; }
+.neg-toggle-label  { font-size:0.84rem; font-weight:600; color:#1aa37a; }
+.negotiate-section { background:#fffbeb; border:1.5px solid #fde68a; border-radius:9px; padding:12px 14px; }
+.neg-info          { font-size:0.81rem; color:#92400e; background:#fef3c7; border-radius:7px; padding:8px 11px; }
