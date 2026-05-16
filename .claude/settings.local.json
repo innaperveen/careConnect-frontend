@@ -25,13 +25,18 @@
       "Read(//tmp/**)",
       "Bash(taskkill //F //IM java.exe)",
       "Bash(echo \"PID: $!\")",
-      "Bash(mvn -e spring-boot:run)"
+      "Bash(mvn -e spring-boot:run)",
+      "Bash(ls \"C:\\\\Users\\\\prakhar\\\\Music\\\\DOCUMENTS YAHA PE\" 2>/dev/null || echo \"directory empty or not found\")",
+      "Read(//c/Users/prakhar/Music/DOCUMENTS YAHA PE/**)",
+      "Bash(ls \"C:\\\\Users\\\\prakhar\\\\Music\\\\DOCUMENTS YAHA PE\\\\\")",
+      "Read(//c/Users/prakhar/Music/**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend\\src\\main\\java\\com\\careconnect\\entity",
       "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend\\src\\main\\java\\com\\careconnect\\dto\\request",
       "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend\\src\\main\\java\\com\\careconnect\\service",
-      "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend"
+      "C:\\Users\\prakhar\\Music\\Angular\\CareConnect\\careConnect-backend",
+      "C:\\Users\\prakhar\\Music\\DOCUMENTS YAHA PE"
     ]
   }
 }

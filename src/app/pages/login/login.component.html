@@ -34,17 +34,17 @@
           [type]="identifierType"
           [placeholder]="identifierPlaceholder"
           formControlName="identifier"
-          [class.input-error]="identifier.invalid && identifier.touched"
+          [class.input-error]="identifier.invalid && identifier.dirty"
           [class.field-text]="selectedRole === 'organization'"
           autocomplete="username"
         >
-        <small *ngIf="identifier.touched && identifier.hasError('required')">
+        <small *ngIf="identifier.dirty && identifier.hasError('required')">
           This field is required.
         </small>
-        <small *ngIf="identifier.touched && (identifier.hasError('email') || identifier.hasError('pattern')) && selectedRole !== 'organization'">
+        <small *ngIf="identifier.dirty && (identifier.hasError('email') || identifier.hasError('pattern')) && selectedRole !== 'organization'">
           Enter a valid .com email address (e.g. name@example.com).
         </small>
-        <small *ngIf="identifier.touched && identifier.hasError('pattern') && selectedRole === 'organization'">
+        <small *ngIf="identifier.dirty && identifier.hasError('pattern') && selectedRole === 'organization'">
           Enter your Registration Number or License Number (letters and digits only, 5–30 characters).
         </small>
       </div>
@@ -57,7 +57,7 @@
             [type]="showPassword ? 'text' : 'password'"
             placeholder="Enter your password (min 12 characters)"
             formControlName="password"
-            [class.input-error]="password.invalid && password.touched"
+            [class.input-error]="password.invalid && password.dirty"
             autocomplete="current-password"
             (paste)="$event.preventDefault()"
           >
@@ -65,8 +65,8 @@
             <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
           </button>
         </div>
-        <small *ngIf="password.touched && password.hasError('required')">Password is required.</small>
-        <small *ngIf="password.touched && password.hasError('minlength')">Minimum 12 characters required.</small>
+        <small *ngIf="password.dirty && password.hasError('required')">Password is required.</small>
+        <small *ngIf="password.dirty && password.hasError('minlength')">Minimum 12 characters required.</small>
         <span class="forgot" routerLink="/forgot-password">Forgot password?</span>
       </div>
 

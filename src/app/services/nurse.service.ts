@@ -23,6 +23,12 @@ export class NurseService {
       .pipe(map((r: any) => r.data), catchError(this.handleError));
   }
 
+  // ── Emergency availability ────────────────────────────────────────
+  toggleEmergencyAvailability(userId: number, available: boolean): Observable<any> {
+    return this.http.patch<any>(`${this.NURSES_API}/${userId}/emergency-availability?available=${available}`, {})
+      .pipe(map((r: any) => r.data), catchError(this.handleError));
+  }
+
   // ── Jobs ─────────────────────────────────────────────────────────
   getJobs(specialization?: string, location?: string, jobType?: string): Observable<any[]> {
     let params = new HttpParams();
@@ -30,6 +36,11 @@ export class NurseService {
     if (location      && location      !== 'All') params = params.set('location', location);
     if (jobType       && jobType       !== 'All') params = params.set('jobType', jobType);
     return this.http.get<any>(`${this.JOBS_API}`, { params })
+      .pipe(map((r: any) => r.data || []), catchError(this.handleError));
+  }
+
+  getEmergencyJobs(): Observable<any[]> {
+    return this.http.get<any>(`${this.JOBS_API}/emergency`)
       .pipe(map((r: any) => r.data || []), catchError(this.handleError));
   }
 

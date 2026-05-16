@@ -31,6 +31,11 @@ export class AuthService {
       .pipe(map(r => r.data?.exists ?? false), catchError(() => of(false)));
   }
 
+  checkNurseLicense(licenseNumber: string): Observable<boolean> {
+    return this.http.get<any>(`${this.API}/auth/check`, { params: { field: 'nurseLicense', value: licenseNumber.toUpperCase() } })
+      .pipe(map(r => r.data?.exists ?? false), catchError(() => of(false)));
+  }
+
   changePassword(userId: number, currentPassword: string, newPassword: string): Observable<any> {
     return this.http.post(`${this.API}/auth/change-password`, { userId, currentPassword, newPassword })
       .pipe(catchError(this.handleError));

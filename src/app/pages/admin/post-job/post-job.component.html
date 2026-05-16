@@ -208,6 +208,7 @@
                     <small class="err" *ngIf="f['description'].touched && f['description'].hasError('required')">Description is required.</small>
                     <small class="err" *ngIf="f['description'].touched && f['description'].hasError('minlength')">Minimum 10 characters required.</small>
                     <small class="err" *ngIf="f['description'].touched && f['description'].hasError('maxlength')">Description must not exceed 100 characters.</small>
+                    <small class="err" *ngIf="f['description'].touched && f['description'].hasError('pattern')">Only letters, numbers, spaces, and basic punctuation ( , . / - ( ) & ! ? : ; ' ) are allowed.</small>
                   </div>
                   <small class="text-muted" style="font-size:0.72rem;white-space:nowrap;">{{ descLen }}/100</small>
                 </div>
@@ -215,11 +216,11 @@
 
               <!-- 8. Working Conditions -->
               <div class="col-12">
-                <label class="field-label">Working Conditions <small style="color:#9ab8b0;font-weight:400;">(optional · max 150 chars)</small></label>
-                <input class="field-input" formControlName="workingConditions" maxlength="150"
-                       placeholder="e.g. ICU environment, night shifts only, home visits required…"
-                       [class.input-err]="f['workingConditions'].touched && f['workingConditions'].invalid">
-                <small class="err" *ngIf="f['workingConditions'].touched && f['workingConditions'].hasError('maxlength')">Maximum 150 characters.</small>
+                <label class="field-label">Working Conditions <small style="color:#9ab8b0;font-weight:400;">(optional)</small></label>
+                <select class="field-input" formControlName="workingConditions">
+                  <option value="">Select working conditions</option>
+                  <option *ngFor="let w of WORKING_CONDITIONS_OPTIONS" [value]="w">{{ w }}</option>
+                </select>
               </div>
 
             </div>
@@ -310,6 +311,76 @@
                      [class.input-err]="f['deadline'].touched && f['deadline'].invalid">
               <small class="err" *ngIf="f['deadline'].touched && f['deadline'].hasError('required')">Deadline is required.</small>
             </div>
+          </div>
+
+          <!-- Emergency Posting -->
+          <div class="form-card emerg-card" [class.emerg-card-active]="jobForm.value.isEmergency">
+
+            <!-- Header -->
+            <div class="emerg-card-hdr">
+              <div class="emerg-card-icon" [class.emerg-card-icon-on]="jobForm.value.isEmergency">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+              </div>
+              <div class="flex-grow-1">
+                <div class="emerg-card-title">Emergency Posting</div>
+                <div class="emerg-card-sub">Instantly notify all nurses who opted in for emergency assignments</div>
+              </div>
+            </div>
+
+            <!-- Toggle -->
+            <label class="emerg-toggle-row" [class.emerg-toggle-row-on]="jobForm.value.isEmergency">
+              <input type="checkbox" formControlName="isEmergency" style="display:none;">
+              <div class="emerg-toggle-track" [class.emerg-track-on]="jobForm.value.isEmergency">
+                <div class="emerg-toggle-thumb"></div>
+              </div>
+              <span class="emerg-toggle-label">
+                {{ jobForm.value.isEmergency ? '🚨 Emergency — Nurses will be notified immediately' : 'Mark this job as Emergency' }}
+              </span>
+            </label>
+
+            <!-- Contact field — shown only when emergency ON -->
+            <div *ngIf="jobForm.value.isEmergency" class="emerg-contact-section">
+              <label class="field-label mt-3">
+                Emergency Contact Number <span style="color:#c0392b;">*</span>
+                <span style="font-size:0.72rem;color:#9ab8b0;font-weight:400;margin-left:8px;">Nurses will call this directly</span>
+              </label>
+
+              <div class="emerg-phone-row">
+                <!-- Country Code -->
+                <select class="emerg-code-select field-input" formControlName="emergencyCountryCode">
+                  <option *ngFor="let cc of EMERGENCY_COUNTRY_CODES" [value]="cc.code">{{ cc.label }}</option>
+                </select>
+
+                <!-- 10-digit number -->
+                <div class="emerg-phone-wrap flex-grow-1">
+                  <input class="field-input"
+                         formControlName="emergencyPhone"
+                         inputmode="numeric"
+                         maxlength="10"
+                         placeholder="9876543210"
+                         (keydown)="blockEmergencyNonDigit($event)"
+                         [class.input-err]="f['emergencyPhone'].touched && f['emergencyPhone'].invalid">
+                  <span class="emerg-phone-counter"
+                        [class.counter-ok]="emergencyPhoneLen === 10"
+                        [class.counter-err]="emergencyPhoneLen > 0 && emergencyPhoneLen < 10">
+                    {{ emergencyPhoneLen }}/10
+                  </span>
+                </div>
+              </div>
+
+              <small class="err" *ngIf="f['emergencyPhone'].touched && f['emergencyPhone'].hasError('required')">
+                Contact number is required for emergency postings.
+              </small>
+              <small class="err" *ngIf="f['emergencyPhone'].touched && f['emergencyPhone'].hasError('pattern')">
+                Must be exactly 10 digits, starting with 6, 7, 8, or 9. No letters or special characters.
+              </small>
+
+              <div class="emerg-info-note mt-2">
+                <i class="bi bi-info-circle me-1"></i>
+                Nurses who opt in for emergencies will see this number on the job card and can call immediately.
+              </div>
+            </div>
+
           </div>
 
           <!-- Submit -->

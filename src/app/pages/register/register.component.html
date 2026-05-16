@@ -35,16 +35,16 @@
         <div class="field-wrap">
           <label class="field-label">First Name <span class="req-star">*</span></label>
           <input type="text" placeholder="First Name *" formControlName="firstName"
-            [class.input-error]="pFirst.invalid && pFirst.dirty"
+            [class.input-error]="pFirst.invalid && (pFirst.dirty || pFirst.touched)"
             (keypress)="blockNonLetter($event)"
             (input)="capitalizeFirst(pFirst)">
-          <small *ngIf="pFirst.dirty && pFirst.hasError('required')">First name is required.</small>
+          <small *ngIf="pFirst.touched && pFirst.hasError('required')">First name is required.</small>
           <small *ngIf="pFirst.dirty && pFirst.hasError('minlength')">Minimum 3 letters required.</small>
           <small *ngIf="pFirst.dirty && pFirst.hasError('maxlength')">Maximum 30 characters.</small>
           <small *ngIf="pFirst.dirty && pFirst.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
         </div>
         <div class="field-wrap">
-                    <label class="field-label">Middle Name <span class="req-star">*</span></label>
+                    <label class="field-label">Middle Name</label>
           <input type="text" placeholder="Middle Name (optional)" formControlName="middleName"
             [class.input-error]="pMiddle.invalid && pMiddle.dirty"
             (keypress)="blockNonLetter($event)"
@@ -55,10 +55,10 @@
         <div class="field-wrap">
           <label class="field-label">Last Name <span class="req-star">*</span></label>
           <input type="text" placeholder="Last Name *" formControlName="lastName"
-            [class.input-error]="pLast.invalid && pLast.dirty"
+            [class.input-error]="pLast.invalid && (pLast.dirty || pLast.touched)"
             (keypress)="blockNonLetterOrDot($event)"
             (input)="capitalizeFirst(pLast)">
-          <small *ngIf="pLast.dirty && pLast.hasError('required')">Last name is required.</small>
+          <small *ngIf="pLast.touched && pLast.hasError('required')">Last name is required.</small>
           <small *ngIf="pLast.dirty && pLast.hasError('maxlength')">Maximum 30 characters.</small>
           <small *ngIf="pLast.dirty && pLast.hasError('invalidLastName')">Min 3 letters, or a single dot (.) for single-name individuals.</small>
         </div>
@@ -231,7 +231,7 @@
         </div>
       </div>
 
-      <button type="submit" class="submit-btn" [disabled]="isLoading">
+      <button type="submit" class="submit-btn" [disabled]="isLoading || patientForm.invalid || patEmailDuplicateError">
         <span *ngIf="!isLoading">Create Patient Account</span>
         <span *ngIf="isLoading" class="spinner-wrap"><span class="btn-spinner"></span> Registering…</span>
       </button>
@@ -247,16 +247,16 @@
         <div class="field-wrap">
           <label class="field-label">First Name <span class="req-star">*</span></label>
           <input type="text" placeholder="First Name *" formControlName="firstName"
-            [class.input-error]="nFirst.invalid && nFirst.dirty"
+            [class.input-error]="nFirst.invalid && (nFirst.dirty || nFirst.touched)"
             (keypress)="blockNonLetter($event)"
             (input)="capitalizeFirst(nFirst)">
-          <small *ngIf="nFirst.dirty && nFirst.hasError('required')">First name is required.</small>
+          <small *ngIf="nFirst.touched && nFirst.hasError('required')">First name is required.</small>
           <small *ngIf="nFirst.dirty && nFirst.hasError('minlength')">Minimum 3 letters required.</small>
           <small *ngIf="nFirst.dirty && nFirst.hasError('maxlength')">Maximum 30 characters.</small>
           <small *ngIf="nFirst.dirty && nFirst.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
         </div>
         <div class="field-wrap">
-                    <label class="field-label">Middle Name <span class="req-star">*</span></label>
+                    <label class="field-label">Middle Name</label>
           <input type="text" placeholder="Middle Name (optional)" formControlName="middleName"
             [class.input-error]="nMiddle.invalid && nMiddle.dirty"
             (keypress)="blockNonLetter($event)"
@@ -267,10 +267,10 @@
         <div class="field-wrap">
           <label class="field-label">Last Name <span class="req-star">*</span></label>
           <input type="text" placeholder="Last Name *" formControlName="lastName"
-            [class.input-error]="nLast.invalid && nLast.dirty"
+            [class.input-error]="nLast.invalid && (nLast.dirty || nLast.touched)"
             (keypress)="blockNonLetterOrDot($event)"
             (input)="capitalizeFirst(nLast)">
-          <small *ngIf="nLast.dirty && nLast.hasError('required')">Last name is required.</small>
+          <small *ngIf="nLast.touched && nLast.hasError('required')">Last name is required.</small>
           <small *ngIf="nLast.dirty && nLast.hasError('maxlength')">Maximum 30 characters.</small>
           <small *ngIf="nLast.dirty && nLast.hasError('invalidLastName')">Min 3 letters, or a single dot (.) for single-name individuals.</small>
         </div>
@@ -283,9 +283,11 @@
         <div class="field-wrap">
           <label class="field-label">License Number <span class="req-star">*</span></label>
           <input type="text" placeholder="License Number * (e.g. AB1234567890)" formControlName="licenseNumber"
-            [class.input-error]="nLicense.invalid && nLicense.touched" maxlength="12">
+            [class.input-error]="(nLicense.invalid && nLicense.touched) || nurseLicenseDuplicateError" maxlength="12"
+            (blur)="checkNurseLicense()" style="text-transform:uppercase;">
           <small *ngIf="nLicense.touched && nLicense.hasError('required')">License number is required.</small>
           <small *ngIf="nLicense.touched && nLicense.hasError('pattern')">Format: 2 capital letters + 10 digits (e.g. AB1234567890).</small>
+          <small *ngIf="nurseLicenseDuplicateError" style="color:#c0392b;font-weight:600;">This license number is already registered.</small>
         </div>
         <div class="field-wrap">
           <label class="field-label">Specialization <span class="req-star">*</span></label>
@@ -447,7 +449,7 @@
         </div>
       </div>
 
-      <button type="submit" class="submit-btn" [disabled]="isLoading">
+      <button type="submit" class="submit-btn" [disabled]="isLoading || nurseForm.invalid || nurseEmailDuplicateError || nurseLicenseDuplicateError">
         <span *ngIf="!isLoading">Create Nurse Account</span>
         <span *ngIf="isLoading" class="spinner-wrap"><span class="btn-spinner"></span> Registering…</span>
       </button>
@@ -514,16 +516,16 @@
         <div class="field-wrap">
           <label class="field-label">Contact First Name <span class="req-star">*</span></label>
           <input type="text" placeholder="Contact First Name *" formControlName="contactFirstName"
-            [class.input-error]="oCFirst.invalid && oCFirst.dirty" maxlength="30"
+            [class.input-error]="oCFirst.invalid && (oCFirst.dirty || oCFirst.touched)" maxlength="30"
             (keypress)="blockNonLetter($event)"
             (input)="capitalizeFirst(oCFirst)">
-          <small *ngIf="oCFirst.dirty && oCFirst.hasError('required')">First name is required.</small>
+          <small *ngIf="oCFirst.touched && oCFirst.hasError('required')">First name is required.</small>
           <small *ngIf="oCFirst.dirty && oCFirst.hasError('minlength')">Minimum 3 letters.</small>
           <small *ngIf="oCFirst.dirty && oCFirst.hasError('maxlength')">Maximum 30 characters.</small>
           <small *ngIf="oCFirst.dirty && oCFirst.hasError('pattern')">Only letters allowed. No numbers or special characters.</small>
         </div>
         <div class="field-wrap">
-                    <label class="field-label">Middle Name <span class="req-star">*</span></label>
+                    <label class="field-label">Middle Name</label>
           <input type="text" placeholder="Middle Name (optional)" formControlName="contactMiddleName"
             [class.input-error]="oCMiddle.invalid && oCMiddle.dirty" maxlength="30"
             (keypress)="blockNonLetter($event)"
@@ -534,10 +536,10 @@
         <div class="field-wrap">
           <label class="field-label">Contact Last Name <span class="req-star">*</span></label>
           <input type="text" placeholder="Contact Last Name *" formControlName="contactLastName"
-            [class.input-error]="oCLast.invalid && oCLast.dirty" maxlength="30"
+            [class.input-error]="oCLast.invalid && (oCLast.dirty || oCLast.touched)" maxlength="30"
             (keypress)="blockNonLetterOrDot($event)"
             (input)="capitalizeFirst(oCLast)">
-          <small *ngIf="oCLast.dirty && oCLast.hasError('required')">Contact last name is required.</small>
+          <small *ngIf="oCLast.touched && oCLast.hasError('required')">Contact last name is required.</small>
           <small *ngIf="oCLast.dirty && oCLast.hasError('maxlength')">Contact last name must not exceed 30 characters.</small>
           <small *ngIf="oCLast.dirty && oCLast.hasError('invalidLastName')">Min 3 letters, or a single dot (.) for single-name individuals.</small>
         </div>
@@ -691,7 +693,7 @@
         Your organization account will be reviewed within 24 hours before activation.
       </p>
 
-      <button type="submit" class="submit-btn" [disabled]="isLoading">
+      <button type="submit" class="submit-btn" [disabled]="isLoading || orgForm.invalid || orgEmailDuplicateError || regDuplicateError || licenseDuplicateError">
         <span *ngIf="!isLoading">Register Organization</span>
         <span *ngIf="isLoading" class="spinner-wrap"><span class="btn-spinner"></span> Registering…</span>
       </button>

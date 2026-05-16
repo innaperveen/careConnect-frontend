@@ -105,6 +105,32 @@ export class PostJobComponent implements OnInit {
 
   readonly OPENINGS_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20];
 
+  readonly EMERGENCY_COUNTRY_CODES = [
+    { label: '🇮🇳 +91', code: '+91' },
+    { label: '🇺🇸 +1',  code: '+1'  },
+    { label: '🇬🇧 +44', code: '+44' },
+    { label: '🇦🇪 +971',code: '+971'},
+    { label: '🇦🇺 +61', code: '+61' },
+    { label: '🇸🇬 +65', code: '+65' },
+  ];
+
+  readonly WORKING_CONDITIONS_OPTIONS = [
+    'ICU / High Dependency Unit',
+    'General Ward',
+    'Emergency / Trauma Bay',
+    'Operation Theatre',
+    'Home Care / Field Visits',
+    'Night Shifts Mandatory',
+    'Rotational Shifts',
+    'Day Shifts Only',
+    'Physical / Demanding Environment',
+    'Isolation / Infectious Ward',
+    'Pediatric / Neonatal Care',
+    'Outdoor / Mobile Clinic',
+    'Air-Conditioned Indoor Ward',
+    'Non-AC General Facility',
+  ];
+
   readonly BENEFITS_OPTIONS = [
     'Health Insurance', 'Accommodation', 'Transportation Allowance',
     'Meals Provided', 'EPF / Provident Fund', 'Annual Bonus',
@@ -128,14 +154,33 @@ export class PostJobComponent implements OnInit {
       patientPopulation: ['', Validators.required],
       specialization:  ['', Validators.required],
       description:     [{ value: '', disabled: true },
-                        [Validators.required, Validators.minLength(10), Validators.maxLength(100)]],
-      workingConditions: ['', [Validators.maxLength(150)]],
+                        [Validators.required, Validators.minLength(10), Validators.maxLength(100),
+                         Validators.pattern("^[A-Za-z0-9 ,.\\/\\-()&!?:;']+$")]],
+      workingConditions: [''],
       shiftDetails:    ['', Validators.required],
       salaryMin:       ['', [Validators.min(10000), Validators.max(75000)]],
       salaryMax:       ['', [Validators.min(10000), Validators.max(75000)]],
-      priority:        ['Normal', Validators.required],
-      deadline:        ['', Validators.required],
+      priority:          ['Normal', Validators.required],
+      deadline:          ['', Validators.required],
+      isEmergency:          [false],
+      emergencyCountryCode: ['+91'],
+      emergencyPhone:       [''],
     }, { validators: salaryRangeValidator() });
+
+    // When isEmergency toggled, apply/clear contact validators
+    this.jobForm.get('isEmergency')!.valueChanges.subscribe((val: boolean) => {
+      const phoneCtrl = this.jobForm.get('emergencyPhone')!;
+      if (val) {
+        phoneCtrl.setValidators([
+          Validators.required,
+          Validators.pattern('^[6-9][0-9]{9}$')
+        ]);
+      } else {
+        phoneCtrl.clearValidators();
+        phoneCtrl.setValue('');
+      }
+      phoneCtrl.updateValueAndValidity({ emitEvent: false });
+    });
   }
 
   ngOnInit(): void {
@@ -166,6 +211,19 @@ export class PostJobComponent implements OnInit {
 
   get f() { return this.jobForm.controls; }
   get descLen(): number { return (this.jobForm.get('description')?.value || '').length; }
+  get emergencyPhoneLen(): number { return (this.jobForm.get('emergencyPhone')?.value || '').length; }
+
+  blockEmergencyNonDigit(event: KeyboardEvent): boolean {
+    const allowed = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    const isDigit = /^[0-9]$/.test(event.key);
+    if (!isDigit && !allowed.includes(event.key)) { event.preventDefault(); return false; }
+    if (isDigit) {
+      const input = event.target as HTMLInputElement;
+      const hasSelection = input.selectionStart !== input.selectionEnd;
+      if (input.value.length >= 10 && !hasSelection) { event.preventDefault(); return false; }
+    }
+    return true;
+  }
 
   onDepartmentChange(dept: string): void {
     this.jobTitles      = this.DEPT_JOBS[dept] || ['Other'];
@@ -231,8 +289,12 @@ export class PostJobComponent implements OnInit {
       shiftDetails:     v.shiftDetails,
       salaryMin:        v.salaryMin ? parseFloat(v.salaryMin) : null,
       salaryMax:        v.salaryMax ? parseFloat(v.salaryMax) : null,
-      priority:         v.priority,
-      deadline:         v.deadline ? v.deadline + ':00' : null,
+      priority:          v.isEmergency ? 'Critical' : v.priority,
+      deadline:          v.deadline ? v.deadline + ':00' : null,
+      isEmergency:       !!v.isEmergency,
+      emergencyContact:  v.isEmergency && v.emergencyPhone
+                           ? (v.emergencyCountryCode || '+91') + ' ' + v.emergencyPhone
+                           : null,
     };
 
     this.adminService.createJob(this.userId, payload).subscribe({
@@ -242,7 +304,7 @@ export class PostJobComponent implements OnInit {
         this.jobTitles       = [];
         this.showOtherTitle  = false;
         this.selectedBenefits.clear();
-        this.jobForm.reset({ priority: 'Normal' });
+        this.jobForm.reset({ priority: 'Normal', isEmergency: false, emergencyCountryCode: '+91', emergencyPhone: '' });
         this.jobForm.get('location')?.setValue(this.orgLocation);
         this.jobForm.get('description')?.disable();
         this.myJobs.unshift(created);

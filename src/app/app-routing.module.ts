@@ -32,6 +32,7 @@ import { ScheduleComponent } from './pages/nurse/schedule/schedule.component';
 import { PaymentsComponent } from './pages/nurse/payments/payments.component';
 import { TrainingComponent } from './pages/nurse/training/training.component';
 import { MyPatientsComponent } from './pages/nurse/my-patients/my-patients.component';
+import { NotificationsComponent } from './pages/nurse/notifications/notifications.component';
 
 const routes: Routes = [
   // Public — always accessible
@@ -68,6 +69,7 @@ const routes: Routes = [
   { path: 'nurse-payments',       component: PaymentsComponent,       canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
   { path: 'nurse-training',       component: TrainingComponent,       canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
   { path: 'nurse-my-patients',    component: MyPatientsComponent,     canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
+  { path: 'nurse-notifications',  component: NotificationsComponent,  canActivate: [authGuard, roleGuard], data: { role: 'NURSE' } },
 
   // Fallback
   { path: '**', redirectTo: '' },

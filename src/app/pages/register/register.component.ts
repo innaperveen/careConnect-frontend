@@ -114,6 +114,9 @@ export class RegisterComponent implements OnInit {
   nurseEmailDuplicateError = false;
   orgEmailDuplicateError   = false;
 
+  // Duplicate check flag for nurse license number
+  nurseLicenseDuplicateError = false;
+
   // Country codes — short format: "IN +91"
   countryCodes = [
     { label: 'IN +91',  code: '+91'  },
@@ -452,6 +455,12 @@ export class RegisterComponent implements OnInit {
     this.auth.checkEmail(val).subscribe(exists => this.nurseEmailDuplicateError = exists);
   }
 
+  checkNurseLicense(): void {
+    const val = (this.nurseForm.get('licenseNumber')?.value || '').trim().toUpperCase();
+    if (!val || this.nurseForm.get('licenseNumber')?.invalid) { this.nurseLicenseDuplicateError = false; return; }
+    this.auth.checkNurseLicense(val).subscribe(exists => this.nurseLicenseDuplicateError = exists);
+  }
+
   checkOrgEmail(): void {
     const val = (this.orgForm.get('email')?.value || '').trim().toLowerCase();
     if (!val || this.orgForm.get('email')?.invalid) { this.orgEmailDuplicateError = false; return; }
@@ -634,7 +643,8 @@ export class RegisterComponent implements OnInit {
 
   register(): void {
     if (this.regDuplicateError || this.licenseDuplicateError ||
-        this.patEmailDuplicateError || this.nurseEmailDuplicateError || this.orgEmailDuplicateError) return;
+        this.patEmailDuplicateError || this.nurseEmailDuplicateError || this.orgEmailDuplicateError ||
+        this.nurseLicenseDuplicateError) return;
     const form = this.activeForm;
     if (form.invalid) { form.markAllAsTouched(); return; }
 
