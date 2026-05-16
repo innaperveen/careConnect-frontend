@@ -152,7 +152,10 @@
 
             <!-- Action buttons -->
             <div class="nc-shift-actions">
-              <button class="btn-mark-shift-sm" (click)="openShiftModal(appt)">
+              <button class="btn-mark-shift-sm"
+                      [disabled]="!canMarkShift(appt)"
+                      [title]="markShiftDisabledReason(appt)"
+                      (click)="openShiftModal(appt)">
                 <i class="bi bi-plus-circle me-1"></i>Mark Shift Done
               </button>
               <button class="btn-pay-sm"
@@ -160,7 +163,39 @@
                       (click)="openPayModal(appt)">
                 <i class="bi bi-credit-card me-1"></i>Pay {{ formatAmount(totalConfirmedAmount(appt.id)) }}
               </button>
+              <div class="pay-blocked-msg" *ngIf="payBlockedApptId === appt.id && payBlockedMsg" (click)="$event.stopPropagation()">
+                <i class="bi bi-exclamation-triangle me-1"></i>{{ payBlockedMsg }}
+              </div>
             </div>
+
+            <!-- Reconciliation banner -->
+            <div class="reconcile-banner" *ngIf="needsReconciliation(appt)" (click)="$event.stopPropagation()">
+              <div class="reconcile-info">
+                <i class="bi bi-clipboard-check me-2"></i>
+                <div>
+                  <strong>Shift Summary Confirmation</strong>
+                  <p class="reconcile-msg">
+                    {{ appt.actualShifts }} of {{ appt.expectedShifts }} expected shifts were marked.
+                    <span *ngIf="appt.reconciliationStatus === 'NURSE_CONFIRMED'"> Nurse has confirmed — your turn.</span>
+                    Please confirm to finalise this appointment.
+                  </p>
+                </div>
+              </div>
+              <div class="reconcile-actions">
+                <button class="btn-reconcile-confirm"
+                        [disabled]="reconcilingId === appt.id"
+                        (click)="confirmReconciliation(appt)">
+                  <span *ngIf="reconcilingId !== appt.id"><i class="bi bi-check2-circle me-1"></i>Confirm</span>
+                  <span *ngIf="reconcilingId === appt.id"><span class="sm-spin-r"></span></span>
+                </button>
+              </div>
+              <p class="reconcile-err" *ngIf="reconcileError">{{ reconcileError }}</p>
+            </div>
+
+            <div class="reconcile-agreed" *ngIf="reconcileSuccess[appt.id] || appt.reconciliationStatus === 'AGREED'">
+              <i class="bi bi-check-circle-fill me-2"></i>Appointment confirmed by both parties.
+            </div>
+
           </div>
         </ng-container>
 
@@ -183,6 +218,85 @@
         </div>
 
       </div>
+    </div>
+
+    <!-- ── PAYMENT HISTORY + REFERENCE SEARCH ── -->
+    <div class="pay-history-section mt-4" *ngIf="!isLoading && assignedNurses.length > 0">
+
+      <!-- Header row -->
+      <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <h6 class="pay-hist-title">
+          <i class="bi bi-receipt me-2"></i>Payment History &amp; Reference Lookup
+        </h6>
+        <button class="btn-toggle-hist" (click)="showPayHistory ? showPayHistory = false : loadPaymentHistory()">
+          {{ showPayHistory ? 'Hide History' : 'Show My Payments' }}
+        </button>
+      </div>
+
+      <!-- Reference search -->
+      <div class="ref-search-row mb-3">
+        <input class="ref-input" [(ngModel)]="refSearch" placeholder="Enter reference number e.g. CC-20260516-A3B9C2D"
+               (keydown.enter)="searchByRef()" maxlength="25" style="text-transform:uppercase;">
+        <button class="btn-ref-search" (click)="searchByRef()" [disabled]="isSearchingRef || !refSearch.trim()">
+          <span *ngIf="!isSearchingRef"><i class="bi bi-search me-1"></i>Search</span>
+          <span *ngIf="isSearchingRef"><span class="sm-spinner-sm"></span></span>
+        </button>
+      </div>
+
+      <!-- Search result -->
+      <div class="ref-result-card" *ngIf="refSearchResult">
+        <div class="ref-result-hdr">
+          <span class="ref-badge-found"><i class="bi bi-check-circle me-1"></i>{{ refSearchResult.referenceNumber }}</span>
+          <button class="ref-result-close" (click)="refSearchResult = null; refSearch = ''"><i class="bi bi-x"></i></button>
+        </div>
+        <div class="ref-result-row"><span>Nurse</span><strong>{{ refSearchResult.nurseName }}</strong></div>
+        <div class="ref-result-row"><span>Amount</span><strong class="text-success">{{ formatAmount(refSearchResult.amount) }}</strong></div>
+        <div class="ref-result-row"><span>Date</span><strong>{{ formatDate(refSearchResult.paymentDate) }}</strong></div>
+        <div class="ref-result-row"><span>Method</span><strong>{{ refSearchResult.paymentMethod === 'UPI' ? 'UPI' : 'Bank Transfer' }}</strong></div>
+        <div class="ref-result-row"><span>Care</span><strong>{{ refSearchResult.appointmentCareNeeds || 'Home Care' }}</strong></div>
+        <button class="btn-dl-receipt-sm mt-2" (click)="downloadReceipt(refSearchResult)">
+          <i class="bi bi-download me-1"></i>Download Receipt
+        </button>
+      </div>
+      <div class="ref-search-err" *ngIf="refSearchError">
+        <i class="bi bi-exclamation-circle me-1"></i>{{ refSearchError }}
+      </div>
+
+      <!-- Full history list -->
+      <div *ngIf="showPayHistory">
+        <div *ngIf="isLoadingHistory" class="text-center py-3 text-muted">
+          <div class="spinner-border spinner-border-sm text-success me-2"></div>Loading…
+        </div>
+        <div *ngIf="!isLoadingHistory && payHistory.length === 0" class="pay-hist-empty">
+          No payment history yet.
+        </div>
+        <div *ngFor="let p of payHistory" class="pay-hist-row">
+          <div class="pay-hist-left">
+            <div class="pay-hist-icon" [ngClass]="p.status === 'PROCESSED' ? 'phi-green' : 'phi-orange'">
+              <i class="bi" [ngClass]="p.status === 'PROCESSED' ? 'bi-check2-circle' : 'bi-hourglass-split'"></i>
+            </div>
+            <div>
+              <p class="pay-hist-nurse">{{ p.nurseName }}</p>
+              <p class="pay-hist-meta">
+                {{ formatDate(p.paymentDate) }}
+                <span *ngIf="p.referenceNumber"> · {{ p.referenceNumber }}</span>
+              </p>
+              <p class="pay-hist-care">{{ p.appointmentCareNeeds || 'Home Care' }}</p>
+            </div>
+          </div>
+          <div class="pay-hist-right">
+            <span class="pay-hist-amount">{{ formatAmount(p.amount) }}</span>
+            <span class="pay-hist-badge" [ngClass]="p.status === 'PROCESSED' ? 'phb-paid' : 'phb-pending'">
+              {{ p.status === 'PROCESSED' ? 'Paid' : 'Pending' }}
+            </span>
+            <button class="btn-dl-receipt-sm" *ngIf="p.status === 'PROCESSED'"
+                    (click)="downloadReceipt(p)" title="Download Receipt">
+              <i class="bi bi-download"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -444,31 +558,57 @@
     <!-- Transfer details -->
     <div class="transfer-info mb-3">
       <div class="text-muted mb-1" style="font-size:0.78rem;">Transfer to:</div>
-      <div *ngIf="selectedPayMethod === 'UPI' && payModal.nurse?.nurseUpiId">
-        <i class="bi bi-phone me-2 text-success"></i><strong>{{ payModal.nurse.nurseUpiId }}</strong>
-      </div>
+
+      <!-- UPI: show all UPI IDs as chips -->
+      <ng-container *ngIf="selectedPayMethod === 'UPI' && payModal.nurse?.nurseUpiId">
+        <div class="upi-pay-list">
+          <div class="upi-pay-chip" *ngFor="let upi of getUpiList(payModal.nurse.nurseUpiId)">
+            <i class="bi bi-phone-fill me-2" style="color:#1aa37a;font-size:0.85rem;"></i>
+            <span class="upi-pay-id">{{ upi }}</span>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Bank Transfer details -->
       <div *ngIf="selectedPayMethod === 'BANK_TRANSFER' && payModal.nurse?.nurseBankAccount">
         <i class="bi bi-bank me-2" style="color:#3b82f6;"></i>
         <strong>{{ payModal.nurse.nurseBankAccount }}</strong>
         <span *ngIf="payModal.nurse.nurseIfsc"> · {{ payModal.nurse.nurseIfsc }}</span>
         <span *ngIf="payModal.nurse.nurseBankName"> · {{ payModal.nurse.nurseBankName }}</span>
       </div>
-      <div class="pay-info-note mt-2" *ngIf="!payModal.nurse?.nurseUpiId && !payModal.nurse?.nurseBankAccount">
-        <i class="bi bi-exclamation-circle me-1"></i>
-        Nurse hasn't added bank details yet. Ask them to add from their Payments page.
-      </div>
+
       <div class="pay-info-note mt-2" *ngIf="payModal.nurse?.nurseUpiId || payModal.nurse?.nurseBankAccount">
         <i class="bi bi-info-circle me-1"></i>
-        Transfer manually, then click Confirm to mark as paid.
+        Transfer manually to any of the above, then click Confirm to mark as paid.
       </div>
     </div>
 
-    <div class="shift-success-msg" *ngIf="paySuccess">
-      <i class="bi bi-check-circle-fill me-2"></i>{{ paySuccess }}
-    </div>
     <div class="err-txt mb-2" *ngIf="payError">{{ payError }}</div>
 
-    <div class="d-flex gap-2">
+    <!-- After payment — show reference numbers -->
+    <div *ngIf="paymentRefs.length > 0" class="pay-success-block">
+      <div class="pay-success-header">
+        <i class="bi bi-check-circle-fill me-2"></i>Payment Successful!
+      </div>
+      <p class="pay-success-sub">Save your reference number(s) for tracking:</p>
+      <div *ngFor="let ref of paymentRefs" class="ref-chip">
+        <i class="bi bi-tag-fill me-2"></i>{{ ref }}
+      </div>
+      <button class="btn-download-receipt mt-3" (click)="downloadReceipt({
+        referenceNumber: paymentRefs[0],
+        amount: totalConfirmedAmount(payModal.appt.id),
+        paymentDate: null,
+        patientName: null,
+        nurseName: payModal.nurse?.nurseName,
+        appointmentCareNeeds: payModal.appt.careNeeds,
+        paymentMethod: selectedPayMethod
+      })">
+        <i class="bi bi-download me-1"></i>Download Receipt
+      </button>
+      <button class="btn-sm-cancel mt-2 w-100" (click)="closePayModal()">Close</button>
+    </div>
+
+    <div class="d-flex gap-2" *ngIf="paymentRefs.length === 0">
       <button class="btn-sm-confirm" (click)="confirmPayment()" [disabled]="isProcessingPayment">
         <span *ngIf="!isProcessingPayment"><i class="bi bi-check2-circle me-1"></i>Confirm Payment</span>
         <span *ngIf="isProcessingPayment"><span class="sm-spinner me-1"></span>Processing…</span>

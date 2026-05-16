@@ -5,6 +5,10 @@ import { AppointmentService } from '../../../services/appointment.service';
 import { MessageService } from '../../../services/message.service';
 import { ShiftService } from '../../../services/shift.service';
 import { NotificationService } from '../../../services/notification.service';
+import { MedicalRecordService } from '../../../services/medical-record.service';
+import { VitalSignService } from '../../../services/vital-sign.service';
+
+type CareTab = 'records' | 'vitals' | 'notes';
 
 @Component({
   selector: 'app-my-patients',
@@ -23,18 +27,66 @@ export class MyPatientsComponent implements OnInit, OnDestroy, AfterViewChecked 
     All: 'All', CONFIRMED: 'Confirmed', IN_PROGRESS: 'In Progress', COMPLETED: 'Completed'
   };
 
-  // Shifts — keyed by appointmentId
   shiftsMap:    Record<number, any[]> = {};
   loadingShifts = new Set<number>();
 
-  // Pending count badge
   totalPending = 0;
   unreadCount  = 0;
 
-  // Confirm/reject state
   confirmingShiftId: number | null = null;
   rejectingShiftId:  number | null = null;
   shiftActionError   = '';
+
+  // ── Reconciliation ────────────────────────────────────────────────────────
+  reconcilingId: number | null = null;
+  reconcileError  = '';
+  reconcileSuccess: Record<number, boolean> = {};
+
+  needsNurseReconciliation(appt: any): boolean {
+    return appt.reconciliationStatus === 'PENDING' || appt.reconciliationStatus === 'PATIENT_CONFIRMED';
+  }
+
+  confirmReconciliation(appt: any): void {
+    this.reconcilingId  = appt.id;
+    this.reconcileError = '';
+    this.apptService.reconcileByNurse(appt.id, this.myUserId).subscribe({
+      next: (updated: any) => {
+        const idx = this.appointments.findIndex((a: any) => a.id === appt.id);
+        if (idx !== -1) this.appointments[idx] = { ...this.appointments[idx], ...updated };
+        this.reconcilingId = null;
+        this.reconcileSuccess[appt.id] = true;
+        setTimeout(() => delete this.reconcileSuccess[appt.id], 4000);
+      },
+      error: (err: Error) => {
+        this.reconcileError = err.message;
+        this.reconcilingId  = null;
+      }
+    });
+  }
+
+  // ── Care Panel ─────────────────────────────────────────────────────────────
+  carePanelPatient: any    = null;
+  carePanelTab: CareTab    = 'records';
+
+  // Records
+  patientRecords: Record<number, any[]> = {};
+  loadingRecords = new Set<number>();
+
+  // Vitals
+  patientVitals: Record<number, any[]> = {};
+  loadingVitals = new Set<number>();
+  vitals = { bloodPressure: '', pulseRate: '', temperature: '', spo2: '', weight: '', notes: '' };
+  isSavingVitals = false;
+  vitalsError    = '';
+  vitalsSuccess  = false;
+
+  // Care Notes
+  noteTitle    = '';
+  noteContent  = '';
+  isSavingNote = false;
+  noteError    = '';
+  noteSuccess  = false;
+  noteRecords: Record<number, any[]> = {};
 
   // Chat state
   chatPatient: any   = null;
@@ -52,11 +104,13 @@ export class MyPatientsComponent implements OnInit, OnDestroy, AfterViewChecked 
   private notifSub!: Subscription;
 
   constructor(
-    private auth:       AuthService,
-    private apptService:AppointmentService,
-    private msgSvc:     MessageService,
-    private shiftSvc:   ShiftService,
-    private notifSvc:   NotificationService
+    private auth:         AuthService,
+    private apptService:  AppointmentService,
+    private msgSvc:       MessageService,
+    private shiftSvc:     ShiftService,
+    private notifSvc:     NotificationService,
+    private recordSvc:    MedicalRecordService,
+    private vitalSvc:     VitalSignService
   ) {}
 
   ngOnInit(): void {
@@ -85,7 +139,7 @@ export class MyPatientsComponent implements OnInit, OnDestroy, AfterViewChecked 
     if (this.shouldScroll) { this.scrollToBottom(); this.shouldScroll = false; }
   }
 
-  // ── Appointments ─────────────────────────────────────────────────────────
+  // ── Appointments ──────────────────────────────────────────────────────────
 
   get activeAppointments(): any[] {
     const ACTIVE = ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'];
@@ -125,7 +179,7 @@ export class MyPatientsComponent implements OnInit, OnDestroy, AfterViewChecked 
     return this.assignedPatients.filter(p => this.appointmentsFor(p.patientId).length > 0);
   }
 
-  // ── Shift Loading ─────────────────────────────────────────────────────────
+  // ── Shifts ────────────────────────────────────────────────────────────────
 
   loadShiftsFor(appointmentId: number): void {
     this.loadingShifts.add(appointmentId);
@@ -147,9 +201,7 @@ export class MyPatientsComponent implements OnInit, OnDestroy, AfterViewChecked 
     this.totalPending = count;
   }
 
-  shiftsFor(appointmentId: number): any[] {
-    return this.shiftsMap[appointmentId] || [];
-  }
+  shiftsFor(appointmentId: number): any[] { return this.shiftsMap[appointmentId] || []; }
 
   pendingShiftsFor(appointmentId: number): any[] {
     return this.shiftsFor(appointmentId).filter(s => s.status === 'PENDING_CONFIRMATION');
@@ -159,9 +211,6 @@ export class MyPatientsComponent implements OnInit, OnDestroy, AfterViewChecked 
     return this.shiftsFor(appointmentId).filter(s => s.status === 'CONFIRMED');
   }
 
-  // ── Confirm / Reject ──────────────────────────────────────────────────────
-
-  // acceptNegotiation: true = patient's proposed rate, false = keep original
   confirmShift(shift: any, acceptNegotiation = false): void {
     this.confirmingShiftId = shift.id;
     this.shiftActionError  = '';
@@ -201,11 +250,217 @@ export class MyPatientsComponent implements OnInit, OnDestroy, AfterViewChecked 
     if (idx !== -1) list[idx] = updated;
   }
 
+  // ── Care Panel ────────────────────────────────────────────────────────────
+
+  openCarePanel(patient: any, tab: CareTab): void {
+    this.carePanelPatient = patient;
+    this.carePanelTab     = tab;
+    this.resetCareforms();
+    if (tab === 'records') this.loadRecordsFor(patient.patientUserId);
+    if (tab === 'vitals')  this.loadVitalsFor(patient.patientUserId);
+    if (tab === 'notes')   this.loadNotesFor(patient.patientUserId);
+  }
+
+  closeCarePanel(): void {
+    this.carePanelPatient = null;
+    this.resetCareforms();
+  }
+
+  switchCareTab(tab: CareTab): void {
+    this.carePanelTab = tab;
+    this.resetCareforms();
+    const pid = this.carePanelPatient?.patientUserId;
+    if (!pid) return;
+    if (tab === 'records' && !this.patientRecords[pid]) this.loadRecordsFor(pid);
+    if (tab === 'vitals'  && !this.patientVitals[pid])  this.loadVitalsFor(pid);
+    if (tab === 'notes'   && !this.noteRecords[pid])    this.loadNotesFor(pid);
+  }
+
+  private resetCareforms(): void {
+    this.vitals       = { bloodPressure: '', pulseRate: '', temperature: '', spo2: '', weight: '', notes: '' };
+    this.vitalsError  = '';
+    this.vitalsSuccess = false;
+    this.noteTitle    = '';
+    this.noteContent  = '';
+    this.noteError    = '';
+    this.noteSuccess  = false;
+  }
+
+  // ── EHR Records ───────────────────────────────────────────────────────────
+
+  loadRecordsFor(patientUserId: number): void {
+    if (this.loadingRecords.has(patientUserId)) return;
+    this.loadingRecords.add(patientUserId);
+    this.recordSvc.getByPatient(patientUserId).subscribe({
+      next: (data) => {
+        this.patientRecords[patientUserId] = (data || []).map((r: any) => ({
+          id:         r.id,
+          title:      r.title || 'Record',
+          type:       r.recordType || '—',
+          notes:      r.description || '',
+          fileUrl:    r.fileUrl || null,
+          fileName:   r.fileName || '',
+          date:       r.createdAt
+            ? new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            : '—'
+        }));
+        this.loadingRecords.delete(patientUserId);
+      },
+      error: () => { this.loadingRecords.delete(patientUserId); }
+    });
+  }
+
+  getRecordsFor(patientUserId: number): any[] {
+    return this.patientRecords[patientUserId] || [];
+  }
+
+  isLoadingRecords(patientUserId: number): boolean {
+    return this.loadingRecords.has(patientUserId);
+  }
+
+  getFileViewUrl(fileUrl: string): string {
+    return this.recordSvc.getFileUrl(fileUrl);
+  }
+
+  getRecordTypeIcon(type: string): string {
+    switch (type) {
+      case 'Lab Report':        return 'bi-flask';
+      case 'Prescription':      return 'bi-capsule';
+      case 'Imaging':           return 'bi-image';
+      case 'Discharge Summary': return 'bi-file-earmark-medical';
+      case 'Care Note':         return 'bi-journal-text';
+      default:                  return 'bi-file-earmark';
+    }
+  }
+
+  // ── Vitals ────────────────────────────────────────────────────────────────
+
+  loadVitalsFor(patientUserId: number): void {
+    if (this.loadingVitals.has(patientUserId)) return;
+    this.loadingVitals.add(patientUserId);
+    this.vitalSvc.getByPatient(patientUserId).subscribe({
+      next: (data) => {
+        this.patientVitals[patientUserId] = (data || []).map((v: any) => ({
+          ...v,
+          date: v.recordedAt
+            ? new Date(v.recordedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            + ' ' + new Date(v.recordedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+            : '—'
+        }));
+        this.loadingVitals.delete(patientUserId);
+      },
+      error: () => { this.loadingVitals.delete(patientUserId); }
+    });
+  }
+
+  getVitalsFor(patientUserId: number): any[] { return this.patientVitals[patientUserId] || []; }
+  isLoadingVitals(patientUserId: number): boolean { return this.loadingVitals.has(patientUserId); }
+
+  logVitals(): void {
+    const v = this.vitals;
+    if (!v.bloodPressure && !v.pulseRate && !v.temperature && !v.spo2 && !v.weight) {
+      this.vitalsError = 'Please fill in at least one vital sign.';
+      return;
+    }
+    const pid = this.carePanelPatient?.patientUserId;
+    if (!pid) return;
+
+    this.isSavingVitals = true;
+    this.vitalsError    = '';
+
+    const appt = this.appointments.find(a =>
+      a.patientId === this.carePanelPatient.patientId &&
+      ['CONFIRMED','IN_PROGRESS'].includes(a.status?.toUpperCase() || '')
+    );
+
+    this.vitalSvc.save({
+      patientUserId: pid,
+      nurseUserId:   this.myUserId,
+      appointmentId: appt?.id,
+      bloodPressure: v.bloodPressure || undefined,
+      pulseRate:     v.pulseRate ? +v.pulseRate : undefined,
+      temperature:   v.temperature ? +v.temperature : undefined,
+      spo2:          v.spo2 ? +v.spo2 : undefined,
+      weight:        v.weight ? +v.weight : undefined,
+      notes:         v.notes || undefined
+    }).subscribe({
+      next: (saved) => {
+        const entry = {
+          ...saved,
+          date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+              + ' ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+        };
+        if (!this.patientVitals[pid]) this.patientVitals[pid] = [];
+        this.patientVitals[pid].unshift(entry);
+        this.vitals        = { bloodPressure: '', pulseRate: '', temperature: '', spo2: '', weight: '', notes: '' };
+        this.isSavingVitals = false;
+        this.vitalsSuccess  = true;
+        setTimeout(() => this.vitalsSuccess = false, 3000);
+      },
+      error: (err: Error) => {
+        this.vitalsError    = err.message;
+        this.isSavingVitals = false;
+      }
+    });
+  }
+
+  // ── Care Notes ────────────────────────────────────────────────────────────
+
+  loadNotesFor(patientUserId: number): void {
+    this.recordSvc.getByPatient(patientUserId).subscribe({
+      next: (data) => {
+        this.noteRecords[patientUserId] = (data || [])
+          .filter((r: any) => r.recordType === 'Care Note')
+          .map((r: any) => ({
+            id:    r.id,
+            title: r.title || 'Care Note',
+            notes: r.description || '',
+            date:  r.createdAt
+              ? new Date(r.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+              : '—'
+          }));
+      },
+      error: () => {}
+    });
+  }
+
+  getNotesFor(patientUserId: number): any[] { return this.noteRecords[patientUserId] || []; }
+
+  addNote(): void {
+    if (!this.noteTitle.trim()) { this.noteError = 'Note title is required.'; return; }
+    const pid = this.carePanelPatient?.patientUserId;
+    if (!pid) return;
+
+    this.isSavingNote = true;
+    this.noteError    = '';
+
+    this.recordSvc.upload(pid, this.myUserId, 'Care Note', this.noteTitle.trim(),
+      this.noteContent.trim() || undefined).subscribe({
+      next: (saved) => {
+        const entry = {
+          id:    saved.id,
+          title: saved.title,
+          notes: saved.description || '',
+          date:  new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+        };
+        if (!this.noteRecords[pid]) this.noteRecords[pid] = [];
+        this.noteRecords[pid].unshift(entry);
+        this.noteTitle    = '';
+        this.noteContent  = '';
+        this.isSavingNote = false;
+        this.noteSuccess  = true;
+        setTimeout(() => this.noteSuccess = false, 3000);
+      },
+      error: (err: Error) => {
+        this.noteError    = err.message;
+        this.isSavingNote = false;
+      }
+    });
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  formatAmount(n: number): string {
-    return '₹' + Number(n).toLocaleString('en-IN');
-  }
+  formatAmount(n: number): string { return '₹' + Number(n).toLocaleString('en-IN'); }
 
   totalConfirmedAmount(appointmentId: number): number {
     return this.confirmedShiftsFor(appointmentId)
@@ -239,7 +494,7 @@ export class MyPatientsComponent implements OnInit, OnDestroy, AfterViewChecked 
          : 'badge-pending';
   }
 
-  // ── Chat ─────────────────────────────────────────────────────────────────
+  // ── Chat ──────────────────────────────────────────────────────────────────
 
   private refreshUnread(): void {
     this.msgSvc.getUnreadSenders(this.myUserId).subscribe({

@@ -75,6 +75,16 @@ export class PaymentService {
       .pipe(map(r => r.data || []), catchError(() => []));
   }
 
+  getByReference(referenceNumber: string): Observable<any> {
+    return this.http.get<any>(`${this.API}/payments/ref/${referenceNumber.toUpperCase()}`)
+      .pipe(map((r: any) => r.data), catchError(this.handleError));
+  }
+
+  getHistoryByPatient(patientUserId: number): Observable<any[]> {
+    return this.http.get<any>(`${this.API}/payments/patient/${patientUserId}/history`)
+      .pipe(map(r => r.data || []), catchError(() => []));
+  }
+
   // ── Error handler ─────────────────────────────────────────────────────────
 
   private handleError(err: HttpErrorResponse): Observable<never> {

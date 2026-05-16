@@ -106,6 +106,21 @@
             {{ appointmentsFor(patient.patientId).length }} appointment{{ appointmentsFor(patient.patientId).length !== 1 ? 's' : '' }}
           </span>
         </div>
+        <!-- Care Tools Buttons -->
+        <div class="care-tools-btns">
+          <button class="care-btn care-btn-records" (click)="openCarePanel(patient, 'records')"
+                  title="View medical records">
+            <i class="bi bi-journal-medical me-1"></i>Records
+          </button>
+          <button class="care-btn care-btn-vitals" (click)="openCarePanel(patient, 'vitals')"
+                  title="Log vital signs">
+            <i class="bi bi-heart-pulse me-1"></i>Vitals
+          </button>
+          <button class="care-btn care-btn-notes" (click)="openCarePanel(patient, 'notes')"
+                  title="Add care note">
+            <i class="bi bi-journal-text me-1"></i>Notes
+          </button>
+        </div>
       </div>
 
       <!-- Appointments with shift tracking -->
@@ -145,7 +160,6 @@
             </div>
             <div class="shift-right-actions">
 
-              <!-- Already confirmed/rejected — show status -->
               <ng-container *ngIf="s.status !== 'PENDING_CONFIRMATION'">
                 <span class="shift-status-badge" [ngClass]="shiftStatusClass(s.status)">
                   {{ shiftStatusLabel(s.status) }}
@@ -155,10 +169,7 @@
                 </span>
               </ng-container>
 
-              <!-- Pending: with or without negotiation -->
               <ng-container *ngIf="s.status === 'PENDING_CONFIRMATION'">
-
-                <!-- No negotiation — simple Confirm / Reject -->
                 <ng-container *ngIf="s.negotiationStatus === 'NONE'">
                   <span class="original-rate-tag">{{ formatAmount(s.originalRate) }}</span>
                   <button class="btn-confirm-shift" [disabled]="confirmingShiftId === s.id"
@@ -173,7 +184,6 @@
                   </button>
                 </ng-container>
 
-                <!-- Patient negotiated — two confirm options -->
                 <ng-container *ngIf="s.negotiationStatus === 'PENDING'">
                   <div class="negotiation-block">
                     <div class="neg-rates-row">
@@ -198,7 +208,6 @@
                     </div>
                   </div>
                 </ng-container>
-
               </ng-container>
             </div>
           </div>
@@ -210,6 +219,32 @@
         </div>
 
         <div class="shift-action-err" *ngIf="shiftActionError">{{ shiftActionError }}</div>
+
+        <!-- Reconciliation banner per appointment -->
+        <div class="reconcile-banner-n" *ngIf="needsNurseReconciliation(appt)" (click)="$event.stopPropagation()">
+          <div class="reconcile-info-n">
+            <i class="bi bi-clipboard-check me-2"></i>
+            <div>
+              <strong>Shift Reconciliation Required</strong>
+              <p class="reconcile-msg-n">
+                {{ appt.actualShifts }} of {{ appt.expectedShifts }} expected shifts were marked.
+                <span *ngIf="appt.reconciliationStatus === 'PATIENT_CONFIRMED'"> Patient has confirmed — your turn.</span>
+                Please confirm to finalise this appointment.
+              </p>
+            </div>
+          </div>
+          <button class="btn-reconcile-n"
+                  [disabled]="reconcilingId === appt.id"
+                  (click)="confirmReconciliation(appt)">
+            <span *ngIf="reconcilingId !== appt.id"><i class="bi bi-check2-circle me-1"></i>Confirm</span>
+            <span *ngIf="reconcilingId === appt.id"><span class="sm-spin-r"></span></span>
+          </button>
+          <p class="reconcile-err-n" *ngIf="reconcileError">{{ reconcileError }}</p>
+        </div>
+
+        <div class="reconcile-agreed-n" *ngIf="reconcileSuccess[appt.id] || appt.reconciliationStatus === 'AGREED'">
+          <i class="bi bi-check-circle-fill me-2"></i>Appointment confirmed by both parties.
+        </div>
       </div>
 
       <!-- Message button -->
@@ -234,7 +269,6 @@
 <!-- ── CHAT PANEL ─────────────────────────────────────────────── -->
 <div class="chat-backdrop" *ngIf="chatPatient" (click)="closeChat()"></div>
 <div class="chat-panel" *ngIf="chatPatient">
-
   <div class="chat-header">
     <div class="chat-header-info">
       <div class="chat-avatar">{{ chatPatient.patientName?.charAt(0)?.toUpperCase() || '?' }}</div>
@@ -245,7 +279,6 @@
     </div>
     <button class="chat-close" (click)="closeChat()"><i class="bi bi-x-lg"></i></button>
   </div>
-
   <div class="chat-body">
     <div *ngIf="messages.length === 0" class="chat-empty">
       <i class="bi bi-chat-dots" style="font-size:2rem;color:#c8ddd8;display:block;margin-bottom:8px;"></i>
@@ -259,11 +292,9 @@
     </div>
     <div #msgEnd></div>
   </div>
-
   <div class="chat-error" *ngIf="chatError">
     <i class="bi bi-exclamation-circle me-1"></i>{{ chatError }}
   </div>
-
   <div class="chat-footer">
     <textarea class="chat-input" [(ngModel)]="newMessage" placeholder="Type a message…"
       rows="1" maxlength="1000" (keydown)="onEnter($event)"></textarea>
@@ -271,5 +302,187 @@
       <i class="bi bi-send-fill"></i>
     </button>
   </div>
+</div>
 
+<!-- ── CARE PANEL ─────────────────────────────────────────────── -->
+<div class="care-backdrop" *ngIf="carePanelPatient" (click)="closeCarePanel()"></div>
+<div class="care-panel" *ngIf="carePanelPatient">
+
+  <!-- Header -->
+  <div class="care-panel-header">
+    <div class="care-panel-header-info">
+      <div class="care-panel-avatar">{{ carePanelPatient.patientName?.charAt(0)?.toUpperCase() || '?' }}</div>
+      <div>
+        <p class="care-panel-name">{{ carePanelPatient.patientName }}</p>
+        <small class="care-panel-sub">Patient Care Tools</small>
+      </div>
+    </div>
+    <button class="care-panel-close" (click)="closeCarePanel()"><i class="bi bi-x-lg"></i></button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="care-tabs">
+    <button class="care-tab-btn" [class.care-tab-active]="carePanelTab === 'records'"
+            (click)="switchCareTab('records')">
+      <i class="bi bi-journal-medical me-1"></i>Records
+    </button>
+    <button class="care-tab-btn" [class.care-tab-active]="carePanelTab === 'vitals'"
+            (click)="switchCareTab('vitals')">
+      <i class="bi bi-heart-pulse me-1"></i>Vitals
+    </button>
+    <button class="care-tab-btn" [class.care-tab-active]="carePanelTab === 'notes'"
+            (click)="switchCareTab('notes')">
+      <i class="bi bi-journal-text me-1"></i>Notes
+    </button>
+  </div>
+
+  <!-- Tab Body -->
+  <div class="care-panel-body">
+
+    <!-- ── RECORDS TAB ────────────────────────────── -->
+    <ng-container *ngIf="carePanelTab === 'records'">
+      <p class="care-section-label">Patient's Medical Records (read-only)</p>
+
+      <div *ngIf="isLoadingRecords(carePanelPatient.patientUserId)" class="care-loading">
+        <div class="spinner-border spinner-border-sm text-success me-2"></div> Loading…
+      </div>
+
+      <div *ngIf="!isLoadingRecords(carePanelPatient.patientUserId)">
+        <div *ngIf="getRecordsFor(carePanelPatient.patientUserId).length === 0" class="care-empty">
+          <i class="bi bi-folder2-open d-block mb-2" style="font-size:1.8rem;color:#c8ddd8;"></i>
+          No records uploaded yet.
+        </div>
+
+        <div *ngFor="let rec of getRecordsFor(carePanelPatient.patientUserId)" class="ehr-rec-row">
+          <div class="ehr-rec-icon">
+            <i class="bi" [ngClass]="getRecordTypeIcon(rec.type)"></i>
+          </div>
+          <div class="ehr-rec-info">
+            <p class="ehr-rec-title">{{ rec.title }}</p>
+            <div class="ehr-rec-meta">
+              <span class="ehr-type-badge">{{ rec.type }}</span>
+              <span>{{ rec.date }}</span>
+            </div>
+            <p class="ehr-rec-notes" *ngIf="rec.notes">{{ rec.notes }}</p>
+          </div>
+          <div class="ehr-rec-actions">
+            <a *ngIf="rec.fileUrl" [href]="getFileViewUrl(rec.fileUrl)" target="_blank"
+               class="ehr-view-btn">
+              <i class="bi bi-eye"></i>
+            </a>
+            <span *ngIf="!rec.fileUrl" class="ehr-no-file"><i class="bi bi-file-earmark"></i></span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ── VITALS TAB ─────────────────────────────── -->
+    <ng-container *ngIf="carePanelTab === 'vitals'">
+      <p class="care-section-label">Log Vital Signs</p>
+
+      <div class="vitals-form">
+        <div class="vitals-grid">
+          <div class="vital-field">
+            <label class="vital-label"><i class="bi bi-thermometer-half me-1"></i>Blood Pressure</label>
+            <input class="vital-input" [(ngModel)]="vitals.bloodPressure"
+                   placeholder="e.g. 120/80 mmHg" maxlength="20">
+          </div>
+          <div class="vital-field">
+            <label class="vital-label"><i class="bi bi-heart-pulse me-1"></i>Pulse Rate</label>
+            <input class="vital-input" [(ngModel)]="vitals.pulseRate" type="number"
+                   placeholder="bpm" min="30" max="250">
+          </div>
+          <div class="vital-field">
+            <label class="vital-label"><i class="bi bi-thermometer me-1"></i>Temperature</label>
+            <input class="vital-input" [(ngModel)]="vitals.temperature" type="number"
+                   placeholder="°C" min="30" max="45" step="0.1">
+          </div>
+          <div class="vital-field">
+            <label class="vital-label"><i class="bi bi-lungs me-1"></i>SpO2</label>
+            <input class="vital-input" [(ngModel)]="vitals.spo2" type="number"
+                   placeholder="%" min="50" max="100">
+          </div>
+          <div class="vital-field">
+            <label class="vital-label"><i class="bi bi-person me-1"></i>Weight</label>
+            <input class="vital-input" [(ngModel)]="vitals.weight" type="number"
+                   placeholder="kg" min="1" max="300" step="0.1">
+          </div>
+        </div>
+        <div class="vital-field mt-2">
+          <label class="vital-label">Observations / Notes</label>
+          <textarea class="vital-input vital-textarea" [(ngModel)]="vitals.notes"
+                    placeholder="Any observations…" rows="2" maxlength="500"></textarea>
+        </div>
+
+        <div class="care-err" *ngIf="vitalsError"><i class="bi bi-exclamation-circle me-1"></i>{{ vitalsError }}</div>
+        <div class="care-success" *ngIf="vitalsSuccess"><i class="bi bi-check-circle me-1"></i>Vitals saved!</div>
+
+        <button class="care-save-btn" (click)="logVitals()" [disabled]="isSavingVitals">
+          <span *ngIf="!isSavingVitals"><i class="bi bi-save me-1"></i>Save Vitals</span>
+          <span *ngIf="isSavingVitals"><span class="sm-spin-w"></span> Saving…</span>
+        </button>
+      </div>
+
+      <!-- Vitals history -->
+      <div *ngIf="getVitalsFor(carePanelPatient.patientUserId).length > 0" class="vitals-history">
+        <p class="care-section-label mt-3">Vitals History</p>
+        <div *ngFor="let v of getVitalsFor(carePanelPatient.patientUserId)" class="vitals-history-row">
+          <span class="vh-date">{{ v.date }}</span>
+          <div class="vh-chips">
+            <span class="vh-chip" *ngIf="v.bloodPressure"><i class="bi bi-thermometer-half"></i> {{ v.bloodPressure }}</span>
+            <span class="vh-chip" *ngIf="v.pulseRate"><i class="bi bi-heart-pulse"></i> {{ v.pulseRate }} bpm</span>
+            <span class="vh-chip" *ngIf="v.temperature"><i class="bi bi-thermometer"></i> {{ v.temperature }}°C</span>
+            <span class="vh-chip" *ngIf="v.spo2"><i class="bi bi-lungs"></i> {{ v.spo2 }}%</span>
+            <span class="vh-chip" *ngIf="v.weight"><i class="bi bi-person"></i> {{ v.weight }} kg</span>
+          </div>
+          <p class="vh-notes" *ngIf="v.notes">{{ v.notes }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="isLoadingVitals(carePanelPatient.patientUserId)" class="care-loading">
+        <div class="spinner-border spinner-border-sm text-success me-2"></div> Loading history…
+      </div>
+    </ng-container>
+
+    <!-- ── NOTES TAB ──────────────────────────────── -->
+    <ng-container *ngIf="carePanelTab === 'notes'">
+      <p class="care-section-label">Add Care Note / Progress Note</p>
+
+      <div class="notes-form">
+        <div class="vital-field mb-2">
+          <label class="vital-label">Note Title *</label>
+          <input class="vital-input" [(ngModel)]="noteTitle"
+                 placeholder="e.g. Post-medication observation" maxlength="100">
+        </div>
+        <div class="vital-field">
+          <label class="vital-label">Description</label>
+          <textarea class="vital-input vital-textarea" [(ngModel)]="noteContent"
+                    placeholder="Describe the patient's condition, care given, observations…"
+                    rows="4" maxlength="1000"></textarea>
+        </div>
+
+        <div class="care-err"     *ngIf="noteError"><i class="bi bi-exclamation-circle me-1"></i>{{ noteError }}</div>
+        <div class="care-success" *ngIf="noteSuccess"><i class="bi bi-check-circle me-1"></i>Note saved!</div>
+
+        <button class="care-save-btn" (click)="addNote()" [disabled]="isSavingNote">
+          <span *ngIf="!isSavingNote"><i class="bi bi-journal-plus me-1"></i>Save Note</span>
+          <span *ngIf="isSavingNote"><span class="sm-spin-w"></span> Saving…</span>
+        </button>
+      </div>
+
+      <!-- Notes history -->
+      <div *ngIf="getNotesFor(carePanelPatient.patientUserId).length > 0" class="notes-history mt-3">
+        <p class="care-section-label">Previous Notes</p>
+        <div *ngFor="let n of getNotesFor(carePanelPatient.patientUserId)" class="note-history-row">
+          <div class="note-h-header">
+            <i class="bi bi-journal-text me-2" style="color:#1aa37a;"></i>
+            <span class="note-h-title">{{ n.title }}</span>
+            <span class="note-h-date ms-auto">{{ n.date }}</span>
+          </div>
+          <p class="note-h-body" *ngIf="n.notes">{{ n.notes }}</p>
+        </div>
+      </div>
+    </ng-container>
+
+  </div>
 </div>

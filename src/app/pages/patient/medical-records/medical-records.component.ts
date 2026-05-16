@@ -6,9 +6,11 @@ import { MedicalRecordService } from '../../../services/medical-record.service';
 interface MedicalRecord {
   id: number;
   fileName: string;
+  originalFileName: string;
   type: string;
   date: string;
   notes: string;
+  fileUrl: string | null;
 }
 
 @Component({
@@ -23,7 +25,11 @@ export class MedicalRecordsComponent implements OnInit {
   uploadOpen    = false;
   uploadSuccess = false;
   isLoading     = true;
+  isUploading   = false;
   errorMsg      = '';
+
+  selectedFile: File | null = null;
+  fileError = '';
 
   records: MedicalRecord[] = [];
   uploadForm: FormGroup;
@@ -57,13 +63,15 @@ export class MedicalRecordsComponent implements OnInit {
 
   private mapRecord(r: any): MedicalRecord {
     return {
-      id:       r.id,
-      fileName: r.title || r.fileName || 'Record',
-      type:     r.recordType || '—',
-      date:     r.createdAt
+      id:              r.id,
+      fileName:        r.title || r.fileName || 'Record',
+      originalFileName: r.fileName || '',
+      type:            r.recordType || '—',
+      date:            r.createdAt
         ? new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         : '—',
-      notes: r.description || ''
+      notes:   r.description || '',
+      fileUrl: r.fileUrl || null
     };
   }
 
@@ -74,6 +82,75 @@ export class MedicalRecordsComponent implements OnInit {
 
   countByType(type: string): number {
     return this.records.filter(r => r.type === type).length;
+  }
+
+  onFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.fileError = '';
+    if (!input.files?.length) { this.selectedFile = null; return; }
+    const f = input.files[0];
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif',
+                          'application/msword',
+                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(f.type)) {
+      this.fileError = 'Only PDF, JPG, PNG, DOC, DOCX files allowed.';
+      this.selectedFile = null;
+      input.value = '';
+      return;
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      this.fileError = 'File must be under 10 MB.';
+      this.selectedFile = null;
+      input.value = '';
+      return;
+    }
+    this.selectedFile = f;
+  }
+
+  onUpload(): void {
+    if (this.uploadForm.invalid) { this.uploadForm.markAllAsTouched(); return; }
+    const userId = this.auth.getUserId();
+    if (!userId) return;
+
+    const v = this.uploadForm.value;
+    this.errorMsg    = '';
+    this.isUploading = true;
+
+    this.recordService.upload(
+      userId, userId, v.type, v.fileName, v.notes || undefined, this.selectedFile || undefined
+    ).subscribe({
+      next: (record) => {
+        this.records.unshift(this.mapRecord(record));
+        this.uploadForm.reset();
+        this.selectedFile  = null;
+        this.uploadOpen    = false;
+        this.uploadSuccess = true;
+        this.isUploading   = false;
+        setTimeout(() => this.uploadSuccess = false, 3000);
+      },
+      error: (err: Error) => {
+        this.errorMsg    = err.message;
+        this.isUploading = false;
+      }
+    });
+  }
+
+  cancelUpload(): void {
+    this.uploadOpen   = false;
+    this.selectedFile = null;
+    this.fileError    = '';
+    this.uploadForm.reset();
+  }
+
+  getFileViewUrl(rec: MedicalRecord): string {
+    return rec.fileUrl ? this.recordService.getFileUrl(rec.fileUrl) : '#';
+  }
+
+  deleteRecord(id: number): void {
+    this.recordService.delete(id).subscribe({
+      next: () => { this.records = this.records.filter(r => r.id !== id); },
+      error: () => {}
+    });
   }
 
   getTypeIcon(type: string): string {
@@ -94,33 +171,6 @@ export class MedicalRecordsComponent implements OnInit {
       case 'Discharge Summary': return 'type-dis';
       default:                  return 'type-other';
     }
-  }
-
-  onUpload(): void {
-    if (this.uploadForm.invalid) { this.uploadForm.markAllAsTouched(); return; }
-    const userId = this.auth.getUserId();
-    if (!userId) return;
-
-    const v = this.uploadForm.value;
-    this.errorMsg = '';
-
-    this.recordService.upload(userId, userId, v.type, v.fileName, v.notes || undefined).subscribe({
-      next: (record) => {
-        this.records.unshift(this.mapRecord(record));
-        this.uploadForm.reset();
-        this.uploadOpen    = false;
-        this.uploadSuccess = true;
-        setTimeout(() => this.uploadSuccess = false, 3000);
-      },
-      error: (err: Error) => { this.errorMsg = err.message; }
-    });
-  }
-
-  deleteRecord(id: number): void {
-    this.recordService.delete(id).subscribe({
-      next: () => { this.records = this.records.filter(r => r.id !== id); },
-      error: () => {}
-    });
   }
 
   logout(): void { this.auth.logout(); }

@@ -41,6 +41,20 @@ export class MyNursesComponent implements OnInit, OnDestroy, AfterViewChecked {
   isProcessingPayment    = false;
   paySuccess             = '';
   payError               = '';
+  paymentRefs: string[]  = [];
+
+  // Payment history
+  payHistory: any[]          = [];
+  showPayHistory             = false;
+  isLoadingHistory           = false;
+  refSearch                  = '';
+  refSearchResult: any       = null;
+  refSearchError             = '';
+  isSearchingRef             = false;
+
+  // Block message when nurse has no details
+  payBlockedMsg    = '';
+  payBlockedApptId: number | null = null;
 
   // Chat state
   chatNurse: any       = null;
@@ -57,6 +71,11 @@ export class MyNursesComponent implements OnInit, OnDestroy, AfterViewChecked {
   private myName!:   string;
 
   readonly today = new Date().toISOString().split('T')[0];
+
+  // Reconciliation
+  reconcilingId: number | null = null;
+  reconcileError  = '';
+  reconcileSuccess: Record<number, boolean> = {};
 
   constructor(
     private auth:        AuthService,
@@ -255,15 +274,38 @@ export class MyNursesComponent implements OnInit, OnDestroy, AfterViewChecked {
   // ── Pay Modal (pay confirmed shifts) ──────────────────────────────────────
 
   openPayModal(appt: any): void {
-    // Check if nurse has bank/UPI details available from appointment
-    const nurse = this.assignedNurses.find(n => n.nurseId === appt.nurseId);
-    this.payModal          = { appt, nurse };
-    this.selectedPayMethod = nurse?.nursePreferredPaymentMode || 'UPI';
-    this.paySuccess        = '';
-    this.payError          = '';
+    const nurse   = this.assignedNurses.find(n => n.nurseId === appt.nurseId);
+    const hasUpi  = !!(nurse?.nurseUpiId);
+    const hasBank = !!(nurse?.nurseBankAccount);
+
+    // Block if nurse has no payment details at all
+    if (!hasUpi && !hasBank) {
+      this.payBlockedMsg    = "Nurse hasn't added payment details yet. Ask them to add UPI or bank details from their Payments page.";
+      this.payBlockedApptId = appt.id;
+      return;
+    }
+
+    this.payBlockedMsg    = '';
+    this.payBlockedApptId = null;
+    this.payModal         = { appt, nurse };
+    this.paymentRefs      = [];
+    this.paySuccess       = '';
+    this.payError         = '';
+
+    // Default to nurse preferred mode, falling back to what's available
+    const pref = nurse?.nursePreferredPaymentMode || 'UPI';
+    if (pref === 'UPI' && hasUpi)              this.selectedPayMethod = 'UPI';
+    else if (pref === 'BANK_TRANSFER' && hasBank) this.selectedPayMethod = 'BANK_TRANSFER';
+    else if (hasUpi)                           this.selectedPayMethod = 'UPI';
+    else                                       this.selectedPayMethod = 'BANK_TRANSFER';
   }
 
-  closePayModal(): void { this.payModal = null; }
+  closePayModal(): void {
+    this.payModal    = null;
+    this.paymentRefs = [];
+    this.paySuccess  = '';
+    this.payError    = '';
+  }
 
   confirmPayment(): void {
     if (!this.payModal) return;
@@ -275,12 +317,16 @@ export class MyNursesComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.payModal.appt.id,
       this.selectedPayMethod
     ).subscribe({
-      next: () => {
+      next: (payments: any) => {
         this.isProcessingPayment = false;
-        this.paySuccess          = 'Payment done! Nurse has been notified.';
-        // Reload shifts
+        const list = Array.isArray(payments) ? payments : [payments];
+        this.paymentRefs = list.map((p: any) => p.referenceNumber).filter(Boolean);
+        this.paySuccess  = 'Payment successful!';
+        // Refresh shifts + reload all appointments to update total
         this.loadShiftsFor(this.payModal.appt.id);
-        setTimeout(() => this.closePayModal(), 2000);
+        this.apptService.getByPatient(this.myUserId).subscribe({
+          next: (data) => { this.allAppointments = data || []; }
+        });
       },
       error: (err: Error) => {
         this.payError            = err.message;
@@ -394,6 +440,148 @@ export class MyNursesComponent implements OnInit, OnDestroy, AfterViewChecked {
   private stopPoll(): void  { if (this.pollTimer) { clearInterval(this.pollTimer); this.pollTimer = undefined; } }
   private scrollToBottom(): void {
     try { this.msgEnd?.nativeElement?.scrollIntoView({ behavior: 'smooth' }); } catch {}
+  }
+
+  // ── Payment History ───────────────────────────────────────────────────────
+
+  loadPaymentHistory(): void {
+    this.isLoadingHistory = true;
+    this.showPayHistory   = true;
+    this.paymentSvc.getHistoryByPatient(this.myUserId).subscribe({
+      next: (data) => {
+        this.payHistory       = data || [];
+        this.isLoadingHistory = false;
+      },
+      error: () => { this.isLoadingHistory = false; }
+    });
+  }
+
+  searchByRef(): void {
+    const ref = this.refSearch.trim().toUpperCase();
+    if (!ref) return;
+    this.isSearchingRef   = true;
+    this.refSearchError   = '';
+    this.refSearchResult  = null;
+    this.paymentSvc.getByReference(ref).subscribe({
+      next: (data) => {
+        this.refSearchResult = data;
+        this.isSearchingRef  = false;
+      },
+      error: (err: Error) => {
+        this.refSearchError = err.message;
+        this.isSearchingRef = false;
+      }
+    });
+  }
+
+  downloadReceipt(payment: any): void {
+    const date = payment.paymentDate
+      ? new Date(payment.paymentDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '—';
+    const method = payment.paymentMethod === 'UPI' ? 'UPI' : 'Bank Transfer';
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Payment Receipt — ${payment.referenceNumber}</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:480px;margin:40px auto;color:#1a3b3a;}
+  .header{text-align:center;border-bottom:2px solid #1aa37a;padding-bottom:16px;margin-bottom:20px;}
+  .brand{font-size:22px;font-weight:800;color:#1aa37a;}
+  .receipt-title{font-size:14px;color:#6a9e94;margin:4px 0;}
+  .ref-box{background:#f0fdf4;border:1.5px solid #a7f3d0;border-radius:8px;padding:10px 16px;text-align:center;margin:16px 0;}
+  .ref-num{font-size:18px;font-weight:700;color:#0f6b51;letter-spacing:1px;}
+  .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eef4f2;font-size:13px;}
+  .label{color:#6a9e94;font-weight:600;}
+  .value{color:#1a3b3a;font-weight:700;text-align:right;}
+  .amount-row{background:#f8fffd;border-radius:6px;padding:10px 16px;margin:12px 0;}
+  .amount-label{font-size:12px;color:#6a9e94;}
+  .amount-value{font-size:20px;font-weight:800;color:#0f6b51;}
+  .footer{text-align:center;color:#9ab8b2;font-size:11px;margin-top:20px;border-top:1px solid #eef4f2;padding-top:12px;}
+  .status-badge{background:#d4edda;color:#155724;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+</style></head><body>
+<div class="header">
+  <div class="brand">❤ CareConnect</div>
+  <div class="receipt-title">Payment Receipt</div>
+</div>
+<div class="ref-box">
+  <div style="font-size:11px;color:#6a9e94;margin-bottom:4px;">Reference Number</div>
+  <div class="ref-num">${payment.referenceNumber || '—'}</div>
+</div>
+<div class="amount-row">
+  <div class="amount-label">Amount Paid</div>
+  <div class="amount-value">₹${Number(payment.amount).toLocaleString('en-IN')}</div>
+</div>
+<div class="row"><span class="label">Date</span><span class="value">${date}</span></div>
+<div class="row"><span class="label">Patient</span><span class="value">${payment.patientName || '—'}</span></div>
+<div class="row"><span class="label">Nurse</span><span class="value">${payment.nurseName || '—'}</span></div>
+<div class="row"><span class="label">Care Type</span><span class="value">${payment.appointmentCareNeeds || 'Home Care'}</span></div>
+<div class="row"><span class="label">Payment Method</span><span class="value">${method}</span></div>
+<div class="row"><span class="label">Status</span><span class="value"><span class="status-badge">PAID</span></span></div>
+<div class="footer">CareConnect — Connecting Healthcare Professionals<br>This is a simulated payment receipt for demonstration purposes.</div>
+</body></html>`;
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); w.print(); }
+  }
+
+  // ── Shift button guards ───────────────────────────────────────────────────
+
+  isDateAlreadyMarked(appointmentId: number, date: string): boolean {
+    return (this.shiftsMap[appointmentId] || []).some(s => s.shiftDate === date);
+  }
+
+  isEndDatePassed(appt: any): boolean {
+    if (!appt.endDate) return false;
+    return new Date(appt.endDate) < new Date(this.today);
+  }
+
+  isOneTimeDone(appt: any): boolean {
+    return (appt.scheduleType || '').toUpperCase() === 'ONE_TIME'
+      && (this.shiftsMap[appt.id] || []).length > 0;
+  }
+
+  canMarkShift(appt: any): boolean {
+    if (this.isOneTimeDone(appt))          return false;
+    if (this.isEndDatePassed(appt))        return false;
+    if (this.isDateAlreadyMarked(appt.id, this.today)) return false;
+    return true;
+  }
+
+  getUpiList(nurseUpiId: string): string[] {
+    return nurseUpiId ? nurseUpiId.split(',').map(u => u.trim()).filter(Boolean) : [];
+  }
+
+  markShiftDisabledReason(appt: any): string {
+    if (this.isOneTimeDone(appt))   return 'This one-time appointment already has a shift marked.';
+    if (this.isEndDatePassed(appt)) return 'Appointment end date has passed.';
+    if (this.isDateAlreadyMarked(appt.id, this.today)) return "Today's shift is already marked.";
+    return '';
+  }
+
+  // ── Reconciliation ────────────────────────────────────────────────────────
+
+  needsReconciliation(appt: any): boolean {
+    return appt.reconciliationStatus === 'PENDING' || appt.reconciliationStatus === 'NURSE_CONFIRMED';
+  }
+
+  patientAlreadyConfirmed(appt: any): boolean {
+    return appt.reconciliationStatus === 'PATIENT_CONFIRMED' || appt.reconciliationStatus === 'AGREED';
+  }
+
+  confirmReconciliation(appt: any): void {
+    this.reconcilingId  = appt.id;
+    this.reconcileError = '';
+    this.apptService.reconcileByPatient(appt.id, this.myUserId).subscribe({
+      next: (updated) => {
+        // Update the appointment in our local list
+        const idx = this.allAppointments.findIndex(a => a.id === appt.id);
+        if (idx !== -1) this.allAppointments[idx] = { ...this.allAppointments[idx], ...updated };
+        this.reconcilingId = null;
+        this.reconcileSuccess[appt.id] = true;
+        setTimeout(() => delete this.reconcileSuccess[appt.id], 4000);
+      },
+      error: (err: Error) => {
+        this.reconcileError = err.message;
+        this.reconcilingId  = null;
+      }
+    });
   }
 
   logout(): void { this.auth.logout(); }

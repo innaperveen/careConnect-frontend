@@ -41,7 +41,48 @@
 .pay-sublabel   { color: #5a7a9a; font-size: 0.82rem; margin-top: 2px; }
 .pay-amount     { font-size: 1.15rem; font-weight: 700; color: #0f1c2e; }
 .pay-method     { font-size: 0.77rem; color: #5a7a9a; }
+.pay-ref        { font-size: 0.72rem; color: #0f6b51; background: #f0fdf4; padding: 1px 8px; border-radius: 10px; font-weight: 600; letter-spacing: 0.3px; }
+.btn-dl-receipt-n { background: #eef9f5; color: #1aa37a; border: 1.5px solid #a8d9c8; border-radius: 14px; padding: 4px 12px; font-size: 0.76rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s; }
+.btn-dl-receipt-n:hover { background: #d4f0e8; }
 .salary-card    { border-left-color: #3b82f6; }
+
+/* ── Reference Search Panel ──────────────────────────────────── */
+.ref-search-panel        { background: #f8fffd; border: 1.5px solid #d0eee4; border-radius: 16px; padding: 18px 20px; margin-top: 16px; }
+.ref-search-panel-hdr    { margin-bottom: 14px; }
+.ref-search-panel-title  { font-size: 0.95rem; font-weight: 700; color: #1a3b3a; margin: 0 0 2px; }
+.ref-search-panel-sub    { font-size: 0.77rem; color: #6a9e94; margin: 0; }
+
+.ref-search-row-n  { display: flex; gap: 8px; margin-bottom: 10px; }
+.ref-input-wrap    { flex: 1; position: relative; display: flex; align-items: center; }
+.ref-input-icon    { position: absolute; left: 12px; color: #9ab8b2; font-size: 0.9rem; pointer-events: none; }
+.ref-input-n       { width: 100%; padding: 10px 36px 10px 34px; border: 1.5px solid #d0e8e0; border-radius: 10px; font-size: 0.84rem; color: #1a3b3a; outline: none; transition: border-color 0.15s; letter-spacing: 0.5px; background: white; }
+.ref-input-n:focus { border-color: #1aa37a; box-shadow: 0 0 0 3px rgba(26,163,122,0.1); }
+.ref-input-clear   { position: absolute; right: 10px; background: none; border: none; color: #9ab8b2; cursor: pointer; font-size: 0.8rem; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.15s; }
+.ref-input-clear:hover { background: #fee2e2; color: #c0392b; }
+
+.btn-ref-search-n  { background: #1aa37a; color: white; border: none; border-radius: 10px; padding: 10px 18px; font-size: 0.84rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; white-space: nowrap; transition: background 0.15s; flex-shrink: 0; }
+.btn-ref-search-n:hover:not(:disabled) { background: #0f6b51; }
+.btn-ref-search-n:disabled { opacity: 0.5; cursor: not-allowed; }
+.sm-spin-n        { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spinNP 0.7s linear infinite; }
+@keyframes spinNP { to { transform: rotate(360deg); } }
+
+.ref-not-found    { background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 9px 14px; font-size: 0.82rem; color: #92400e; display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+
+.ref-result-n          { background: #f0fdf4; border: 1.5px solid #a7f3d0; border-radius: 12px; padding: 14px 16px; margin-top: 8px; }
+.ref-result-hdr-n      { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.ref-result-badge-wrap  { display: flex; align-items: center; }
+.ref-found-badge        { background: #0f6b51; color: white; border-radius: 16px; padding: 4px 14px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px; font-family: monospace; }
+.ref-clear-btn          { background: none; border: none; color: #6a9e94; cursor: pointer; font-size: 0.9rem; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.ref-clear-btn:hover    { background: #fee2e2; color: #c0392b; }
+
+.ref-result-body  { display: flex; flex-direction: column; gap: 0; }
+.ref-row-n        { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #d4f0e8; font-size: 0.83rem; }
+.ref-row-n:last-child { border-bottom: none; }
+.ref-row-label    { color: #6a9e94; font-weight: 500; display: flex; align-items: center; gap: 4px; }
+.ref-row-n strong { color: #1a3b3a; text-align: right; }
+.ref-amount-val   { color: #0f6b51; font-size: 1rem; font-weight: 800; }
+
+.ref-search-err-n { color: #c0392b; font-size: 0.8rem; margin-top: 8px; display: flex; align-items: center; gap: 5px; }
 
 /* ── Status badges ───────────────────────────────────────────────────────── */
 .pay-badge    { padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
@@ -177,6 +218,60 @@
 
 /* Info note */
 .info-note    { background: #f0fdf8; border: 1px solid #d0eedd; border-radius: 8px; padding: 9px 14px; font-size: 0.81rem; color: #2d7a5f; }
+
+/* ══════════════════════════════════════════════════════════════
+   MULTI-UPI SECTION
+══════════════════════════════════════════════════════════════ */
+
+.upi-section-hdr  { display:flex; align-items:flex-start; justify-content:space-between; }
+.upi-count-badge  { background:#eef9f5; color:#1aa37a; border:1.5px solid #a8d9c8; border-radius:20px; padding:2px 12px; font-size:0.76rem; font-weight:700; white-space:nowrap; margin-top:2px; }
+
+/* Saved UPI chips */
+.upi-chip-list    { display:flex; flex-direction:column; gap:8px; }
+.upi-chip         { display:flex; align-items:center; gap:10px; background:#f0fdf4; border:1.5px solid #a7f3d0; border-radius:12px; padding:10px 14px; }
+.upi-chip-icon    { width:32px; height:32px; background:#1aa37a; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:0.85rem; flex-shrink:0; }
+.upi-chip-text    { flex:1; font-size:0.9rem; font-weight:700; color:#0f6b51; letter-spacing:0.3px; font-family:monospace; }
+.upi-remove-btn   { background:none; border:none; color:#9ab8b2; cursor:pointer; font-size:0.75rem; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:all 0.15s; flex-shrink:0; }
+.upi-remove-btn:hover { background:#fee2e2; color:#c0392b; }
+
+.upi-empty-hint   { color:#b0ccc5; font-size:0.83rem; padding:8px 0; display:flex; align-items:center; }
+
+/* Add UPI box */
+.upi-add-box      { background:#f8fffd; border:1.5px dashed #b0d8c6; border-radius:14px; padding:16px; }
+.upi-add-label    { font-size:0.82rem; font-weight:600; color:#4e6e68; margin-bottom:10px; }
+
+.upi-input-row    { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.upi-num-wrap     { position:relative; flex:1; min-width:160px; }
+.upi-num-input    { width:100%; padding:9px 44px 9px 12px; border:1.5px solid #cde8de; border-radius:10px; font-size:0.88rem; color:#1a3b3a; outline:none; font-family:monospace; letter-spacing:0.5px; transition:border-color 0.15s; background:white; }
+.upi-num-input:focus { border-color:#1aa37a; box-shadow:0 0 0 3px rgba(26,163,122,0.1); }
+.upi-input-ok     { border-color:#1aa37a !important; }
+.upi-input-err    { border-color:#e05252 !important; }
+.upi-num-counter  { position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:0.68rem; color:#9ab8b2; font-weight:600; pointer-events:none; }
+.upi-num-counter.counter-ok { color:#1aa37a; }
+
+.upi-at           { font-size:1.2rem; font-weight:800; color:#1aa37a; flex-shrink:0; padding:2px 6px; cursor:pointer; border-radius:6px; transition:background 0.15s; user-select:none; }
+.upi-at:hover     { background:#eef9f5; }
+
+.upi-suffix-wrap  { position:relative; width:140px; flex-shrink:0; }
+.upi-suffix-input { width:100%; padding:9px 12px; border:1.5px solid #cde8de; border-radius:10px; font-size:0.88rem; color:#1a3b3a; outline:none; font-family:monospace; transition:border-color 0.15s; background:white; }
+.upi-suffix-input:focus { border-color:#1aa37a; box-shadow:0 0 0 3px rgba(26,163,122,0.1); }
+
+/* Auto-suggestion dropdown */
+.upi-suggestions  { position:absolute; top:calc(100% + 4px); left:0; right:0; background:white; border:1.5px solid #a8d9c8; border-radius:10px; box-shadow:0 6px 20px rgba(0,32,32,0.12); z-index:100; overflow:hidden; }
+.upi-sug-item     { padding:9px 14px; font-size:0.85rem; color:#1a3b3a; cursor:pointer; transition:background 0.12s; display:flex; align-items:center; font-family:monospace; font-weight:600; }
+.upi-sug-item:hover { background:#f0fdf4; color:#0f6b51; }
+
+/* Preview */
+.upi-preview      { background:#e8f9f1; border-radius:8px; padding:7px 12px; font-size:0.82rem; color:#4a7c6f; margin-top:8px; display:flex; align-items:center; gap:6px; }
+.upi-preview strong { color:#0f6b51; font-family:monospace; letter-spacing:0.3px; }
+
+/* Add button */
+.btn-add-upi      { background:#1aa37a; color:white; border:none; border-radius:20px; padding:8px 20px; font-size:0.84rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; transition:background 0.15s; }
+.btn-add-upi:hover:not(:disabled) { background:#0f6b51; }
+.btn-add-upi:disabled { opacity:0.5; cursor:not-allowed; }
+
+/* Max reached */
+.upi-max-note     { background:#f0fdf4; border:1px solid #a7f3d0; border-radius:8px; padding:8px 14px; font-size:0.81rem; color:#065f46; display:flex; align-items:center; gap:6px; margin-top:8px; }
 
 /* Buttons */
 .btn-save     { background: linear-gradient(135deg, #1aa37a, #0f6b51); color: #fff; border: none; padding: 12px 32px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: opacity 0.2s; display: inline-flex; align-items: center; }

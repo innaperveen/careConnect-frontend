@@ -82,6 +82,18 @@ export class AppointmentService {
     }).pipe(map((r: any) => r.data), catchError(this.handleError));
   }
 
+  reconcileByPatient(appointmentId: number, patientUserId: number): Observable<any> {
+    return this.http.post<any>(`${this.API}/${appointmentId}/reconcile/patient`, null, {
+      params: { patientUserId: String(patientUserId) }
+    }).pipe(map((r: any) => r.data), catchError(this.handleError));
+  }
+
+  reconcileByNurse(appointmentId: number, nurseUserId: number): Observable<any> {
+    return this.http.post<any>(`${this.API}/${appointmentId}/reconcile/nurse`, null, {
+      params: { nurseUserId: String(nurseUserId) }
+    }).pipe(map((r: any) => r.data), catchError(this.handleError));
+  }
+
   private handleError(err: HttpErrorResponse): Observable<never> {
     const msg = err.error?.message ?? 'Something went wrong. Please try again.';
     return throwError(() => new Error(msg));

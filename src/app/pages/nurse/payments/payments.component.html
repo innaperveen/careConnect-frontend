@@ -95,8 +95,95 @@
               <i class="bi bi-check2-circle me-1 text-success"></i>
               {{ p.paymentMethod === 'UPI' ? 'via UPI' : 'via Bank Transfer' }}
             </div>
+            <div class="pay-ref" *ngIf="p.referenceNumber">
+              <i class="bi bi-tag me-1"></i>{{ p.referenceNumber }}
+            </div>
+            <button class="btn-dl-receipt-n" *ngIf="p.status === 'PROCESSED'" (click)="downloadReceipt(p)">
+              <i class="bi bi-download me-1"></i>Receipt
+            </button>
           </div>
         </div>
+
+        <!-- ── Reference Search (inside shifts tab) ─────────────────────── -->
+        <div class="ref-search-panel mt-4">
+          <div class="ref-search-panel-hdr">
+            <div>
+              <h6 class="ref-search-panel-title">
+                <i class="bi bi-receipt me-2"></i>Lookup by Reference Number
+              </h6>
+              <p class="ref-search-panel-sub">Find any payment using its reference number</p>
+            </div>
+          </div>
+
+          <div class="ref-search-row-n">
+            <div class="ref-input-wrap">
+              <i class="bi bi-hash ref-input-icon"></i>
+              <input class="ref-input-n" [(ngModel)]="refSearch"
+                     [ngModelOptions]="{standalone: true}"
+                     placeholder="CC-YYYYMMDD-XXXXXXX"
+                     (keydown.enter)="searchByRef()"
+                     (input)="onRefInput()"
+                     maxlength="25"
+                     style="text-transform:uppercase; letter-spacing:0.5px;">
+              <button class="ref-input-clear" *ngIf="refSearch.trim()"
+                      (click)="refSearch = ''; refSearchResult = null; refSearchError = ''">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+            <button class="btn-ref-search-n" (click)="searchByRef()"
+                    [disabled]="isSearchingRef || !refSearch.trim()">
+              <span *ngIf="!isSearchingRef"><i class="bi bi-search me-1"></i>Search</span>
+              <span *ngIf="isSearchingRef"><span class="sm-spin-n"></span></span>
+            </button>
+          </div>
+
+          <!-- Error -->
+          <div class="ref-not-found" *ngIf="refSearchError && !refSearchResult">
+            <i class="bi bi-exclamation-circle me-2"></i>{{ refSearchError }}
+          </div>
+
+          <!-- Result card -->
+          <div class="ref-result-n" *ngIf="refSearchResult">
+            <div class="ref-result-hdr-n">
+              <div class="ref-result-badge-wrap">
+                <i class="bi bi-check-circle-fill me-2" style="color:#1aa37a;"></i>
+                <span class="ref-found-badge">{{ refSearchResult.referenceNumber }}</span>
+              </div>
+              <button class="ref-clear-btn"
+                      (click)="refSearchResult = null; refSearch = ''; refSearchError = ''">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <div class="ref-result-body">
+              <div class="ref-row-n">
+                <span class="ref-row-label"><i class="bi bi-person me-1"></i>Patient</span>
+                <strong>{{ refSearchResult.patientName || '—' }}</strong>
+              </div>
+              <div class="ref-row-n">
+                <span class="ref-row-label"><i class="bi bi-currency-rupee me-1"></i>Amount</span>
+                <strong class="ref-amount-val">{{ formatAmount(refSearchResult.amount) }}</strong>
+              </div>
+              <div class="ref-row-n">
+                <span class="ref-row-label"><i class="bi bi-calendar3 me-1"></i>Date</span>
+                <strong>{{ formatDate(refSearchResult.paymentDate) }}</strong>
+              </div>
+              <div class="ref-row-n">
+                <span class="ref-row-label"><i class="bi bi-credit-card me-1"></i>Method</span>
+                <strong>{{ refSearchResult.paymentMethod === 'UPI' ? 'UPI' : 'Bank Transfer' }}</strong>
+              </div>
+              <div class="ref-row-n">
+                <span class="ref-row-label"><i class="bi bi-bandaid me-1"></i>Care</span>
+                <strong>{{ refSearchResult.appointmentCareNeeds || 'Home Care' }}</strong>
+              </div>
+            </div>
+
+            <button class="btn-dl-receipt-n mt-3 w-100" (click)="downloadReceipt(refSearchResult)">
+              <i class="bi bi-download me-2"></i>Download Receipt
+            </button>
+          </div>
+        </div>
+
       </div>
 
       <!-- ═══════════════════ ORG SALARY PAYMENTS ═══════════════════════ -->
@@ -268,18 +355,106 @@
 
                 <!-- ── UPI ──────────────────────────────── -->
                 <div *ngIf="preferredMode==='UPI'">
-                  <label class="field-label">UPI ID <span class="req-star">*</span></label>
-                  <div class="input-with-icon mb-1">
-                    <i class="bi bi-at input-icon"></i>
-                    <input class="field-input field-input-icon" formControlName="upiId"
-                           placeholder="yourname@upi  or  9876543210@ybl"
-                           [class.input-error]="f['upiId'].invalid && f['upiId'].touched">
+                  <div class="upi-section-hdr mb-3">
+                    <div>
+                      <label class="field-label mb-0">UPI IDs <span class="req-star">*</span></label>
+                      <small class="d-block" style="color:#6a8c80;font-size:0.75rem;margin-top:2px;">
+                        10-digit mobile number + @suffix · Max 3 IDs
+                      </small>
+                    </div>
+                    <span class="upi-count-badge">{{ upiList.length }}/3</span>
                   </div>
-                  <small class="err" *ngIf="f['upiId'].touched && f['upiId'].hasError('required')">UPI ID is required.</small>
+
+                  <!-- Saved UPI chips -->
+                  <div class="upi-chip-list mb-3" *ngIf="upiList.length > 0">
+                    <div class="upi-chip" *ngFor="let upi of upiList">
+                      <div class="upi-chip-icon"><i class="bi bi-phone-fill"></i></div>
+                      <span class="upi-chip-text">{{ upi }}</span>
+                      <button type="button" class="upi-remove-btn" (click)="removeUpi(upi)" title="Remove UPI">
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="upi-empty-hint" *ngIf="upiList.length === 0">
+                    <i class="bi bi-phone me-2" style="color:#b0ccc5;"></i>No UPI IDs added yet
+                  </div>
+
+                  <!-- Add new UPI form -->
+                  <div class="upi-add-box mt-3" *ngIf="upiList.length < 3">
+                    <p class="upi-add-label">
+                      {{ upiList.length === 0 ? 'Add your first UPI ID:' : 'Add another UPI ID:' }}
+                    </p>
+
+                    <div class="upi-input-row">
+                      <!-- 10-digit number -->
+                      <div class="upi-num-wrap">
+                        <input class="upi-num-input" type="text" inputmode="numeric"
+                               maxlength="10"
+                               [(ngModel)]="newUpiNumber"
+                               [ngModelOptions]="{standalone: true}"
+                               (input)="onUpiNumberInput()"
+                               placeholder="e.g. 9876543210"
+                               [class.upi-input-ok]="newUpiNumber.length === 10"
+                               [class.upi-input-err]="upiAddError && newUpiNumber.length !== 10">
+                        <span class="upi-num-counter" [class.counter-ok]="newUpiNumber.length === 10">
+                          {{ newUpiNumber.length }}/10
+                        </span>
+                      </div>
+
+                      <!-- @ divider — clickable to open suffix suggestions -->
+                      <span class="upi-at" (click)="onAtClick()" title="Click to select suffix">@</span>
+
+                      <!-- Suffix with auto-suggest -->
+                      <div class="upi-suffix-wrap">
+                        <input class="upi-suffix-input" type="text"
+                               [(ngModel)]="newUpiSuffix"
+                               [ngModelOptions]="{standalone: true}"
+                               placeholder="tap @ above"
+                               (focus)="showUpiSuggestions = true"
+                               (blur)="onSuffixBlur()"
+                               (input)="onSuffixInput()"
+                               [class.upi-input-ok]="UPI_SUFFIXES.includes(newUpiSuffix)"
+                               [class.upi-input-err]="upiAddError && newUpiSuffix && !UPI_SUFFIXES.includes(newUpiSuffix)"
+                               autocomplete="off">
+                        <div class="upi-suggestions" *ngIf="showUpiSuggestions && filteredSuffixes.length > 0">
+                          <div class="upi-sug-item" *ngFor="let s of filteredSuffixes"
+                               (mousedown)="selectSuffix(s)">
+                            <i class="bi bi-at me-1" style="color:#1aa37a;font-size:0.8rem;"></i>{{ s }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="upi-preview" *ngIf="newUpiNumber.length === 10 && UPI_SUFFIXES.includes(newUpiSuffix)">
+                      <i class="bi bi-eye me-1"></i>Preview:
+                      <strong>{{ newUpiNumber }}@{{ newUpiSuffix }}</strong>
+                    </div>
+
+                    <small class="err d-block mt-2" *ngIf="upiAddError">
+                      <i class="bi bi-exclamation-circle me-1"></i>{{ upiAddError }}
+                    </small>
+
+                    <button type="button" class="btn-add-upi mt-3"
+                            (click)="addUpi()" [disabled]="isSavingUpi">
+                      <span *ngIf="!isSavingUpi">
+                        <i class="bi bi-plus-circle me-1"></i>Add UPI ID
+                      </span>
+                      <span *ngIf="isSavingUpi">
+                        <span class="btn-spinner me-1"></span>Saving…
+                      </span>
+                    </button>
+                  </div>
+
+                  <div class="upi-max-note" *ngIf="upiList.length >= 3">
+                    <i class="bi bi-check-circle-fill me-1"></i>
+                    Maximum 3 UPI IDs added. Remove one to add another.
+                  </div>
+
                   <div class="info-note mt-3">
                     <i class="bi bi-info-circle me-1"></i>
-                    Accepted formats: <code>name@upi</code>, <code>number@ybl</code>, <code>number@paytm</code>,
-                    <code>number@okaxis</code> etc.
+                    Supported: @ybl · @paytm · @okaxis · @okhdfcbank · @oksbi · @slc
                   </div>
                 </div>
 

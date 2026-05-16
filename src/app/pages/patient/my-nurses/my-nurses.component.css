@@ -216,3 +216,81 @@
 .neg-toggle-label  { font-size:0.84rem; font-weight:600; color:#1aa37a; }
 .negotiate-section { background:#fffbeb; border:1.5px solid #fde68a; border-radius:9px; padding:12px 14px; }
 .neg-info          { font-size:0.81rem; color:#92400e; background:#fef3c7; border-radius:7px; padding:8px 11px; }
+
+/* ── UPI LIST IN PAY MODAL ───────────────────────────────────── */
+.upi-pay-list  { display:flex; flex-direction:column; gap:6px; }
+.upi-pay-chip  { display:flex; align-items:center; background:#f0fdf4; border:1.5px solid #a7f3d0; border-radius:10px; padding:8px 12px; }
+.upi-pay-id    { font-size:0.88rem; font-weight:700; color:#0f6b51; font-family:monospace; letter-spacing:0.3px; }
+
+/* ── MARK SHIFT DISABLED ─────────────────────────────────────── */
+.btn-mark-shift-sm:disabled { opacity:0.45; cursor:not-allowed; }
+
+/* ── RECONCILIATION BANNER ───────────────────────────────────── */
+.reconcile-banner  { background:#fffbeb; border:1.5px solid #fbbf24; border-radius:10px; padding:12px 14px; margin-top:10px; }
+.reconcile-info    { display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; color:#92400e; margin-bottom:10px; }
+.reconcile-info i  { font-size:1.2rem; flex-shrink:0; margin-top:2px; }
+.reconcile-info strong { font-size:0.88rem; display:block; margin-bottom:3px; color:#78350f; }
+.reconcile-msg     { margin:0; font-size:0.8rem; line-height:1.5; }
+.reconcile-actions { display:flex; gap:8px; }
+.btn-reconcile-confirm { background:#1aa37a; color:white; border:none; border-radius:20px; padding:6px 18px; font-size:0.82rem; font-weight:600; cursor:pointer; transition:background 0.15s; display:inline-flex; align-items:center; }
+.btn-reconcile-confirm:hover:not(:disabled) { background:#0f6b51; }
+.btn-reconcile-confirm:disabled { opacity:0.5; cursor:not-allowed; }
+.reconcile-err     { color:#c0392b; font-size:0.78rem; margin:6px 0 0; }
+.reconcile-agreed  { background:#d4edda; color:#155724; border-radius:8px; padding:8px 12px; font-size:0.82rem; font-weight:600; display:flex; align-items:center; margin-top:8px; }
+.sm-spin-r { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,0.4); border-top-color:white; border-radius:50%; animation:spinR 0.7s linear infinite; }
+@keyframes spinR { to { transform:rotate(360deg); } }
+
+/* ── PAY BLOCKED MESSAGE ─────────────────────────────────────── */
+.pay-blocked-msg { background:#fff3cd; color:#856404; border-radius:8px; padding:7px 12px; font-size:0.78rem; margin-top:6px; display:flex; align-items:flex-start; gap:6px; }
+
+/* ── PAY MODAL SUCCESS (ref numbers) ────────────────────────── */
+.pay-success-block  { background:#f0fdf4; border:1.5px solid #a7f3d0; border-radius:12px; padding:16px; text-align:center; }
+.pay-success-header { font-size:1rem; font-weight:700; color:#065f46; display:flex; align-items:center; justify-content:center; margin-bottom:6px; }
+.pay-success-sub    { font-size:0.82rem; color:#4a7c6f; margin-bottom:10px; }
+.ref-chip           { background:#0f6b51; color:white; border-radius:20px; padding:6px 18px; font-size:0.88rem; font-weight:700; letter-spacing:0.5px; display:inline-block; margin:4px auto; }
+.btn-download-receipt { background:#1aa37a; color:white; border:none; border-radius:20px; padding:8px 20px; font-size:0.84rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; transition:background 0.15s; }
+.btn-download-receipt:hover { background:#0f6b51; }
+
+/* ── PAYMENT HISTORY SECTION ─────────────────────────────────── */
+.pay-history-section { background:white; border-radius:18px; padding:1.2rem 1.4rem; box-shadow:0 4px 14px -4px rgba(0,32,32,0.07); }
+.pay-hist-title      { font-size:1rem; font-weight:700; color:#1a3b3a; margin:0; }
+.btn-toggle-hist     { background:#eef9f5; color:#1aa37a; border:1.5px solid #a8d9c8; border-radius:20px; padding:5px 16px; font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.15s; }
+.btn-toggle-hist:hover { background:#d4f0e8; }
+
+/* Reference search */
+.ref-search-row  { display:flex; gap:8px; }
+.ref-input       { flex:1; padding:9px 14px; border:1.5px solid #d0e8e0; border-radius:10px; font-size:0.84rem; color:#1a3b3a; outline:none; transition:border-color 0.15s; letter-spacing:0.5px; }
+.ref-input:focus { border-color:#1aa37a; box-shadow:0 0 0 3px rgba(26,163,122,0.1); }
+.btn-ref-search  { background:#1aa37a; color:white; border:none; border-radius:10px; padding:9px 18px; font-size:0.84rem; font-weight:600; cursor:pointer; transition:background 0.15s; white-space:nowrap; display:flex; align-items:center; }
+.btn-ref-search:hover:not(:disabled) { background:#0f6b51; }
+.btn-ref-search:disabled { opacity:0.5; cursor:not-allowed; }
+.sm-spinner-sm   { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.4); border-top-color:white; border-radius:50%; animation:spinR 0.7s linear infinite; }
+.ref-search-err  { color:#c0392b; font-size:0.8rem; margin-top:6px; display:flex; align-items:center; gap:5px; }
+
+/* Reference result card */
+.ref-result-card    { background:#f0fdf4; border:1.5px solid #a7f3d0; border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+.ref-result-hdr     { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.ref-badge-found    { background:#0f6b51; color:white; border-radius:20px; padding:4px 14px; font-size:0.82rem; font-weight:700; letter-spacing:0.3px; }
+.ref-result-close   { background:none; border:none; color:#6a9e94; cursor:pointer; font-size:1rem; padding:2px 6px; }
+.ref-result-row     { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #d4f0e8; font-size:0.83rem; color:#4a7c6f; }
+.ref-result-row:last-of-type { border-bottom:none; }
+.ref-result-row strong { color:#1a3b3a; }
+.btn-dl-receipt-sm  { background:#eef9f5; color:#1aa37a; border:1.5px solid #a8d9c8; border-radius:16px; padding:5px 14px; font-size:0.8rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; transition:all 0.15s; }
+.btn-dl-receipt-sm:hover { background:#d4f0e8; }
+
+/* Payment history list */
+.pay-hist-empty  { text-align:center; padding:20px 0; color:#9ab8b2; font-size:0.85rem; }
+.pay-hist-row    { display:flex; justify-content:space-between; align-items:center; padding:10px 4px; border-bottom:1px solid #f0f5f3; gap:10px; flex-wrap:wrap; }
+.pay-hist-row:last-child { border-bottom:none; }
+.pay-hist-left   { display:flex; align-items:flex-start; gap:10px; flex:1; min-width:0; }
+.pay-hist-icon   { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+.phi-green { background:#d1fae5; color:#065f46; }
+.phi-orange{ background:#fef3c7; color:#92400e; }
+.pay-hist-nurse  { font-size:0.88rem; font-weight:700; color:#1a3b3a; margin:0 0 2px; }
+.pay-hist-meta   { font-size:0.74rem; color:#6a9e94; margin:0 0 1px; letter-spacing:0.2px; }
+.pay-hist-care   { font-size:0.74rem; color:#9ab8b2; margin:0; }
+.pay-hist-right  { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+.pay-hist-amount { font-size:0.95rem; font-weight:800; color:#1a3b3a; }
+.pay-hist-badge  { padding:2px 10px; border-radius:20px; font-size:0.7rem; font-weight:700; }
+.phb-paid    { background:#d1fae5; color:#065f46; }
+.phb-pending { background:#fef3c7; color:#92400e; }

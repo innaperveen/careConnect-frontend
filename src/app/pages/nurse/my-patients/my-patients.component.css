@@ -161,3 +161,100 @@
 .btn-keep-orig      { background:#e8f4fd; color:#1565c0; border:1px solid #bfdbfe; border-radius:6px; padding:5px 11px; font-size:0.78rem; font-weight:600; cursor:pointer; transition:opacity 0.2s; }
 .btn-keep-orig:hover { opacity:0.85; }
 .btn-keep-orig:disabled { opacity:0.5; cursor:not-allowed; }
+
+/* ── CARE TOOLS BUTTONS ──────────────────────────────────────── */
+.care-tools-btns  { display:flex; gap:6px; flex-wrap:wrap; margin-left:auto; }
+.care-btn         { border:none; border-radius:20px; padding:5px 12px; font-size:0.78rem; font-weight:600; cursor:pointer; transition:all 0.18s; display:inline-flex; align-items:center; }
+.care-btn-records { background:#e8f0fe; color:#1a73e8; }
+.care-btn-records:hover { background:#d2e3fc; }
+.care-btn-vitals  { background:#fce4ec; color:#c62828; }
+.care-btn-vitals:hover { background:#f8bbd9; }
+.care-btn-notes   { background:#e8f5e9; color:#2e7d32; }
+.care-btn-notes:hover { background:#c8e6c9; }
+
+/* ── CARE PANEL ──────────────────────────────────────────────── */
+.care-backdrop  { position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:2000; }
+.care-panel     { position:fixed; top:0; right:0; width:480px; max-width:97vw; height:100vh; background:white; z-index:2010; display:flex; flex-direction:column; box-shadow:-4px 0 28px rgba(0,0,0,0.14); animation:careSlideIn 0.22s ease; }
+@keyframes careSlideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+
+.care-panel-header      { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; background:linear-gradient(135deg,#0f6b51,#1aa37a); flex-shrink:0; }
+.care-panel-header-info { display:flex; align-items:center; gap:10px; }
+.care-panel-avatar      { width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.25); display:flex; align-items:center; justify-content:center; color:white; font-size:1.05rem; font-weight:700; flex-shrink:0; }
+.care-panel-name        { margin:0; font-size:0.97rem; font-weight:700; color:white; }
+.care-panel-sub         { color:rgba(255,255,255,0.8); font-size:0.73rem; }
+.care-panel-close       { background:rgba(255,255,255,0.2); border:none; color:white; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.85rem; flex-shrink:0; }
+.care-panel-close:hover { background:rgba(255,255,255,0.35); }
+
+.care-tabs     { display:flex; border-bottom:2px solid #eef4f2; flex-shrink:0; }
+.care-tab-btn  { flex:1; padding:11px 6px; font-size:0.83rem; font-weight:600; color:#6a8c80; background:none; border:none; cursor:pointer; transition:all 0.15s; border-bottom:2.5px solid transparent; margin-bottom:-2px; }
+.care-tab-btn:hover { color:#1aa37a; background:#f8fffc; }
+.care-tab-active { color:#1aa37a; border-bottom-color:#1aa37a; background:#f0fdf4; }
+
+.care-panel-body { flex:1; overflow-y:auto; padding:16px 18px; }
+.care-panel-body::-webkit-scrollbar { width:4px; }
+.care-panel-body::-webkit-scrollbar-thumb { background:#d0e8e0; border-radius:10px; }
+
+.care-section-label { font-size:0.78rem; font-weight:700; color:#6a8c80; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; }
+.care-loading  { display:flex; align-items:center; color:#6a8c80; font-size:0.85rem; padding:12px 0; }
+.care-empty    { text-align:center; padding:24px 0; color:#9ab8b2; font-size:0.85rem; }
+.care-err      { background:#fde8e8; color:#a01010; border-radius:8px; padding:7px 12px; font-size:0.82rem; margin-bottom:10px; }
+.care-success  { background:#d4edda; color:#155724; border-radius:8px; padding:7px 12px; font-size:0.82rem; margin-bottom:10px; display:flex; align-items:center; }
+.care-save-btn { background:#1aa37a; color:white; border:none; border-radius:20px; padding:8px 22px; font-size:0.85rem; font-weight:600; cursor:pointer; transition:background 0.15s; display:inline-flex; align-items:center; margin-top:12px; }
+.care-save-btn:hover:not(:disabled) { background:#0f6b51; }
+.care-save-btn:disabled { opacity:0.55; cursor:not-allowed; }
+
+/* EHR Records */
+.ehr-rec-row    { display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid #f0f5f3; }
+.ehr-rec-row:last-child { border-bottom:none; }
+.ehr-rec-icon   { width:36px; height:36px; border-radius:10px; background:#eef9f5; color:#1aa37a; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+.ehr-rec-info   { flex:1; min-width:0; }
+.ehr-rec-title  { font-size:0.88rem; font-weight:700; color:#1a3b3a; margin:0 0 3px; }
+.ehr-rec-meta   { display:flex; flex-wrap:wrap; gap:8px; font-size:0.74rem; color:#6a8c80; margin-bottom:2px; }
+.ehr-type-badge { background:#eef9f5; color:#1aa37a; padding:1px 8px; border-radius:12px; font-size:0.69rem; font-weight:700; }
+.ehr-rec-notes  { font-size:0.78rem; color:#8aaba4; margin:3px 0 0; }
+.ehr-rec-actions { flex-shrink:0; }
+.ehr-view-btn   { background:#e8f0fe; color:#1a73e8; border:none; border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:0.9rem; cursor:pointer; text-decoration:none; }
+.ehr-view-btn:hover { background:#d2e3fc; }
+.ehr-no-file    { color:#c8ddd8; font-size:0.9rem; display:flex; align-items:center; }
+
+/* Vitals Form */
+.vitals-form   { background:#f8fffd; border-radius:12px; padding:14px; border:1.5px solid #d0eee4; }
+.vitals-grid   { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.vital-field   { display:flex; flex-direction:column; }
+.vital-label   { font-size:0.75rem; font-weight:600; color:#4e6e68; margin-bottom:4px; display:flex; align-items:center; }
+.vital-input   { padding:7px 10px; border:1.5px solid #cde8de; border-radius:9px; font-size:0.84rem; color:#1a3b3a; background:white; outline:none; transition:border-color 0.15s; }
+.vital-input:focus { border-color:#1aa37a; box-shadow:0 0 0 3px rgba(26,163,122,0.1); }
+.vital-textarea { resize:vertical; min-height:60px; }
+
+/* Vitals history */
+.vitals-history-row { padding:10px 0; border-bottom:1px solid #f0f5f3; }
+.vitals-history-row:last-child { border-bottom:none; }
+.vh-date  { font-size:0.75rem; color:#8aaba4; display:block; margin-bottom:5px; }
+.vh-chips { display:flex; flex-wrap:wrap; gap:5px; }
+.vh-chip  { background:#eef9f5; color:#1a3b3a; padding:2px 9px; border-radius:14px; font-size:0.76rem; font-weight:600; display:inline-flex; align-items:center; gap:4px; }
+.vh-chip i { color:#1aa37a; font-size:0.7rem; }
+.vh-notes { font-size:0.78rem; color:#8aaba4; margin:5px 0 0; font-style:italic; }
+
+/* Notes */
+.notes-form    { background:#f8fffd; border-radius:12px; padding:14px; border:1.5px solid #d0eee4; }
+.note-history-row { border:1px solid #e8f3ef; border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+.note-h-header { display:flex; align-items:center; margin-bottom:4px; }
+.note-h-title  { font-size:0.88rem; font-weight:700; color:#1a3b3a; }
+.note-h-date   { font-size:0.74rem; color:#8aaba4; }
+.note-h-body   { font-size:0.82rem; color:#4e6e68; margin:0; white-space:pre-wrap; }
+
+/* Spinner for save btns */
+.sm-spin-w { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,0.4); border-top-color:white; border-radius:50%; animation:spinP 0.7s linear infinite; margin-right:6px; }
+
+/* ── NURSE RECONCILIATION BANNER ─────────────────────────────── */
+.reconcile-banner-n  { background:#fffbeb; border:1.5px solid #fbbf24; border-radius:10px; padding:12px 14px; margin-top:10px; }
+.reconcile-info-n    { display:flex; align-items:flex-start; gap:8px; font-size:0.84rem; color:#92400e; margin-bottom:10px; }
+.reconcile-info-n i  { font-size:1.1rem; flex-shrink:0; margin-top:2px; }
+.reconcile-info-n strong { font-size:0.87rem; display:block; margin-bottom:3px; color:#78350f; }
+.reconcile-msg-n     { margin:0; font-size:0.79rem; line-height:1.5; }
+.btn-reconcile-n     { background:#1aa37a; color:white; border:none; border-radius:20px; padding:6px 18px; font-size:0.82rem; font-weight:600; cursor:pointer; transition:background 0.15s; display:inline-flex; align-items:center; }
+.btn-reconcile-n:hover:not(:disabled) { background:#0f6b51; }
+.btn-reconcile-n:disabled { opacity:0.5; cursor:not-allowed; }
+.reconcile-err-n     { color:#c0392b; font-size:0.77rem; margin:5px 0 0; }
+.reconcile-agreed-n  { background:#d4edda; color:#155724; border-radius:8px; padding:7px 12px; font-size:0.82rem; font-weight:600; display:flex; align-items:center; margin-top:6px; }
+.sm-spin-r { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,0.4); border-top-color:white; border-radius:50%; animation:spinP 0.7s linear infinite; }
